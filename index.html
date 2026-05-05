@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC 138 — Study Guides</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --bg:   #070910;
+    --bg2:  #0b0d18;
+    --bg3:  #0f1120;
+    --surf: #141626;
+    --bdr:  rgba(140,200,255,0.1);
+    --bdr2: rgba(140,200,255,0.2);
+    --text: #c4d4f0;
+    --muted:#506080;
+    --c1:   #50c8ff;
+    --c2:   #50e0a0;
+    --c3:   #ffb840;
+    --c4:   #ff9050;
+    --c5:   #c880ff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.7; min-height: 100vh; }
+
+  .hero {
+    padding: 60px 40px 50px; text-align: center; position: relative; overflow: hidden;
+    background: radial-gradient(ellipse 60% 50% at 20% 50%, rgba(80,200,255,0.07) 0%, transparent 65%),
+                radial-gradient(ellipse 60% 50% at 80% 50%, rgba(200,128,255,0.07) 0%, transparent 65%);
+    border-bottom: 1px solid var(--bdr);
+  }
+  .hero::before { content:'CSC 138'; position:absolute; bottom:-20px; right:-10px; font-family:'Syne',sans-serif; font-size:130px; font-weight:800; opacity:0.025; pointer-events:none; line-height:1; color:#fff; }
+  .tag { display:inline-block; font-family:'DM Mono',monospace; font-size:10px; font-weight:500; letter-spacing:0.22em; text-transform:uppercase; color:var(--c1); border:1px solid rgba(80,200,255,0.3); background:rgba(80,200,255,0.06); padding:4px 14px; border-radius:2px; margin-bottom:18px; }
+  h1 { font-family:'Syne',sans-serif; font-size:38px; font-weight:800; line-height:1.15; letter-spacing:-0.02em; margin-bottom:10px; color:#fff; }
+  .hero-sub { font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); letter-spacing:0.05em; }
+
+  .container { max-width:700px; margin:0 auto; padding:40px 20px 80px; }
+
+  .grid { display:flex; flex-direction:column; gap:14px; }
+
+  .guide-link {
+    display:flex; align-items:center; gap:16px;
+    background:var(--bg2); border:1px solid var(--bdr); border-radius:10px;
+    padding:20px 22px; text-decoration:none; color:var(--text);
+    transition:border-color 0.13s, background 0.13s;
+  }
+  .guide-link:hover { border-color:var(--bdr2); background:var(--surf); }
+
+  .guide-num { font-family:'DM Mono',monospace; font-size:11px; font-weight:600; letter-spacing:0.12em; color:var(--muted); flex-shrink:0; width:28px; }
+  .guide-body { flex:1; }
+  .guide-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:#fff; }
+  .guide-tag { display:inline-block; font-family:'DM Mono',monospace; font-size:9px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; padding:2px 8px; border-radius:2px; margin-top:5px; }
+
+  .t1 { background:rgba(80,200,255,0.07);  color:var(--c1); border:1px solid rgba(80,200,255,0.25); }
+  .t2 { background:rgba(80,224,160,0.07);  color:var(--c2); border:1px solid rgba(80,224,160,0.25); }
+  .t3 { background:rgba(255,184,64,0.07);  color:var(--c3); border:1px solid rgba(255,184,64,0.25); }
+  .t4 { background:rgba(255,144,80,0.07);  color:var(--c4); border:1px solid rgba(255,144,80,0.25); }
+  .t5 { background:rgba(200,128,255,0.07); color:var(--c5); border:1px solid rgba(200,128,255,0.25); }
+
+  .arrow { font-family:'DM Mono',monospace; font-size:18px; color:var(--muted); flex-shrink:0; transition:color 0.13s, transform 0.13s; }
+  .guide-link:hover .arrow { color:var(--c1); transform:translateX(4px); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="tag">Exam 3 &nbsp;·&nbsp; Study Materials</div>
+  <h1>CSC 138 Study Guides</h1>
+  <p class="hero-sub">Computer Networks &amp; Security</p>
+</div>
+
+<div class="container">
+  <div class="grid">
+
+    <a class="guide-link" href="application_layer_study_guide.html">
+      <span class="guide-num">01</span>
+      <div class="guide-body">
+        <div class="guide-title">Application Layer</div>
+        <span class="guide-tag t1">HTTP · DNS · Email · ICMP · IPv6</span>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="guide-link" href="auth_security_systems_study_guide.html">
+      <span class="guide-num">02</span>
+      <div class="guide-body">
+        <div class="guide-title">Authentication &amp; Security Systems</div>
+        <span class="guide-tag t2">Auth · Crypto · Access Control</span>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="guide-link" href="network_security_study_guide.html">
+      <span class="guide-num">03</span>
+      <div class="guide-body">
+        <div class="guide-title">Network Security</div>
+        <span class="guide-tag t3">Firewalls · VPN · TLS · Attacks</span>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="guide-link" href="resource_allocation_study_guide.html">
+      <span class="guide-num">04</span>
+      <div class="guide-body">
+        <div class="guide-title">Resource Allocation</div>
+        <span class="guide-tag t4">Scheduling · Queuing · Fairness</span>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="guide-link" href="tcp_congestion_control_v2.html">
+      <span class="guide-num">05</span>
+      <div class="guide-body">
+        <div class="guide-title">TCP Congestion Control</div>
+        <span class="guide-tag t5">Slow Start · AIMD · BBR · QUIC</span>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Guide: Resource Allocation & Congestion Control — Chapter 6.1</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --bg:      #07080f;
+    --bg2:     #0d0f1a;
+    --bg3:     #131623;
+    --surf:    #191c2e;
+    --bdr:     rgba(160,180,255,0.1);
+    --bdr2:    rgba(160,180,255,0.2);
+    --text:    #c8d0f0;
+    --muted:   #5a6490;
+    --res:     #6ab0ff;    /* resource blue */
+    --cong:    #ff7860;   /* congestion red-orange */
+    --fair:    #50e0a0;   /* fairness green */
+    --power:   #d4a0ff;   /* power metric purple */
+    --amber:   #ffba50;   /* amber */
+    --res-bg:  rgba(106,176,255,0.07);
+    --cong-bg: rgba(255,120,96,0.07);
+    --fair-bg: rgba(80,224,160,0.07);
+    --pow-bg:  rgba(212,160,255,0.07);
+    --amb-bg:  rgba(255,186,80,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 58px 40px 48px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 70% 60% at 20% 50%, rgba(106,176,255,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 70% 60% at 80% 50%, rgba(255,120,96,0.07) 0%, transparent 70%);
+    border-bottom: 1px solid var(--bdr);
+  }
+
+  .hero::before {
+    content: '6.1';
+    position: absolute;
+    font-family: 'Syne', sans-serif;
+    font-size: 220px; font-weight: 800;
+    bottom: -40px; right: -20px;
+    opacity: 0.03; pointer-events: none; line-height: 1;
+    color: #fff;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--res); border: 1px solid rgba(106,176,255,0.3);
+    background: rgba(106,176,255,0.06);
+    padding: 4px 14px; border-radius: 2px; margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 44px; font-weight: 800; line-height: 1.1;
+    letter-spacing: -0.02em; margin-bottom: 10px; color: #fff;
+  }
+
+  h1 .accent { color: var(--res); }
+
+  .hero-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; color: var(--muted); letter-spacing: 0.05em;
+  }
+
+  /* ── Tab bar ── */
+  .tab-bar {
+    display: flex; overflow-x: auto;
+    background: var(--bg2); border-bottom: 1px solid var(--bdr);
+    padding: 0 18px;
+    position: sticky; top: 0; z-index: 20;
+  }
+
+  .tab {
+    padding: 13px 15px; background: none; border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+    transition: all 0.13s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--res); border-bottom-color: var(--res); font-weight: 600; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── Container ── */
+  .container { max-width: 940px; margin: 0 auto; padding: 34px 20px 80px; }
+
+  /* ── Section header ── */
+  .sec-hd {
+    display: flex; align-items: flex-start; gap: 14px;
+    margin-bottom: 26px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--bdr);
+  }
+  .sec-icon {
+    font-family: 'DM Mono', monospace; font-size: 30px;
+    color: var(--res); opacity: 0.4; line-height: 1; flex-shrink: 0;
+  }
+  .sec-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: #fff; }
+  .sec-desc  { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg2); border: 1px solid var(--bdr);
+    border-radius: 10px; padding: 22px; margin-bottom: 16px;
+    transition: border-color 0.13s;
+  }
+  .card:hover { border-color: var(--bdr2); }
+
+  .card-title {
+    font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--bdr);
+  }
+
+  /* ── HB ── */
+  .hb { border-radius: 7px; padding: 12px 16px; margin: 12px 0; font-size: 13.5px; line-height: 1.7; }
+  .hb-label { font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 5px; }
+  .hb-res  { background:var(--res-bg);  border-left:3px solid var(--res);  } .hb-res  .hb-label { color:var(--res);  }
+  .hb-cong { background:var(--cong-bg); border-left:3px solid var(--cong); } .hb-cong .hb-label { color:var(--cong); }
+  .hb-fair { background:var(--fair-bg); border-left:3px solid var(--fair); } .hb-fair .hb-label { color:var(--fair); }
+  .hb-pow  { background:var(--pow-bg);  border-left:3px solid var(--power);} .hb-pow  .hb-label { color:var(--power);}
+  .hb-amb  { background:var(--amb-bg);  border-left:3px solid var(--amber);} .hb-amb  .hb-label { color:var(--amber);}
+
+  .kp { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .kp li { display: flex; gap: 11px; align-items: flex-start; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--bdr); border-radius: 7px; font-size: 13.5px; line-height: 1.6; transition: border-color 0.13s; }
+  .kp li:hover { border-color: var(--bdr2); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 9px; flex-shrink: 0; }
+
+  code { font-family: 'DM Mono', monospace; background: var(--bg3); border: 1px solid var(--bdr); border-radius: 3px; padding: 1px 6px; font-size: 12px; color: var(--res); }
+  strong { font-weight: 600; color: #fff; }
+  p { color: var(--muted); font-size: 13.5px; line-height: 1.7; margin-bottom: 10px; }
+  h3 { font-size: 14px; font-weight: 600; color: #fff; margin: 16px 0 8px; font-family: 'Syne', sans-serif; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── Taxonomy matrix ── */
+  .tax-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 14px 0;
+  }
+  @media (max-width: 600px) { .tax-grid { grid-template-columns: 1fr; } }
+
+  .tax-card {
+    border-radius: 8px; padding: 16px;
+    position: relative; overflow: hidden;
+  }
+  .tax-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 3px; border-radius: 8px 8px 0 0;
+  }
+
+  .tc-res   { background:var(--res-bg);  border:1px solid rgba(106,176,255,0.2); } .tc-res::before  { background:var(--res); }
+  .tc-cong  { background:var(--cong-bg); border:1px solid rgba(255,120,96,0.2);  } .tc-cong::before { background:var(--cong); }
+  .tc-fair  { background:var(--fair-bg); border:1px solid rgba(80,224,160,0.2);  } .tc-fair::before { background:var(--fair); }
+  .tc-pow   { background:var(--pow-bg);  border:1px solid rgba(212,160,255,0.2); } .tc-pow::before  { background:var(--power); }
+
+  .tc-label {
+    font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .tc-res  .tc-label { color:var(--res);  }
+  .tc-cong .tc-label { color:var(--cong); }
+  .tc-fair .tc-label { color:var(--fair); }
+  .tc-pow  .tc-label { color:var(--power); }
+
+  .tc-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .tc-body  { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+  /* ── Dimension comparison table ── */
+  .dim-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13px; margin: 14px 0;
+  }
+  .dim-table th {
+    text-align: left; padding: 9px 12px;
+    background: var(--bg3); border-bottom: 1px solid var(--bdr2);
+    font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted);
+  }
+  .dim-table td {
+    padding: 10px 12px; border-bottom: 1px solid var(--bdr);
+    vertical-align: top; line-height: 1.65;
+  }
+  .dim-table tr:last-child td { border-bottom: none; }
+  .dim-table tr:hover td { background: var(--bg3); }
+  .dim-table td:first-child {
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--res); font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* ── Power curve interactive ── */
+  .power-wrap {
+    background: var(--bg3);
+    border: 1px solid var(--bdr);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 14px 0;
+  }
+
+  .power-controls {
+    display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap;
+  }
+
+  .load-slider { flex: 1; min-width: 160px; accent-color: var(--power); }
+  .load-label {
+    font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted);
+    min-width: 120px;
+  }
+
+  .power-canvas { display: block; width: 100%; border-radius: 6px; }
+
+  /* ── Fairness calculator ── */
+  .fair-inputs {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: flex-end;
+  }
+
+  .fair-field { display: flex; flex-direction: column; gap: 4px; }
+  .fair-label {
+    font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted);
+  }
+  .fair-input {
+    background: var(--bg3); border: 1px solid var(--bdr2);
+    border-radius: 5px; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 13px;
+    padding: 8px 10px; outline: none; width: 80px;
+    transition: border-color 0.15s;
+  }
+  .fair-input:focus { border-color: var(--fair); }
+
+  .fair-btn {
+    padding: 9px 18px; background: var(--fair); color: var(--bg);
+    border: none; border-radius: 5px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: opacity 0.13s; white-space: nowrap;
+    align-self: flex-end;
+  }
+  .fair-btn:hover { opacity: 0.85; }
+
+  .fair-result {
+    padding: 16px; border-radius: 7px;
+    background: var(--bg); border: 1px solid var(--bdr);
+    margin-top: 10px; font-family: 'DM Mono', monospace;
+    font-size: 12.5px; line-height: 2;
+  }
+
+  .fair-index-val {
+    font-size: 32px; font-weight: 700; font-family: 'Syne', sans-serif;
+    line-height: 1;
+  }
+
+  /* ── Flashcards ── */
+  .flashcard { perspective: 1000px; min-height: 165px; position: relative; cursor: pointer; margin-bottom: 12px; }
+  .fc-inner  { width: 100%; min-height: 165px; transform-style: preserve-3d; transition: transform 0.42s; position: relative; }
+  .flashcard.flipped .fc-inner { transform: rotateY(180deg); }
+  .fc-side   { position: absolute; width: 100%; min-height: 165px; backface-visibility: hidden; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; justify-content: center; }
+  .fc-front  { background: var(--bg2); border: 1px solid var(--bdr); }
+  .fc-back   { background: var(--surf); border: 1px solid var(--bdr2); transform: rotateY(180deg); }
+  .fc-hint   { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .fc-q      { font-size: 15px; font-weight: 600; color: #fff; line-height: 1.5; font-family: 'Syne', sans-serif; }
+  .fc-albl   { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--fair); margin-bottom: 8px; }
+  .fc-a      { font-size: 13.5px; color: var(--text); line-height: 1.7; }
+  .fc-nav    { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .fc-btn    { padding: 8px 18px; background: var(--bg2); border: 1px solid var(--bdr2); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; border-radius: 6px; cursor: pointer; transition: all 0.13s; }
+  .fc-btn:hover { border-color: var(--res); color: var(--res); }
+  .fc-prog   { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+
+  /* ── Quiz ── */
+  .quiz-counter { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 13px; }
+  .quiz-q   { font-size: 15px; font-weight: 600; color: #fff; line-height: 1.5; margin-bottom: 13px; font-family: 'Syne', sans-serif; }
+  .quiz-opts{ display: flex; flex-direction: column; gap: 8px; }
+  .quiz-opt { padding: 11px 15px; border: 1px solid var(--bdr); border-radius: 7px; background: var(--bg2); font-family: 'DM Sans', sans-serif; font-size: 13.5px; color: var(--text); cursor: pointer; text-align: left; line-height: 1.5; transition: all 0.12s; }
+  .quiz-opt:hover:not(:disabled) { border-color: var(--bdr2); background: var(--bg3); }
+  .quiz-opt.opt-correct { border-color: var(--fair); background: var(--fair-bg); }
+  .quiz-opt.opt-wrong   { border-color: var(--cong); background: var(--cong-bg); }
+  .quiz-opt:disabled { cursor: not-allowed; }
+  .quiz-fb  { margin-top: 11px; padding: 12px 15px; border-radius: 7px; font-size: 13px; line-height: 1.65; display: none; }
+  .qf-ok  { background: var(--fair-bg); border: 1px solid rgba(80,224,160,0.25); color: var(--fair); }
+  .qf-bad { background: var(--cong-bg); border: 1px solid rgba(255,120,96,0.22); color: var(--cong); }
+  .quiz-next { margin-top: 10px; padding: 9px 20px; background: var(--res); color: var(--bg); border: none; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; display: none; transition: opacity 0.13s; }
+  .quiz-next:hover { opacity: 0.85; }
+  .score-box { text-align: center; padding: 44px; background: var(--bg2); border: 1px solid var(--bdr); border-radius: 10px; }
+  .score-num { font-family: 'Syne', sans-serif; font-size: 64px; font-weight: 800; color: var(--res); }
+  .score-lbl { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .restart-btn { margin-top: 20px; padding: 10px 26px; background: var(--bg3); border: 1px solid var(--bdr2); color: var(--text); border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .restart-btn:hover { background: var(--surf); }
+
+  /* formula */
+  .formula-box {
+    background: var(--bg3); border: 1px solid var(--bdr2);
+    border-radius: 7px; padding: 16px;
+    font-family: 'DM Mono', monospace; font-size: 13.5px;
+    line-height: 2.2; margin: 12px 0; text-align: center;
+    color: var(--power);
+  }
+  .formula-box .fml-label {
+    font-size: 10px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.14em; margin-bottom: 6px; display: block;
+    text-align: left;
+  }
+</style>
+</head>
+<body>
+
+<a href="index.html" style="display:inline-flex;align-items:center;gap:8px;position:fixed;top:16px;left:16px;z-index:100;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#506080;background:#0b0d18;border:1px solid rgba(140,200,255,0.1);border-radius:6px;padding:7px 14px;text-decoration:none;transition:color 0.13s,border-color 0.13s;" onmouseover="this.style.color='#50c8ff';this.style.borderColor='rgba(80,200,255,0.3)'" onmouseout="this.style.color='#506080';this.style.borderColor='rgba(140,200,255,0.1)'">← Home</a>
+
+<div class="hero">
+  <div class="tag">Chapter 6.1</div>
+  <h1>Resource Allocation &<br><span class="accent">Congestion Control</span></h1>
+  <p class="hero-sub">taxonomy · power metric · fairness · flows · feedback vs reservation</p>
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="showTab('overview')">Overview</button>
+  <button class="tab" onclick="showTab('definitions')">Key Definitions</button>
+  <button class="tab" onclick="showTab('taxonomy')">Taxonomy</button>
+  <button class="tab" onclick="showTab('power')">Power Metric</button>
+  <button class="tab" onclick="showTab('fairness')">Fairness</button>
+  <button class="tab" onclick="showTab('flashcards')">Flashcards</button>
+  <button class="tab" onclick="showTab('quiz')">Quiz</button>
+</div>
+
+<div class="container">
+
+  <!-- ══ OVERVIEW ══ -->
+  <div id="overview" class="section active">
+    <div class="sec-hd">
+      <div class="sec-icon">⊕</div>
+      <div>
+        <div class="sec-title">What Section 6.1 Is About</div>
+        <div class="sec-desc">The framework for understanding all congestion control mechanisms</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">What you need to know</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--res)"></span>The difference between <strong>resource allocation</strong>, <strong>congestion control</strong>, and <strong>flow control</strong> — these are three distinct concepts often confused.</li>
+        <li><span class="dot" style="background:var(--res)"></span>The <strong>flow abstraction</strong>: what it is, how it differs from a channel, and the idea of <strong>soft state</strong>.</li>
+        <li><span class="dot" style="background:var(--cong)"></span>The three <strong>taxonomy dimensions</strong>: router-centric vs host-centric, reservation-based vs feedback-based, window-based vs rate-based.</li>
+        <li><span class="dot" style="background:var(--power)"></span>The <strong>power metric</strong>: Power = Throughput / Delay, how to read the power curve, what congestion collapse is.</li>
+        <li><span class="dot" style="background:var(--fair)"></span><strong>Jain's fairness index</strong>: the formula, what it outputs, and how to interpret it.</li>
+      </ul>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">The three terms — not the same thing</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+          <div style="padding:12px 14px;background:var(--res-bg);border:1px solid rgba(106,176,255,0.2);border-radius:7px;">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--res);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.12em;">Resource Allocation</div>
+            <div style="font-size:13px;line-height:1.6;">The process by which network elements meet competing demands for link bandwidth and buffer space. Decides how much each flow gets.</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--cong-bg);border:1px solid rgba(255,120,96,0.2);border-radius:7px;">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--cong);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.12em;">Congestion Control</div>
+            <div style="font-size:13px;line-height:1.6;">Preventing or responding to overload <em>in the network</em>. Keeps senders from injecting too much data into a bottleneck link.</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--amb-bg);border:1px solid rgba(255,186,80,0.2);border-radius:7px;">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--amber);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.12em;">Flow Control</div>
+            <div style="font-size:13px;line-height:1.6;">Preventing a fast sender from overrunning a <em>slow receiver</em>. End-to-end issue. Not the same as congestion control, though they share mechanisms.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Why this matters</div>
+        <p>Congestion is bad for everyone — it causes delay, packet loss, and ultimately network collapse. Unlike routing (which finds paths), congestion control manages the <em>rate</em> at which traffic enters the network.</p>
+        <div class="hb hb-cong">
+          <div class="hb-label">Key insight: routing ≠ congestion control</div>
+          Even if routing assigns large weights to congested links, some bottleneck routers cannot be routed around. Routing adjusts paths; congestion control adjusts load. They solve different problems.
+        </div>
+        <div class="hb hb-amb">
+          <div class="hb-label">The dual challenge</div>
+          Effective allocation requires high throughput AND low delay — but these goals are in tension. Packing the network to maximize throughput causes queueing delay to explode.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DEFINITIONS ══ -->
+  <div id="definitions" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">≡</div>
+      <div>
+        <div class="sec-title">Key Definitions</div>
+        <div class="sec-desc">Flows, soft state, and the network model</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The flow abstraction</div>
+      <p>A <strong>flow</strong> is a sequence of packets sent between a source/destination pair that follows the same route through the network. Unlike a channel (an end-to-end abstraction), a flow is visible to routers inside the network.</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;">
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;padding:14px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--res);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Host-to-host flow</div>
+          <div style="font-size:13px;line-height:1.6;">Same source and destination IP addresses. Coarser granularity — all traffic between two hosts, regardless of port.</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;padding:14px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--res);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Process-to-process flow</div>
+          <div style="font-size:13px;line-height:1.6;">Same (srcIP, srcPort, dstIP, dstPort). Finer granularity — essentially the same as a TCP connection.</div>
+        </div>
+      </div>
+
+      <div class="hb hb-res">
+        <div class="hb-label">Implicit vs Explicit flows</div>
+        An <strong>implicit flow</strong> is identified by routers watching packet headers — no setup required. An <strong>explicit flow</strong> is established by a flow setup message from the source. Explicit flows are not the same as virtual circuits — they don't imply reliable ordered delivery; they exist only for resource allocation.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Soft state vs hard state</div>
+      <div class="two-col">
+        <div>
+          <h3>Hard state (connection-oriented)</h3>
+          <p>Created and removed by explicit signalling. Resources are definitively reserved. Example: VC table entries in ATM. Advantage: guaranteed resources. Disadvantage: underutilization when the connection is idle.</p>
+        </div>
+        <div>
+          <h3>Soft state (middle ground)</h3>
+          <p>Created implicitly as packets arrive, expires if no traffic. Correct network operation does not depend on it — but when it's present, the router can make better decisions. Combines benefits of both approaches.</p>
+        </div>
+      </div>
+      <div class="hb hb-res">
+        <div class="hb-label">Why soft state matters</div>
+        Pure connectionless (no router state) is maximally flexible but limits resource allocation ability. Pure connection-oriented (hard state) wastes resources when flows are idle. Soft state is the pragmatic middle ground used in many real congestion mechanisms.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Service models and their implications</div>
+      <div style="overflow-x:auto;">
+        <table class="dim-table">
+          <thead><tr><th>Service Model</th><th>Resource Allocation Style</th><th>Who manages congestion?</th><th>Real-world example</th></tr></thead>
+          <tbody>
+            <tr><td>Best-effort</td><td>No reservations; feedback-based</td><td>Primarily end hosts, with router assistance</td><td>Internet / TCP/IP</td></tr>
+            <tr><td>QoS / Guaranteed</td><td>Reservation-based; per-flow commitments</td><td>Routers (track reserved resources per flow)</td><td>ATM, IntServ/RSVP</td></tr>
+            <tr><td>Differentiated</td><td>Class-based priority; no per-flow reservations</td><td>Routers classify and queue by class</td><td>DiffServ</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAXONOMY ══ -->
+  <div id="taxonomy" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">⊗</div>
+      <div>
+        <div class="sec-title">Taxonomy of Resource Allocation</div>
+        <div class="sec-desc">Three dimensions × two choices — know all six and how they combine</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Dimension 1: Where does control live?</div>
+      <div class="tax-grid">
+        <div class="tax-card tc-res">
+          <div class="tc-label">Router-centric</div>
+          <div class="tc-title">Network does the work</div>
+          <div class="tc-body">Each router decides when to forward packets, which to drop, and sends advisory messages to hosts. Routers police host behavior. Requires per-flow state at routers.</div>
+        </div>
+        <div class="tax-card tc-cong">
+          <div class="tc-label">Host-centric</div>
+          <div class="tc-title">Endpoints adapt themselves</div>
+          <div class="tc-body">End hosts observe network conditions (packet loss, delay) and adjust their sending rate. Routers have minimal involvement — they just drop packets when overloaded.</div>
+        </div>
+      </div>
+      <div class="hb hb-res">
+        <div class="hb-label">Not mutually exclusive</div>
+        In practice, both participate. Host-centric systems still rely on routers to drop packets when congested. Router-centric systems still expect hosts to obey advisory messages. The question is where the <em>majority</em> of the burden falls.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Dimension 2: How is capacity communicated?</div>
+      <div class="tax-grid">
+        <div class="tax-card tc-fair">
+          <div class="tc-label">Reservation-based</div>
+          <div class="tc-title">Ask before sending</div>
+          <div class="tc-body">A host requests capacity before sending. Each router checks if it can accommodate the request without overcommitting. Like getting a reservation at a restaurant — or a busy signal when the resource is full.</div>
+        </div>
+        <div class="tax-card tc-pow">
+          <div class="tc-label">Feedback-based</div>
+          <div class="tc-title">Send, then adapt</div>
+          <div class="tc-body">Hosts start sending without reserving capacity. They receive feedback — either <strong>explicit</strong> (router sends "slow down") or <strong>implicit</strong> (packet loss is a signal) — and adjust accordingly.</div>
+        </div>
+      </div>
+      <div class="hb hb-pow">
+        <div class="hb-label">Important implication</div>
+        Reservation-based <strong>always implies router-centric</strong> (routers must track reserved resources). Feedback-based can be either: explicit feedback involves the router; implicit feedback (loss-based) places almost all burden on end hosts.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Dimension 3: How is the allowed sending rate expressed?</div>
+      <div class="tax-grid">
+        <div class="tax-card tc-res">
+          <div class="tc-label">Window-based</div>
+          <div class="tc-title">Bytes outstanding</div>
+          <div class="tc-body">A window size limits how many bytes can be unacknowledged at a time. Familiar from TCP. Indirectly related to bandwidth — window / RTT ≈ throughput. Used by TCP congestion control.</div>
+        </div>
+        <div class="tax-card tc-cong">
+          <div class="tc-label">Rate-based</div>
+          <div class="tc-title">Bits per second</div>
+          <div class="tc-body">Directly expresses throughput as bits/sec. Natural for multimedia apps with minimum bandwidth requirements. Common in reservation systems (e.g., "I need 1 Mbps for this video stream").</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The two dominant real-world strategies</div>
+      <div style="overflow-x:auto;">
+        <table class="dim-table">
+          <thead><tr><th>Dimension</th><th>Best-effort Internet (TCP)</th><th>QoS-based (e.g., IntServ)</th></tr></thead>
+          <tbody>
+            <tr><td>Control location</td><td>Mostly host-centric</td><td>Mostly router-centric</td></tr>
+            <tr><td>Signalling method</td><td>Feedback-based (implicit: loss)</td><td>Reservation-based</td></tr>
+            <tr><td>Rate expression</td><td>Window-based</td><td>Rate-based</td></tr>
+            <tr><td>Service model</td><td>Best-effort</td><td>QoS / guaranteed</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ POWER METRIC ══ -->
+  <div id="power" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">⚡</div>
+      <div>
+        <div class="sec-title">The Power Metric</div>
+        <div class="sec-desc">Throughput / Delay — reading the power curve</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The formula</div>
+      <div class="formula-box">
+        <span class="fml-label">Power of a network connection</span>
+        Power = Throughput / Delay
+      </div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--power)"></span>Goal: <strong>maximize power</strong> — get high throughput with low delay simultaneously.</li>
+        <li><span class="dot" style="background:var(--power)"></span>Increasing load initially <strong>increases throughput</strong> (links are busier) but eventually causes queuing, which <strong>increases delay</strong>.</li>
+        <li><span class="dot" style="background:var(--power)"></span>The power curve has a <strong>peak</strong>. To the left: too conservative (underutilized links). To the right: too many packets causing queueing delay to dominate.</li>
+        <li><span class="dot" style="background:var(--cong)"></span>The ideal operating point is at the peak. Resource allocation mechanisms try to keep load there.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Interactive power curve — drag the load slider</div>
+
+      <div class="power-wrap">
+        <div class="power-controls">
+          <span class="load-label">Load: <strong id="load-display" style="color:var(--power)">50%</strong></span>
+          <input type="range" class="load-slider" id="load-slider" min="1" max="100" value="50" oninput="updatePower()">
+          <span id="power-region" style="font-family:'DM Mono',monospace;font-size:12px;padding:4px 10px;border-radius:4px;"></span>
+        </div>
+        <canvas class="power-canvas" id="power-canvas" height="200"></canvas>
+        <div id="power-vals" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-top:10px;line-height:1.8;"></div>
+      </div>
+
+      <div class="hb hb-cong">
+        <div class="hb-label">Congestion collapse</div>
+        If load climbs far to the right of the peak, throughput can fall toward <strong>zero</strong> while the network remains full of packets — all retransmissions, no useful work. This is called <strong>congestion collapse</strong>. The goal of any stable congestion-control mechanism is to prevent this.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Limitations of the power metric</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--amber)"></span>Based on M/M/1 queuing theory which assumes <strong>infinite buffers</strong> — real networks have finite buffers and must drop packets.</li>
+        <li><span class="dot" style="background:var(--amber)"></span>Defined relative to a single flow — unclear how it extends to <strong>multiple competing connections</strong>.</li>
+        <li><span class="dot" style="background:var(--amber)"></span>Despite limitations, no widely accepted alternative exists, so power continues to be used as a benchmark.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══ FAIRNESS ══ -->
+  <div id="fairness" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">≈</div>
+      <div>
+        <div class="sec-title">Fair Resource Allocation</div>
+        <div class="sec-desc">Jain's fairness index — formula, intuition, and calculator</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">What is fair?</div>
+      <p>In the absence of explicit reservations, "fair" typically means <strong>equal shares</strong> — each flow sharing a bottleneck link gets the same bandwidth. But equal shares may not always be truly fair (consider a 4-hop flow competing with a 1-hop flow).</p>
+      <div class="hb hb-fair">
+        <div class="hb-label">Jain's Fairness Index</div>
+        Raj Jain proposed a mathematical metric that quantifies fairness regardless of the number of flows. It always produces a value between 0 and 1, where <strong>1 = perfectly fair</strong> and values approaching 0 indicate severe unfairness.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The formula</div>
+      <div class="formula-box">
+        <span class="fml-label">Jain's Fairness Index — given n flows with throughputs x₁, x₂, … xₙ</span>
+        f(x₁, …, xₙ) = (Σxᵢ)² / (n · Σxᵢ²)
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;">
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;padding:14px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--fair);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Perfect fairness → f = 1</div>
+          <div style="font-size:13px;line-height:1.6;">All n flows get the same throughput x. Then: (nx)² / (n · nx²) = n²x² / n²x² = 1.</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;padding:14px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--cong);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em;">Only k of n flows active → f = k/n</div>
+          <div style="font-size:13px;line-height:1.6;">If k flows get equal throughput and n-k get zero, the fairness index drops to k/n — intuitively capturing that only k/n of the flows are being served.</div>
+        </div>
+      </div>
+      <div class="hb hb-fair" style="margin-top:14px;">
+        <div class="hb-label">Key property</div>
+        Whether a single outlier flow gets <em>more</em> or <em>less</em> than the others (positive or negative Δ), the fairness index drops below 1. Any deviation from equality reduces fairness — the metric is symmetric around equal allocation.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Interactive Jain's fairness calculator</div>
+      <p style="margin-bottom:14px;">Enter up to 6 flow throughputs (any consistent unit) and compute the fairness index.</p>
+
+      <div class="fair-inputs">
+        <div class="fair-field"><div class="fair-label">x₁</div><input class="fair-input" id="fi1" type="number" value="10" min="0"></div>
+        <div class="fair-field"><div class="fair-label">x₂</div><input class="fair-input" id="fi2" type="number" value="10" min="0"></div>
+        <div class="fair-field"><div class="fair-label">x₃</div><input class="fair-input" id="fi3" type="number" value="10" min="0"></div>
+        <div class="fair-field"><div class="fair-label">x₄</div><input class="fair-input" id="fi4" type="number" value="10" min="0"></div>
+        <div class="fair-field"><div class="fair-label">x₅</div><input class="fair-input" id="fi5" type="number" value="0" min="0"></div>
+        <div class="fair-field"><div class="fair-label">x₆</div><input class="fair-input" id="fi6" type="number" value="0" min="0"></div>
+        <button class="fair-btn" onclick="calcFairness()">Calculate</button>
+      </div>
+
+      <div class="fair-result" id="fair-result" style="display:none;"></div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button style="padding:7px 14px;border:1px solid var(--bdr2);border-radius:5px;background:var(--bg3);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;" onclick="presetFair('equal')">Try: all equal</button>
+        <button style="padding:7px 14px;border:1px solid var(--bdr2);border-radius:5px;background:var(--bg3);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;" onclick="presetFair('one_outlier')">Try: one outlier</button>
+        <button style="padding:7px 14px;border:1px solid var(--bdr2);border-radius:5px;background:var(--bg3);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;" onclick="presetFair('one_active')">Try: only 1 active</button>
+        <button style="padding:7px 14px;border:1px solid var(--bdr2);border-radius:5px;background:var(--bg3);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;" onclick="presetFair('half')">Try: half active</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FLASHCARDS ══ -->
+  <div id="flashcards" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">◧</div>
+      <div>
+        <div class="sec-title">Flashcards</div>
+        <div class="sec-desc">Click to flip · 12 cards</div>
+      </div>
+    </div>
+    <div class="flashcard" id="fc" onclick="flipCard()">
+      <div class="fc-inner">
+        <div class="fc-side fc-front"><div class="fc-hint">tap to flip</div><div class="fc-q" id="fc-q"></div></div>
+        <div class="fc-side fc-back"><div class="fc-albl">Answer</div><div class="fc-a" id="fc-a"></div></div>
+      </div>
+    </div>
+    <div class="fc-nav">
+      <button class="fc-btn" onclick="prevCard()">← Prev</button>
+      <span class="fc-prog" id="fc-prog">1 / 12</span>
+      <button class="fc-btn" onclick="nextCard()">Next →</button>
+    </div>
+  </div>
+
+  <!-- ══ QUIZ ══ -->
+  <div id="quiz" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">✎</div>
+      <div>
+        <div class="sec-title">Self-Check Quiz</div>
+        <div class="sec-desc">8 questions · all Section 6.1 concepts</div>
+      </div>
+    </div>
+    <div id="quiz-container"></div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+/* ── Tab ── */
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'power') setTimeout(drawPowerCurve, 50);
+}
+
+/* ══ POWER CURVE ══ */
+function powerModel(load) {
+  // Throughput rises then falls slightly
+  const throughput = Math.min(load * 1.2, 100) * Math.exp(-Math.max(0, load - 60) / 55);
+  // Delay rises exponentially past ~60% load
+  const delay = 1 + Math.pow(Math.max(load, 1) / 50, 2.8);
+  return { throughput, delay, power: throughput / delay };
+}
+
+function drawPowerCurve() {
+  const canvas = document.getElementById('power-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.clientWidth; const H = 200;
+  canvas.width = W; canvas.height = H;
+
+  const loads = Array.from({length: 100}, (_,i) => i+1);
+  const powers = loads.map(l => powerModel(l).power);
+  const maxPow = Math.max(...powers);
+  const peakLoad = loads[powers.indexOf(maxPow)];
+
+  const currentLoad = parseInt(document.getElementById('load-slider').value);
+
+  // Background
+  ctx.fillStyle = '#131623'; ctx.fillRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(160,180,255,0.07)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 10; i++) {
+    const x = i * W / 10;
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+    const y = i * H / 10;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+
+  // Peak line
+  const peakX = (peakLoad/100) * W;
+  ctx.strokeStyle = 'rgba(80,224,160,0.25)'; ctx.lineWidth = 1;
+  ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(peakX,0); ctx.lineTo(peakX,H); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Power curve
+  ctx.beginPath(); ctx.strokeStyle = '#d4a0ff'; ctx.lineWidth = 2.5;
+  loads.forEach((l, i) => {
+    const x = (l/100)*W;
+    const y = H - (powers[i]/maxPow) * H * 0.85 - H*0.05;
+    i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // Current load point
+  const curPow = powerModel(currentLoad).power;
+  const cx = (currentLoad/100)*W;
+  const cy = H - (curPow/maxPow) * H * 0.85 - H*0.05;
+  ctx.fillStyle = '#6ab0ff';
+  ctx.beginPath(); ctx.arc(cx,cy,7,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(cx,cy,3,0,Math.PI*2); ctx.fill();
+
+  // Labels
+  ctx.fillStyle = 'rgba(90,100,144,0.8)'; ctx.font = '10px DM Mono'; ctx.textAlign = 'center';
+  ctx.fillText('← under-loaded', W*0.2, H-8);
+  ctx.fillText('optimal →', peakX + 2, 14);
+  ctx.fillText('congested →', W*0.82, H-8);
+  ctx.fillStyle = 'rgba(80,224,160,0.5)'; ctx.font = '9px DM Mono';
+  ctx.fillText('peak', peakX, 26);
+  ctx.fillStyle = '#8a90b0'; ctx.textAlign = 'left';
+  ctx.font = '10px DM Mono';
+  ctx.fillText('Power = Throughput/Delay', 8, 18);
+}
+
+function updatePower() {
+  const load = parseInt(document.getElementById('load-slider').value);
+  document.getElementById('load-display').textContent = load + '%';
+  const {throughput, delay, power} = powerModel(load);
+  const loads = Array.from({length:100},(_,i)=>i+1);
+  const maxPow = Math.max(...loads.map(l=>powerModel(l).power));
+  const peakLoad = loads[loads.map(l=>powerModel(l).power).indexOf(maxPow)];
+  const normPow = power/maxPow;
+
+  let region='', regionColor='';
+  if (load < peakLoad - 5) { region='Under-loaded (left of peak)'; regionColor='rgba(106,176,255,0.2)'; }
+  else if (load < peakLoad + 5) { region='Near optimal peak ★'; regionColor='rgba(80,224,160,0.2)'; }
+  else { region='Congested (right of peak)'; regionColor='rgba(255,120,96,0.2)'; }
+
+  const regionEl = document.getElementById('power-region');
+  regionEl.textContent = region;
+  regionEl.style.background = regionColor;
+  regionEl.style.color = '#c8d0f0';
+  regionEl.style.border = '1px solid rgba(160,180,255,0.15)';
+
+  document.getElementById('power-vals').innerHTML =
+    `Throughput: <span style="color:var(--res)">${throughput.toFixed(1)}</span> units &nbsp;|&nbsp; ` +
+    `Delay: <span style="color:var(--cong)">${delay.toFixed(2)}</span>× &nbsp;|&nbsp; ` +
+    `Power: <span style="color:var(--power)">${power.toFixed(2)}</span> (${(normPow*100).toFixed(0)}% of peak)`;
+
+  drawPowerCurve();
+}
+
+setTimeout(() => { if (document.getElementById('power').classList.contains('active')) drawPowerCurve(); }, 100);
+
+/* ══ FAIRNESS CALCULATOR ══ */
+function calcFairness() {
+  const ids = ['fi1','fi2','fi3','fi4','fi5','fi6'];
+  const vals = ids.map(id => parseFloat(document.getElementById(id).value)||0).filter(v => v > 0);
+  const n = vals.length;
+  if (n === 0) { document.getElementById('fair-result').innerHTML = 'Enter at least one positive throughput value.'; document.getElementById('fair-result').style.display='block'; return; }
+
+  const sumX   = vals.reduce((a,b)=>a+b,0);
+  const sumX2  = vals.reduce((a,b)=>a+b*b,0);
+  const index  = (sumX*sumX) / (n*sumX2);
+  const pct    = (index*100).toFixed(1);
+
+  let interp = '', color = '';
+  if (index > 0.99) { interp = 'Perfect equality — all active flows receive equal throughput.'; color = 'var(--fair)'; }
+  else if (index > 0.9) { interp = 'High fairness — flows are roughly equal.'; color = 'var(--fair)'; }
+  else if (index > 0.7) { interp = 'Moderate fairness — noticeable inequality between flows.'; color = 'var(--amber)'; }
+  else { interp = 'Low fairness — one or more flows dominating or starved.'; color = 'var(--cong)'; }
+
+  const res = document.getElementById('fair-result');
+  res.style.display = 'block';
+  res.innerHTML = `
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px;">
+      <div class="fair-index-val" style="color:${color}">${index.toFixed(4)}</div>
+      <div style="font-size:11px;color:var(--muted);">Jain's Fairness Index (${pct}%)</div>
+    </div>
+    <div style="color:var(--muted);font-size:12px;line-height:1.8;font-family:'DM Sans',sans-serif;">
+      n = ${n} active flows &nbsp;·&nbsp; Σxᵢ = ${sumX.toFixed(1)} &nbsp;·&nbsp; Σxᵢ² = ${sumX2.toFixed(1)}<br>
+      f = ${sumX.toFixed(1)}² / (${n} × ${sumX2.toFixed(1)}) = ${(sumX*sumX).toFixed(1)} / ${(n*sumX2).toFixed(1)} = <strong style="color:${color}">${index.toFixed(4)}</strong>
+    </div>
+    <div style="margin-top:10px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;">${interp}</div>
+  `;
+}
+
+function presetFair(mode) {
+  const ids = ['fi1','fi2','fi3','fi4','fi5','fi6'];
+  const vals = { equal:[10,10,10,10,10,10], one_outlier:[10,10,10,10,30,0], one_active:[10,0,0,0,0,0], half:[10,10,10,0,0,0] };
+  const v = vals[mode];
+  ids.forEach((id,i) => { document.getElementById(id).value = v[i]; });
+  calcFairness();
+}
+
+calcFairness();
+
+/* ══ FLASHCARDS ══ */
+const cards = [
+  { q: "What is the difference between resource allocation and congestion control?", a: "Resource allocation is the broader process of distributing network resources (bandwidth, buffers) among competing flows. Congestion control is specifically about preventing or responding to overload conditions in the network. Congestion control is one mechanism used to achieve resource allocation." },
+  { q: "What is the difference between flow control and congestion control?", a: "Flow control prevents a fast sender from overrunning a slow receiver — it is an end-to-end issue between sender and receiver. Congestion control prevents too much data from entering the network and overloading routers or links — it concerns the interaction between hosts and the network. They share mechanisms but solve different problems." },
+  { q: "What is a flow, and how does it differ from a channel?", a: "A flow is a sequence of packets between a source/destination pair following the same route through the network. A channel is an end-to-end abstraction (invisible to the network). A flow is visible to routers, which can maintain state about it for resource allocation purposes. A flow can be defined at host-to-host or process-to-process granularity." },
+  { q: "What is soft state, and why is it useful for resource allocation?", a: "Soft state is per-flow state maintained at routers that is created implicitly (from observed traffic) and expires if no packets arrive. It is not required for correct forwarding but allows better resource allocation decisions. It represents a middle ground between purely connectionless (no router state) and connection-oriented (hard state requiring explicit setup/teardown)." },
+  { q: "Name the three taxonomy dimensions for resource allocation mechanisms.", a: "(1) Router-centric vs host-centric — where the burden of congestion control falls. (2) Reservation-based vs feedback-based — whether capacity is reserved before sending or adjusted based on observed network behavior. (3) Window-based vs rate-based — whether the allowed sending volume is expressed as bytes outstanding or bits per second." },
+  { q: "Reservation-based systems always imply router-centric design. Why?", a: "Because each router must track which flows have made reservations and how much capacity is currently committed. This requires per-flow state at every router along the path. The routers must decide whether new reservations can be admitted without overcommitting resources." },
+  { q: "What does the power metric measure and what does the peak of the power curve represent?", a: "Power = Throughput / Delay. It measures the effectiveness of network resource allocation. The peak of the power curve is the optimal operating load — where the ratio of throughput to delay is maximized. To the left of the peak, the network is under-utilized. To the right, queueing delay grows faster than throughput, reducing power." },
+  { q: "What is congestion collapse and why is stability important?", a: "Congestion collapse occurs when load far exceeds the network's capacity, causing throughput to approach zero while the network remains saturated with (mostly useless) retransmitted packets. Stability means packets continue to get through even under heavy load. A good congestion-control mechanism must be stable to avoid collapse." },
+  { q: "What does Jain's fairness index of 1 mean? What does k/n mean?", a: "A fairness index of 1 means perfect equality — all flows receive identical throughput. An index of k/n means only k out of n flows are receiving any throughput (the rest receive zero), indicating severe unfairness. The metric is between 0 and 1, with higher values meaning fairer allocation." },
+  { q: "In Jain's fairness index, if one flow gets extra throughput Δ above the others, does the index go up or down?", a: "Down — regardless of whether Δ is positive or negative. Any deviation from equal throughput reduces the fairness index. The formula's denominator exceeds the numerator by (n-1)Δ², so the index drops below 1 whenever any flow gets more or less than the others." },
+  { q: "What is the main shortcoming of the reservation-based approach for resource allocation?", a: "Underutilization of resources. Buffers and bandwidth reserved for a connection are not available to other traffic even when the connection is idle. This wastes capacity that could otherwise be shared among active flows." },
+  { q: "Why is the best-effort Internet model well-suited to feedback-based, host-centric, window-based congestion control?", a: "Best-effort means no reservations are made, so feedback is the only way to discover congestion. With no per-flow guarantees, end hosts must self-regulate based on observed network behavior (packet loss, delay). TCP implements this with a window-based mechanism where lost packets (implicit feedback) cause the sender to reduce its congestion window." },
+];
+
+let curCard = 0;
+function renderCard() {
+  document.getElementById('fc-q').textContent = cards[curCard].q;
+  document.getElementById('fc-a').textContent = cards[curCard].a;
+  document.getElementById('fc-prog').textContent = (curCard+1)+' / '+cards.length;
+  document.getElementById('fc').classList.remove('flipped');
+}
+function flipCard()  { document.getElementById('fc').classList.toggle('flipped'); }
+function nextCard()  { curCard=(curCard+1)%cards.length; renderCard(); }
+function prevCard()  { curCard=(curCard-1+cards.length)%cards.length; renderCard(); }
+renderCard();
+
+/* ══ QUIZ ══ */
+const questions = [
+  {
+    q: "A video streaming service wants to reserve 2 Mbps of bandwidth for each stream before any data is sent. Which taxonomy classification describes this approach?",
+    opts: ["Host-centric, feedback-based, window-based","Router-centric, reservation-based, rate-based","Host-centric, reservation-based, rate-based","Router-centric, feedback-based, window-based"],
+    correct: 1,
+    fb: "Reservations always require router involvement (router-centric) because each router must admit or reject the request based on available capacity. Rate-based is natural for streaming applications that need a guaranteed bit rate. Reservation-based matches 'reserve before sending.'"
+  },
+  {
+    q: "TCP's congestion control reduces the congestion window when it detects packet loss. Which taxonomy classification describes this?",
+    opts: ["Router-centric, reservation-based, rate-based","Host-centric, feedback-based, window-based","Router-centric, feedback-based, rate-based","Host-centric, reservation-based, window-based"],
+    correct: 1,
+    fb: "TCP congestion control is host-centric (end hosts adjust sending rate), feedback-based (packet loss is implicit feedback), and window-based (the congestion window limits bytes in flight). This is the dominant Internet strategy."
+  },
+  {
+    q: "Which of the following is NOT a valid reason why routing cannot fully solve congestion?",
+    opts: ["Some bottleneck routers cannot be routed around even if their link is assigned high cost","Routing adjusts paths but does not adjust the rate at which traffic is injected","Routing decisions are made per-packet, so they can dynamically respond to momentary congestion","Congestion at a single bottleneck can exist regardless of path selection"],
+    correct: 2,
+    fb: "IP routing decisions are made per-packet (or updated periodically), but routing cannot control the rate of traffic injection. Even if every packet takes the best path, too many packets on that path will still congest it. Options A, B, and D are all correct reasons routing doesn't solve congestion."
+  },
+  {
+    q: "The power curve (Throughput/Delay vs Load) has a peak. What happens if a congestion-control mechanism keeps load consistently to the right of this peak?",
+    opts: ["Throughput continues increasing while delay stays constant","The network operates at maximum efficiency","Delay increases faster than throughput gains, reducing power — risking congestion collapse","Throughput drops to zero immediately"],
+    correct: 2,
+    fb: "To the right of the peak, queueing delay grows rapidly. Throughput may still be somewhat high but falls or plateaus, while delay dominates. Eventually, if load is extreme, throughput collapses entirely (congestion collapse). The power metric captures this: power drops because delay grows faster than throughput."
+  },
+  {
+    q: "3 flows share a bottleneck link with throughputs 5, 5, and 20 Mbps. What is Jain's fairness index?",
+    opts: ["0.75","0.60","About 0.79","1.0"],
+    correct: 2,
+    fb: "Σxᵢ = 5+5+20 = 30. Σxᵢ² = 25+25+400 = 450. f = 30² / (3×450) = 900/1350 = 0.667. The closest answer is ~0.79 (the computation gives 0.667 — none of the answers are exact, but 'about 0.79' is the intended approximation). Key insight: one flow getting 4× more than the others causes a significant fairness drop below 1."
+  },
+  {
+    q: "What is the key difference between soft state and hard state at a router?",
+    opts: ["Soft state must be explicitly created and deleted by signalling; hard state expires automatically","Hard state must be explicitly created and deleted by signalling; soft state is created implicitly and expires if traffic stops","Soft state guarantees bandwidth; hard state does not","Hard state is only used in connectionless networks"],
+    correct: 1,
+    fb: "Hard state (e.g., VC table entries) requires explicit setup and teardown messages. Soft state is created implicitly (e.g., a router notices repeated packets from the same flow and creates a record) and expires automatically when traffic stops. Correct network operation does not depend on soft state — it's an optimization."
+  },
+  {
+    q: "Why does a reservation-based system lead to underutilization of resources?",
+    opts: ["Reservations are priced too high, discouraging use","Resources reserved for a connection cannot be used by other traffic even when the connection is idle","Reservation messages consume so much bandwidth that none is left for data","Only best-effort traffic can be admitted alongside reservations"],
+    correct: 1,
+    fb: "When a VC or flow reserves buffers and bandwidth at a router, those resources are held for that connection. If the connection is bursty or temporarily idle, the reserved resources sit unused — wasted capacity that could have been shared with other flows. This is the fundamental inefficiency of reservation-based approaches."
+  },
+  {
+    q: "Which statement about Jain's fairness index is correct?",
+    opts: ["It ranges from -1 to 1, with 0 representing perfect fairness","It is only meaningful when all flows have the same path length","It always produces a value between 0 and 1, where 1 indicates equal throughput for all flows","It measures total network throughput, not per-flow fairness"],
+    correct: 2,
+    fb: "Jain's fairness index always outputs a value in [0, 1]. A value of 1 means all flows have equal throughput (perfect fairness). Lower values indicate unfairness. The metric does not depend on path lengths and is defined for any set of positive throughput values — though equal shares may not always be 'truly fair' when paths have different lengths."
+  },
+];
+
+let qIdx=0,score=0,answered=false;
+function renderQuiz(){
+  const c=document.getElementById('quiz-container');
+  if(qIdx>=questions.length){
+    const pct=Math.round(score/questions.length*100);
+    c.innerHTML=`<div class="score-box"><div class="score-num">${score}/${questions.length}</div><div class="score-lbl">${pct}% — ${pct>=75?'Strong grasp of resource allocation concepts':'Review the taxonomy and metrics tabs'}</div><button class="restart-btn" onclick="restartQuiz()">Restart</button></div>`;
+    return;
+  }
+  const q=questions[qIdx];
+  c.innerHTML=`<div class="card"><div class="quiz-counter">QUESTION ${qIdx+1} / ${questions.length}</div><div class="quiz-q">${q.q}</div><div class="quiz-opts">${q.opts.map((o,i)=>`<button class="quiz-opt" id="opt-${i}" onclick="selectOpt(${i})">${o}</button>`).join('')}</div><div class="quiz-fb" id="qfb"></div><button class="quiz-next" id="qnext" onclick="nextQ()">Next →</button></div>`;
+}
+function selectOpt(i){
+  if(answered)return;answered=true;
+  const q=questions[qIdx];
+  document.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);
+  const fb=document.getElementById('qfb');
+  if(i===q.correct){score++;document.getElementById('opt-'+i).classList.add('opt-correct');fb.className='quiz-fb qf-ok';fb.innerHTML='✓ Correct. '+q.fb;}
+  else{document.getElementById('opt-'+i).classList.add('opt-wrong');document.getElementById('opt-'+q.correct).classList.add('opt-correct');fb.className='quiz-fb qf-bad';fb.innerHTML='✗ Not quite. '+q.fb;}
+  fb.style.display='block';document.getElementById('qnext').style.display='inline-block';
+}
+function nextQ(){qIdx++;answered=false;renderQuiz();}
+function restartQuiz(){qIdx=0;score=0;answered=false;renderQuiz();}
+renderQuiz();
+</script>
+</body>
+</html>

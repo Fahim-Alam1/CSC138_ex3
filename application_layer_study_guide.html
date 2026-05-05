@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Guide: Application Layer, ICMP &amp; IPv6</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --bg:      #070910;
+    --bg2:     #0b0d18;
+    --bg3:     #0f1120;
+    --surf:    #141626;
+    --bdr:     rgba(140,200,255,0.1);
+    --bdr2:    rgba(140,200,255,0.2);
+    --text:    #c4d4f0;
+    --muted:   #506080;
+    --http:    #50c8ff;
+    --email:   #50e0a0;
+    --dns:     #ffb840;
+    --icmp:    #ff9050;
+    --ipv6:    #c880ff;
+    --bad:     #ff5060;
+    --http-bg: rgba(80,200,255,0.07);
+    --em-bg:   rgba(80,224,160,0.07);
+    --dns-bg:  rgba(255,184,64,0.07);
+    --icmp-bg: rgba(255,144,80,0.07);
+    --ipv6-bg: rgba(200,128,255,0.07);
+    --bad-bg:  rgba(255,80,96,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.7; }
+
+  .hero {
+    padding: 50px 40px 40px; text-align: center; position: relative; overflow: hidden;
+    background: radial-gradient(ellipse 60% 50% at 20% 50%, rgba(80,200,255,0.07) 0%, transparent 65%),
+                radial-gradient(ellipse 60% 50% at 80% 50%, rgba(200,128,255,0.07) 0%, transparent 65%);
+    border-bottom: 1px solid var(--bdr);
+  }
+  .hero::before { content:'HTTP'; position:absolute; bottom:-30px; right:-10px; font-family:'Syne',sans-serif; font-size:160px; font-weight:800; opacity:0.025; pointer-events:none; line-height:1; color:#fff; }
+  .tag { display:inline-block; font-family:'DM Mono',monospace; font-size:10px; font-weight:500; letter-spacing:0.22em; text-transform:uppercase; color:var(--http); border:1px solid rgba(80,200,255,0.3); background:rgba(80,200,255,0.06); padding:4px 14px; border-radius:2px; margin-bottom:18px; }
+  h1 { font-family:'Syne',sans-serif; font-size:38px; font-weight:800; line-height:1.15; letter-spacing:-0.02em; margin-bottom:10px; color:#fff; }
+  h1 .h { color:var(--http); } h1 .d { color:var(--dns); }
+  .hero-sub { font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); letter-spacing:0.05em; }
+
+  .tab-bar { display:flex; overflow-x:auto; background:var(--bg2); border-bottom:1px solid var(--bdr); padding:0 18px; position:sticky; top:0; z-index:20; }
+  .tab { padding:13px 14px; background:none; border:none; border-bottom:2px solid transparent; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap; transition:all 0.13s; }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--http); border-bottom-color:var(--http); font-weight:600; }
+
+  .section { display:none; }
+  .section.active { display:block; }
+  .container { max-width:940px; margin:0 auto; padding:30px 20px 80px; }
+
+  .sec-hd { display:flex; align-items:flex-start; gap:14px; margin-bottom:22px; padding-bottom:14px; border-bottom:1px solid var(--bdr); }
+  .sec-icon { font-family:'DM Mono',monospace; font-size:26px; opacity:0.4; line-height:1; flex-shrink:0; }
+  .sec-title { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; color:#fff; }
+  .sec-desc { font-size:13px; color:var(--muted); margin-top:2px; }
+
+  .lec-badge { display:inline-block; font-family:'DM Mono',monospace; font-size:9px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; padding:2px 8px; border-radius:2px; margin-bottom:4px; }
+  .lb-http  { background:var(--http-bg); color:var(--http);  border:1px solid rgba(80,200,255,0.25); }
+  .lb-email { background:var(--em-bg);   color:var(--email); border:1px solid rgba(80,224,160,0.25); }
+  .lb-dns   { background:var(--dns-bg);  color:var(--dns);   border:1px solid rgba(255,184,64,0.25); }
+  .lb-icmp  { background:var(--icmp-bg); color:var(--icmp);  border:1px solid rgba(255,144,80,0.25); }
+  .lb-ipv6  { background:var(--ipv6-bg); color:var(--ipv6);  border:1px solid rgba(200,128,255,0.25); }
+
+  .card { background:var(--bg2); border:1px solid var(--bdr); border-radius:10px; padding:22px; margin-bottom:16px; transition:border-color 0.13s; }
+  .card:hover { border-color:var(--bdr2); }
+  .card-title { font-family:'DM Mono',monospace; font-size:10px; font-weight:500; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--bdr); }
+
+  .hb { border-radius:7px; padding:12px 16px; margin:12px 0; font-size:13.5px; line-height:1.7; }
+  .hb-label { font-family:'DM Mono',monospace; font-size:9px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:5px; }
+  .hb-http  { background:var(--http-bg); border-left:3px solid var(--http);  } .hb-http  .hb-label { color:var(--http);  }
+  .hb-email { background:var(--em-bg);   border-left:3px solid var(--email); } .hb-email .hb-label { color:var(--email); }
+  .hb-dns   { background:var(--dns-bg);  border-left:3px solid var(--dns);   } .hb-dns   .hb-label { color:var(--dns);   }
+  .hb-icmp  { background:var(--icmp-bg); border-left:3px solid var(--icmp);  } .hb-icmp  .hb-label { color:var(--icmp);  }
+  .hb-ipv6  { background:var(--ipv6-bg); border-left:3px solid var(--ipv6);  } .hb-ipv6  .hb-label { color:var(--ipv6);  }
+  .hb-bad   { background:var(--bad-bg);  border-left:3px solid var(--bad);   } .hb-bad   .hb-label { color:var(--bad);   }
+
+  .kp { list-style:none; display:flex; flex-direction:column; gap:7px; }
+  .kp li { display:flex; gap:11px; align-items:flex-start; padding:10px 14px; background:var(--bg3); border:1px solid var(--bdr); border-radius:7px; font-size:13.5px; line-height:1.6; transition:border-color 0.13s; }
+  .kp li:hover { border-color:var(--bdr2); }
+  .dot { width:6px; height:6px; border-radius:50%; margin-top:9px; flex-shrink:0; }
+  code { font-family:'DM Mono',monospace; background:var(--bg3); border:1px solid var(--bdr); border-radius:3px; padding:1px 6px; font-size:12px; color:var(--http); }
+  strong { font-weight:600; color:#fff; }
+  p { color:var(--muted); font-size:13.5px; line-height:1.7; margin-bottom:10px; }
+  h3 { font-size:15px; font-weight:600; color:#fff; margin:16px 0 8px; font-family:'Syne',sans-serif; }
+
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:640px) { .two-col { grid-template-columns:1fr; } }
+
+  /* ── comparison table ── */
+  .cmp-tbl { width:100%; border-collapse:collapse; font-size:13px; margin:12px 0; }
+  .cmp-tbl th { text-align:left; padding:9px 12px; font-family:'DM Mono',monospace; font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); border-bottom:1px solid var(--bdr2); background:var(--bg3); }
+  .cmp-tbl td { padding:10px 12px; border-bottom:1px solid var(--bdr); vertical-align:top; line-height:1.65; }
+  .cmp-tbl tr:last-child td { border-bottom:none; }
+  .cmp-tbl tr:hover td { background:var(--bg3); }
+  .cmp-tbl td:first-child { font-family:'DM Mono',monospace; font-size:11px; color:var(--http); font-weight:500; white-space:nowrap; }
+
+  /* ── HTTP version timeline ── */
+  .http-ver { display:flex; flex-direction:column; gap:0; border:1px solid var(--bdr); border-radius:10px; overflow:hidden; }
+  .hv-step { border-bottom:1px solid var(--bdr); cursor:pointer; display:flex; gap:0; align-items:stretch; transition:background 0.13s; }
+  .hv-step:last-child { border-bottom:none; }
+  .hv-step:hover { background:var(--bg3); }
+  .hv-step.active { border-left:3px solid var(--http); background:var(--http-bg); }
+  .hv-badge { min-width:80px; padding:14px 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid var(--bdr); font-family:'DM Mono',monospace; font-size:13px; font-weight:700; color:var(--http); flex-shrink:0; gap:3px; }
+  .hv-badge .sub { font-size:9px; color:var(--muted); font-weight:400; }
+  .hv-content { padding:14px 18px; flex:1; }
+  .hv-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:#fff; margin-bottom:4px; }
+  .hv-detail { font-size:13px; color:var(--muted); line-height:1.7; display:none; }
+  .hv-step.active .hv-detail { display:block; }
+
+  /* ── DNS hierarchy interactive ── */
+  .dns-layer { padding:14px 18px; border-radius:8px; margin-bottom:10px; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden; }
+  .dns-layer::before { content:''; position:absolute; top:0; left:0; bottom:0; width:4px; border-radius:8px 0 0 8px; }
+  .dns-root { background:rgba(255,80,96,0.08); border:1px solid rgba(255,80,96,0.25); } .dns-root::before { background:var(--bad); }
+  .dns-tld  { background:var(--dns-bg); border:1px solid rgba(255,184,64,0.25); }  .dns-tld::before  { background:var(--dns); }
+  .dns-auth { background:var(--em-bg);  border:1px solid rgba(80,224,160,0.25); }  .dns-auth::before { background:var(--email); }
+  .dns-layer:hover { transform:translateX(2px); }
+  .dns-layer.expanded { }
+  .dl-header { display:flex; align-items:center; gap:12px; }
+  .dl-icon { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:13px; font-weight:700; flex-shrink:0; }
+  .dns-root .dl-icon { background:rgba(255,80,96,0.2); color:var(--bad); }
+  .dns-tld  .dl-icon { background:rgba(255,184,64,0.2); color:var(--dns); }
+  .dns-auth .dl-icon { background:rgba(80,224,160,0.2); color:var(--email); }
+  .dl-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:#fff; }
+  .dl-sub   { font-size:12px; color:var(--muted); margin-top:1px; }
+  .dl-body  { margin-top:10px; font-size:13px; color:var(--muted); line-height:1.7; display:none; }
+  .dns-layer.expanded .dl-body { display:block; }
+
+  /* ── Email path flow ── */
+  .email-path { display:flex; align-items:center; gap:0; margin:14px 0; flex-wrap:wrap; }
+  .ep-node { background:var(--bg3); border:1px solid var(--bdr2); border-radius:8px; padding:12px 14px; text-align:center; flex:1; min-width:100px; }
+  .ep-node .ep-lbl { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; }
+  .ep-node .ep-name { font-size:13px; font-weight:600; color:#fff; }
+  .ep-node .ep-proto { font-family:'DM Mono',monospace; font-size:10px; margin-top:4px; }
+  .ep-arrow { padding:0 8px; font-size:18px; color:var(--muted); flex-shrink:0; }
+  .ep-push { color:var(--http); }
+  .ep-pull { color:var(--email); }
+
+  /* ── Traceroute simulator ── */
+  .tr-wrap { background:var(--bg3); border:1px solid var(--bdr); border-radius:8px; padding:16px; margin:14px 0; }
+  .tr-output { font-family:'DM Mono',monospace; font-size:12px; line-height:2; min-height:100px; }
+  .tr-hop { opacity:0; transform:translateY(4px); transition:all 0.3s; }
+  .tr-hop.visible { opacity:1; transform:translateY(0); }
+  .tr-num { color:var(--muted); display:inline-block; width:24px; }
+  .tr-ip  { color:var(--http); }
+  .tr-rtt { color:var(--dns); }
+  .tr-note{ color:var(--muted); }
+  .tr-star{ color:var(--bad); }
+  .tr-controls { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .tr-btn { padding:8px 14px; border:1px solid var(--bdr2); border-radius:5px; background:var(--bg2); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; cursor:pointer; color:var(--text); transition:all 0.13s; }
+  .tr-btn.primary { background:var(--icmp); color:var(--bg); border-color:var(--icmp); font-weight:700; }
+  .tr-btn:hover:not(.primary) { border-color:var(--icmp); color:var(--icmp); }
+  .tr-btn.primary:hover { opacity:0.85; }
+
+  /* ── NAT diagram ── */
+  .nat-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-family:'DM Mono',monospace; font-size:12px; flex-wrap:wrap; }
+  .nat-box { padding:6px 12px; border-radius:5px; font-size:12px; white-space:nowrap; }
+  .nb-int { background:var(--em-bg); border:1px solid rgba(80,224,160,0.25); color:var(--email); }
+  .nb-nat { background:var(--dns-bg); border:1px solid rgba(255,184,64,0.25); color:var(--dns); }
+  .nb-ext { background:var(--http-bg); border:1px solid rgba(80,200,255,0.25); color:var(--http); }
+  .nat-arrow { color:var(--muted); font-size:14px; }
+
+  /* ── Conditional GET interactive ── */
+  .cget-wrap { background:var(--bg3); border:1px solid var(--bdr); border-radius:8px; overflow:hidden; margin:14px 0; }
+  .cget-msgs { padding:14px; display:flex; flex-direction:column; gap:8px; min-height:100px; }
+  .cget-msg { display:flex; gap:10px; align-items:flex-start; opacity:0; transform:translateY(5px); transition:all 0.25s; }
+  .cget-msg.visible { opacity:1; transform:translateY(0); }
+  .cm-who { font-family:'DM Mono',monospace; font-size:10px; font-weight:700; padding:4px 8px; border-radius:3px; flex-shrink:0; min-width:60px; text-align:center; margin-top:3px; }
+  .cm-client { background:var(--http-bg); color:var(--http); border:1px solid rgba(80,200,255,0.25); }
+  .cm-server { background:var(--em-bg);   color:var(--email); border:1px solid rgba(80,224,160,0.25); }
+  .cm-bubble { background:var(--bg2); border:1px solid var(--bdr); border-radius:6px; padding:8px 12px; font-family:'DM Mono',monospace; font-size:12px; line-height:1.7; flex:1; }
+  .cm-val { color:var(--dns); font-weight:600; }
+  .cm-note { color:var(--muted); font-size:11px; display:block; margin-top:2px; }
+  .cget-controls { padding:12px 14px; border-top:1px solid var(--bdr); display:flex; gap:8px; }
+  .cget-btn { padding:7px 14px; border:1px solid var(--bdr2); border-radius:5px; background:var(--bg2); font-family:'DM Sans',sans-serif; font-size:12px; cursor:pointer; color:var(--text); transition:all 0.13s; }
+  .cget-btn.p { background:var(--http); color:var(--bg); border-color:var(--http); font-weight:700; }
+  .cget-btn:hover:not(.p) { border-color:var(--http); color:var(--http); }
+  .cget-btn.p:hover { opacity:0.85; }
+
+  /* ── Flashcards ── */
+  .flashcard { perspective:1000px; min-height:165px; position:relative; cursor:pointer; margin-bottom:12px; }
+  .fc-inner  { width:100%; min-height:165px; transform-style:preserve-3d; transition:transform 0.42s; position:relative; }
+  .flashcard.flipped .fc-inner { transform:rotateY(180deg); }
+  .fc-side   { position:absolute; width:100%; min-height:165px; backface-visibility:hidden; border-radius:10px; padding:24px; display:flex; flex-direction:column; justify-content:center; }
+  .fc-front  { background:var(--bg2); border:1px solid var(--bdr); }
+  .fc-back   { background:var(--surf); border:1px solid var(--bdr2); transform:rotateY(180deg); }
+  .fc-hint   { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .fc-q      { font-size:15px; font-weight:600; color:#fff; line-height:1.5; font-family:'Syne',sans-serif; }
+  .fc-albl   { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--email); margin-bottom:8px; }
+  .fc-a      { font-size:13.5px; color:var(--text); line-height:1.7; }
+  .fc-nav    { display:flex; align-items:center; justify-content:space-between; margin-top:10px; }
+  .fc-btn    { padding:8px 18px; background:var(--bg2); border:1px solid var(--bdr2); color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; border-radius:6px; cursor:pointer; transition:all 0.13s; }
+  .fc-btn:hover { border-color:var(--http); color:var(--http); }
+  .fc-prog   { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
+
+  /* ── Quiz ── */
+  .quiz-counter { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; margin-bottom:13px; }
+  .quiz-q   { font-size:15px; font-weight:600; color:#fff; line-height:1.5; margin-bottom:13px; font-family:'Syne',sans-serif; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:8px; }
+  .quiz-opt { padding:11px 15px; border:1px solid var(--bdr); border-radius:7px; background:var(--bg2); font-family:'DM Sans',sans-serif; font-size:13.5px; color:var(--text); cursor:pointer; text-align:left; line-height:1.5; transition:all 0.12s; }
+  .quiz-opt:hover:not(:disabled) { border-color:var(--bdr2); background:var(--bg3); }
+  .quiz-opt.opt-correct { border-color:var(--email); background:var(--em-bg); }
+  .quiz-opt.opt-wrong   { border-color:var(--bad);   background:var(--bad-bg); }
+  .quiz-opt:disabled { cursor:not-allowed; }
+  .quiz-fb  { margin-top:11px; padding:12px 15px; border-radius:7px; font-size:13px; line-height:1.65; display:none; }
+  .qf-ok  { background:var(--em-bg);  border:1px solid rgba(80,224,160,0.25); color:var(--email); }
+  .qf-bad { background:var(--bad-bg); border:1px solid rgba(255,80,96,0.22);  color:var(--bad);   }
+  .quiz-next { margin-top:10px; padding:9px 20px; background:var(--http); color:var(--bg); border:none; border-radius:6px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700; cursor:pointer; display:none; transition:opacity 0.13s; }
+  .quiz-next:hover { opacity:0.85; }
+  .score-box { text-align:center; padding:44px; background:var(--bg2); border:1px solid var(--bdr); border-radius:10px; }
+  .score-num { font-family:'Syne',sans-serif; font-size:64px; font-weight:800; color:var(--http); }
+  .score-lbl { color:var(--muted); font-size:13px; margin-top:6px; }
+  .restart-btn { margin-top:20px; padding:10px 26px; background:var(--bg3); border:1px solid var(--bdr2); color:var(--text); border-radius:7px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; }
+  .restart-btn:hover { background:var(--surf); }
+</style>
+</head>
+<body>
+
+<a href="index.html" style="display:inline-flex;align-items:center;gap:8px;position:fixed;top:16px;left:16px;z-index:100;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#506080;background:#0b0d18;border:1px solid rgba(140,200,255,0.1);border-radius:6px;padding:7px 14px;text-decoration:none;transition:color 0.13s,border-color 0.13s;" onmouseover="this.style.color='#50c8ff';this.style.borderColor='rgba(80,200,255,0.3)'" onmouseout="this.style.color='#506080';this.style.borderColor='rgba(140,200,255,0.1)'">← Home</a>
+
+<div class="hero">
+  <div class="tag">Chapter 2 + Supplemental</div>
+  <h1>Application Layer,<br><span class="h">HTTP</span> · Email · <span class="d">DNS</span> · ICMP · IPv6</h1>
+  <p class="hero-sub">persistent vs non-persistent · cookies · caching · HOL blocking · SMTP/IMAP · DNS hierarchy · ping/traceroute · NAT · IPv6 transition</p>
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="showTab('overview')">Objectives</button>
+  <button class="tab" onclick="showTab('http')">HTTP</button>
+  <button class="tab" onclick="showTab('cookies')">Cookies &amp; Caching</button>
+  <button class="tab" onclick="showTab('http2')">HTTP/2 &amp; /3</button>
+  <button class="tab" onclick="showTab('email')">Email</button>
+  <button class="tab" onclick="showTab('dns')">DNS</button>
+  <button class="tab" onclick="showTab('icmp')">ICMP</button>
+  <button class="tab" onclick="showTab('ipv6')">IPv6 &amp; NAT</button>
+  <button class="tab" onclick="showTab('flashcards')">Flashcards</button>
+  <button class="tab" onclick="showTab('quiz')">Quiz</button>
+</div>
+
+<div class="container">
+
+  <!-- ══ OBJECTIVES ══ -->
+  <div id="overview" class="section active">
+    <div class="sec-hd">
+      <div class="sec-icon" style="color:var(--http);">✓</div>
+      <div>
+        <div class="sec-title">Exam Objectives</div>
+        <div class="sec-desc">All required knowledge points from your professor's guide</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="lec-badge lb-http">HTTP</span></div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--http)"></span><strong>Non-persistent vs persistent:</strong> non-persistent opens a new TCP connection per object (costs 2 RTTs per object + slow-start); persistent reuses the connection (saves TCP handshake overhead and slow-start penalty).</li>
+        <li><span class="dot" style="background:var(--http)"></span><strong>HTTP is stateless by design</strong> — simpler servers, easier scaling. <strong>Cookies add state</strong>: server sets a cookie in response, browser sends it back on subsequent requests.</li>
+        <li><span class="dot" style="background:var(--http)"></span><strong>Third-party cookies</strong> enable cross-site tracking — ad network's cookie follows you across every site that loads its ads.</li>
+        <li><span class="dot" style="background:var(--http)"></span><strong>Web cache (proxy):</strong> reduces response time (closer to client) and bandwidth usage (less traffic on access link). <strong>Conditional GET:</strong> cache sends <code>If-Modified-Since</code> header; server replies with new object or <code>304 Not Modified</code>.</li>
+        <li><span class="dot" style="background:var(--bad)"></span><strong>HOL blocking in HTTP/1.1:</strong> responses delivered in order — slow object blocks everything behind it. HTTP/2 solves with multiplexing (interleaved frames). HTTP/3 uses QUIC over UDP to eliminate TCP-level HOL blocking.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="lec-badge lb-email">Email</span></div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--email)"></span><strong>Full path:</strong> sender's mail client → sender's mail server (SMTP push) → recipient's mail server (SMTP push) → recipient's mail client (IMAP/POP pull).</li>
+        <li><span class="dot" style="background:var(--email)"></span>SMTP hops are <strong>push</strong>; IMAP/POP retrieval is <strong>pull</strong>.</li>
+        <li><span class="dot" style="background:var(--email)"></span><strong>Why a recipient mail server is necessary:</strong> the recipient's device may not always be online — the server stores messages until the client connects.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="lec-badge lb-dns">DNS</span></div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--dns)"></span><strong>Why not centralized:</strong> single point of failure, traffic volume, distance, maintenance.</li>
+        <li><span class="dot" style="background:var(--dns)"></span><strong>Three-level hierarchy:</strong> root servers → TLD servers → authoritative servers.</li>
+        <li><span class="dot" style="background:var(--dns)"></span><strong>Iterative vs recursive:</strong> in iterative, the resolver contacts each level itself; in recursive, each server contacts the next on the resolver's behalf. Root/TLD prefer iterative to limit their load.</li>
+        <li><span class="dot" style="background:var(--dns)"></span><strong>DNS caching + TTL:</strong> cached entries expire per TTL — controls freshness vs load tradeoff. DNS changes take time to propagate because all cached copies must expire first.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="lec-badge lb-icmp">ICMP</span> + <span class="lec-badge lb-ipv6">IPv6 / NAT</span></div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--icmp)"></span><strong>ICMP:</strong> diagnostic and error reporting only — not user data. <strong>ping</strong> uses ICMP Echo Request/Reply to measure round-trip time. <strong>traceroute</strong> sends packets with incrementing TTL values, triggering ICMP Time Exceeded from each router.</li>
+        <li><span class="dot" style="background:var(--ipv6)"></span><strong>IPv6 solves IPv4 address exhaustion:</strong> 32-bit (4.3B addresses) → 128-bit (3.4×10³⁸ addresses).</li>
+        <li><span class="dot" style="background:var(--ipv6)"></span><strong>NAT as IPv4 workaround:</strong> many internal hosts share one public IP; NAT device rewrites port numbers. <strong>NAT violates end-to-end principle</strong> — breaks applications requiring inbound connections (P2P, servers).</li>
+        <li><span class="dot" style="background:var(--ipv6)"></span><strong>Dual-stack transition:</strong> devices run both IPv4 and IPv6 simultaneously.</li>
+        <li><span class="dot" style="background:var(--ipv6)"></span><strong>Why adoption is slow:</strong> IPv4 + NAT works well enough for most consumers — no pressure to switch.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══ HTTP ══ -->
+  <div id="http" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon" style="color:var(--http);">⬡</div>
+      <div>
+        <div class="lec-badge lb-http">HTTP</div>
+        <div class="sec-title">HTTP — Persistent vs Non-Persistent</div>
+        <div class="sec-desc">What each saves and the cost of non-persistent connections</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Non-persistent vs persistent — side by side</div>
+      <div class="two-col">
+        <div style="padding:16px;background:var(--bad-bg);border:1px solid rgba(255,80,96,0.25);border-radius:8px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--bad);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Non-Persistent HTTP/1.0</div>
+          <div style="font-size:13px;line-height:1.7;">New TCP connection opened <strong>per object</strong>. Each object costs:<br>• 1 RTT for TCP handshake (SYN/SYN-ACK)<br>• 1 RTT for HTTP request/response<br>• Transmission time<br>= <strong>2 RTT + transmission time per object</strong><br><br>A page with 10 images = 11 TCP connections = 22+ RTTs.</div>
+        </div>
+        <div style="padding:16px;background:var(--em-bg);border:1px solid rgba(80,224,160,0.25);border-radius:8px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--email);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Persistent HTTP/1.1</div>
+          <div style="font-size:13px;line-height:1.7;">Connection stays open after sending response. Multiple objects over one TCP connection. Subsequent requests: <strong>~1 RTT per object</strong> (no new handshake).<br><br>Same page with 10 images ≈ 1 RTT (initial) + small per-request overhead.</div>
+        </div>
+      </div>
+      <div class="hb hb-http" style="margin-top:14px;">
+        <div class="hb-label">What persistent HTTP saves</div>
+        <strong>TCP handshake overhead:</strong> no SYN/SYN-ACK for every object.<br>
+        <strong>TCP slow-start penalty:</strong> non-persistent connections restart slow-start (CW=1) on each new connection, wasting time building up throughput. Persistent connections avoid this for subsequent objects on the same connection.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">HTTP is stateless by design — and why cookies exist</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--http)"></span><strong>Stateless:</strong> the server keeps no information about previous requests. Each HTTP request is independent.</li>
+        <li><span class="dot" style="background:var(--email)"></span><strong>Benefits of statelessness:</strong> simpler server design — no state to maintain, synchronize, or recover if clients crash. Easier to scale horizontally (any server can handle any request).</li>
+        <li><span class="dot" style="background:var(--dns)"></span><strong>Problem:</strong> many applications need to identify returning users (shopping carts, login sessions, personalization). Cookies solve this.</li>
+        <li><span class="dot" style="background:var(--dns)"></span><strong>How cookies work:</strong> (1) Server sends <code>Set-Cookie: 1678</code> in HTTP response. (2) Browser stores cookie. (3) Browser sends <code>Cookie: 1678</code> header on every subsequent request to that server. (4) Server looks up cookie ID in its database to identify the user.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══ COOKIES & CACHING ══ -->
+  <div id="cookies" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon" style="color:var(--dns);">🍪</div>
+      <div>
+        <div class="sec-title">Cookies, Third-Party Tracking &amp; Web Caching</div>
+        <div class="sec-desc">How state gets added to stateless HTTP — and conditional GET</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Third-party cookies and cross-site tracking</div>
+      <p>When you visit nytimes.com, the page may load an ad from AdX.com. Your browser fetches that ad directly from AdX.com, which can set its own cookie. Next time you visit socks.com (which also uses AdX), your browser sends the same AdX cookie — and AdX now knows you visited both sites.</p>
+      <div class="hb hb-bad">
+        <div class="hb-label">Why third-party cookies enable cross-site tracking</div>
+        The cookie is set by a domain you <em>never chose to visit</em> (AdX.com). But because your browser automatically sends that cookie on every request to AdX.com — regardless of which site you're on — AdX can build a profile of your browsing across every site that loads its content. You don't have to visit AdX.com directly; it tracks you invisibly through embedded resources on other pages.
+      </div>
+      <div class="hb hb-http">
+        <div class="hb-label">First-party vs third-party cookies</div>
+        <strong>First-party:</strong> cookie from the site you chose to visit — used for login, shopping carts, preferences. Generally expected and necessary.<br>
+        <strong>Third-party:</strong> cookie from a domain you did not choose to visit — the ad or tracking network. Enables cross-site profiling. Disabled by default in Firefox and Safari; being phased out in Chrome.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Web caches (proxy servers) — how they reduce load</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--email)"></span><strong>Reduces response time:</strong> cache is physically closer to the client than the origin server. A cache hit means near-instant response instead of crossing the access link.</li>
+        <li><span class="dot" style="background:var(--email)"></span><strong>Reduces bandwidth usage:</strong> cached objects are served locally; traffic never goes out on the institution's (expensive) access link to the Internet.</li>
+        <li><span class="dot" style="background:var(--email)"></span>A cache hit rate of 40% reduces access link utilization from 97% (near-saturated) to ~58% — dramatically cutting queueing delay.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Conditional GET — interactive</div>
+      <p style="margin-bottom:12px;">The cache uses <code>If-Modified-Since</code> to check if its cached copy is still fresh, avoiding unnecessary data transfer.</p>
+
+      <div class="cget-wrap">
+        <div class="cget-msgs" id="cget-msgs"></div>
+        <div class="cget-controls">
+          <button class="cget-btn p" id="cget-fresh" onclick="cgetFresh()">Simulate: object NOT modified ▶</button>
+          <button class="cget-btn" id="cget-stale" onclick="cgetStale()">Simulate: object modified ▶</button>
+          <button class="cget-btn" onclick="cgetReset()">Reset</button>
+        </div>
+      </div>
+      <div class="hb hb-dns">
+        <div class="hb-label">What each response means</div>
+        <strong>304 Not Modified:</strong> the object on the server is unchanged since the date in the request. The cache's copy is still valid — use it. No object data is transmitted, saving bandwidth and time.<br><br>
+        <strong>200 OK + data:</strong> the object was modified after the cached date. The server sends the new version. The cache updates its copy and the TTL.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ HTTP/2 & /3 ══ -->
+  <div id="http2" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon" style="color:var(--http);">2</div>
+      <div>
+        <div class="sec-title">HTTP/2, HTTP/3 &amp; Head-of-Line Blocking</div>
+        <div class="sec-desc">HOL blocking, multiplexing, and why TCP motivated QUIC</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">HTTP version progression — click each to expand</div>
+      <div class="http-ver">
+        <div class="hv-step active" onclick="hvToggle(this)">
+          <div class="hv-badge">HTTP/1.0<div class="sub">1996</div></div>
+          <div class="hv-content">
+            <div class="hv-name">Non-persistent connections</div>
+            <div class="hv-detail">One TCP connection per object. Each object costs 2 RTTs + transmission time. Getting a page with 10 images opens 11 separate TCP connections. Extremely inefficient on modern pages with hundreds of objects.</div>
+          </div>
+        </div>
+        <div class="hv-step" onclick="hvToggle(this)">
+          <div class="hv-badge">HTTP/1.1<div class="sub">1997</div></div>
+          <div class="hv-content">
+            <div class="hv-name">Persistent connections + pipelining → but HOL blocking</div>
+            <div class="hv-detail">Keeps TCP connection open; multiple objects can be requested. BUT: server must respond in order (FCFS). If object 1 is a large video file, objects 2/3/4 (small icons) must wait behind it — this is head-of-line (HOL) blocking. Browsers opened 6+ parallel TCP connections as a workaround.</div>
+          </div>
+        </div>
+        <div class="hv-step" onclick="hvToggle(this)">
+          <div class="hv-badge">HTTP/2<div class="sub">2015</div></div>
+          <div class="hv-content">
+            <div class="hv-name">Frame multiplexing — solves application-layer HOL blocking</div>
+            <div class="hv-detail">Objects are divided into frames. Frames from different objects are interleaved — small objects (O2, O3, O4) can be delivered in frames between frames of large O1. No need for in-order delivery at the HTTP layer. BUT: still over one TCP connection — a single dropped TCP segment stalls ALL streams until it's retransmitted. This is TCP-level HOL blocking.</div>
+          </div>
+        </div>
+        <div class="hv-step" onclick="hvToggle(this)">
+          <div class="hv-badge">HTTP/3<div class="sub">2022</div></div>
+          <div class="hv-content">
+            <div class="hv-name">QUIC over UDP — eliminates TCP-level HOL blocking</div>
+            <div class="hv-detail">HTTP/3 moves from TCP to QUIC (a reliable transport built on UDP). Each stream is independent — a dropped packet for one stream doesn't stall other streams. Also adds TLS 1.3 security by default. Because UDP is the base, QUIC implements its own reliability, congestion control, and multiplexing per-stream.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hb hb-bad" style="margin-top:14px;">
+        <div class="hb-label">Head-of-line (HOL) blocking — the key concept</div>
+        In HTTP/1.1: server sends responses in request order. A slow or large object blocks all smaller objects behind it — even if those smaller objects are already ready. This is analogous to being stuck behind a slow truck in a single lane — you can't pass even though you're ready. HTTP/2 fixes this at the HTTP layer by interleaving frames, but a single dropped TCP packet still stalls all frames until retransmission — TCP doesn't know which frame belongs to which stream.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ EMAIL ══ -->
+  <div id="email" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon" style="color:var(--email);">✉</div>
+      <div>
+        <div class="lec-badge lb-email">Email</div>
+        <div class="sec-title">Email — SMTP, IMAP, and the Full Path</div>
+        <div class="sec-desc">Push vs pull and why servers are necessary</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The full path of an email</div>
+      <div class="email-path">
+        <div class="ep-node">
+          <div class="ep-lbl">1. Sender</div>
+          <div class="ep-name">Mail Client</div>
+          <div class="ep-proto" style="color:var(--muted);">(Outlook, etc.)</div>
+        </div>
+        <div class="ep-arrow ep-push">SMTP →<br><span style="font-size:10px;color:var(--muted);">push</span></div>
+        <div class="ep-node">
+          <div class="ep-lbl">2. Sender's</div>
+          <div class="ep-name">Mail Server</div>
+          <div class="ep-proto" style="color:var(--http);">queues msg</div>
+        </div>
+        <div class="ep-arrow ep-push">SMTP →<br><span style="font-size:10px;color:var(--muted);">push</span></div>
+        <div class="ep-node">
+          <div class="ep-lbl">3. Recipient's</div>
+          <div class="ep-name">Mail Server</div>
+          <div class="ep-proto" style="color:var(--http);">stores msg</div>
+        </div>
+        <div class="ep-arrow ep-pull">← IMAP/POP<br><span style="font-size:10px;color:var(--muted);">pull</span></div>
+        <div class="ep-node">
+          <div class="ep-lbl">4. Recipient</div>
+          <div class="ep-name">Mail Client</div>
+          <div class="ep-proto" style="color:var(--muted);">(reads later)</div>
+        </div>
+      </div>
+
+      <div class="hb hb-email">
+        <div class="hb-label">Push vs Pull — the critical distinction</div>
+        <strong>SMTP (push):</strong> the sender's server initiates the connection and pushes the message to the recipient's server. Like physically delivering a letter.<br><br>
+        <strong>IMAP/POP (pull):</strong> the recipient's mail client connects to the recipient's server and pulls messages down. The client controls when it retrieves mail.
+      </div>
+
+      <div class="hb hb-http">
+        <div class="hb-label">Why the recipient's mail server is necessary</div>
+        Bob's phone or laptop may be offline (asleep, out of coverage, powered off). If Alice sent email directly to Bob's device, the delivery would fail whenever he's offline. The recipient's mail server acts as a persistent intermediary — always on, always reachable — that stores messages until Bob's client connects to retrieve them.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">SMTP vs HTTP comparison (slides ask this)</div>
+      <table class="cmp-tbl">
+        <thead><tr><th>Property</th><th>SMTP</th><th>HTTP</th></tr></thead>
+        <tbody>
+          <tr><td>Transfer direction</td><td>Push — sender initiates</td><td>Pull — client requests</td></tr>
+          <tr><td>Persistent connections</td><td>Yes</td><td>Yes (HTTP/1.1+)</td></tr>
+          <tr><td>ASCII commands</td><td>Yes (HELO, MAIL FROM, etc.)</td><td>Yes (GET, POST, etc.)</td></tr>
+          <tr><td>Status codes</td><td>Yes (250 OK, 354, 221…)</td><td>Yes (200, 301, 404…)</td></tr>
+          <tr><td>Multiple objects per connection</td><td>Yes (multipart messages)</td><td>Each object in its own response</td></tr>
+          <tr><td>Character set required</td><td>7-bit ASCII only</td><td>Any (binary, UTF-8)</td></tr>
+          <tr><td>Transport</td><td>TCP port 25</td><td>TCP port 80 (443 for HTTPS)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ DNS ══ -->
+  <div id="dns" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon" style="color:var(--dns);">⊕</div>
+      <div>
+        <div class="lec-badge lb-dns">DNS</div>
+        <div class="sec-title">DNS — Hierarchy, Queries &amp; Caching</div>
+        <div class="sec-desc">Why centralization fails and how iterative vs recursive differ</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Why not a single centralized DNS server?</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0;">
+        <div style="padding:12px 14px;background:var(--bad-bg);border:1px solid rgba(255,80,96,0.2);border-radius:7px;"><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--bad);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Single point of failure</div><div style="font-size:13px;line-height:1.65;">If the server goes down, DNS fails for the entire Internet. No redundancy.</div></div>
+        <div style="padding:12px 14px;background:var(--bad-bg);border:1px solid rgba(255,80,96,0.2);border-radius:7px;"><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--bad);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Traffic volume</div><div style="font-size:13px;line-height:1.65;">Comcast DNS alone handles 600B queries/day. A single server cannot handle all Internet DNS traffic.</div></div>
+        <div style="padding:12px 14px;background:var(--bad-bg);border:1px solid rgba(255,80,96,0.2);border-radius:7px;"><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--bad);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Distance</div><div style="font-size:13px;line-height:1.65;">A server in one location is far from most of the world — high latency for billions of users.</div></div>
+        <div style="padding:12px 14px;background:var(--bad-bg);border:1px solid rgba(255,80,96,0.2);border-radius:7px;"><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--bad);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Maintenance</div><div style="font-size:13px;line-height:1.65;">Billions of records, updated constantly. No single organization can keep up with the entire Internet.</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The three-level hierarchy — click each to expand</div>
+      <div>
+        <div class="dns-layer dns-root expanded" onclick="this.classList.toggle('expanded')">
+          <div class="dl-header">
+            <div class="dl-icon">R</div>
+            <div><div class="dl-title">Root Name Servers</div><div class="dl-sub">13 logical servers, ~200 physical replicas worldwide</div></div>
+          </div>
+          <div class="dl-body">Contact of last resort. Root servers know the addresses of all TLD servers. If your local DNS can't find an answer, it asks the root. Root servers return the address of the appropriate TLD server — they don't have individual hostname records. ICANN manages the root DNS domain.</div>
+        </div>
+        <div class="dns-layer dns-tld" onclick="this.classList.toggle('expanded')">
+          <div class="dl-header">
+            <div class="dl-icon">TLD</div>
+            <div><div class="dl-title">Top-Level Domain (TLD) Servers</div><div class="dl-sub">.com, .org, .edu, .net, country codes (.uk, .cn…)</div></div>
+          </div>
+          <div class="dl-body">TLD servers know the addresses of authoritative DNS servers for all domains under their TLD. For example, the .com TLD server knows where to find amazon.com's authoritative DNS server. Network Solutions manages .com and .net; Educause manages .edu.</div>
+        </div>
+        <div class="dns-layer dns-auth" onclick="this.classList.toggle('expanded')">
+          <div class="dl-header">
+            <div class="dl-icon">A</div>
+            <div><div class="dl-title">Authoritative DNS Servers</div><div class="dl-sub">Organization-owned, provides final IP mappings</div></div>
+          </div>
+          <div class="dl-body">The authoritative server for a domain contains the actual hostname-to-IP mappings (A records). amazon.com's authoritative DNS server knows the IP address of www.amazon.com. Maintained by the organization itself or a DNS hosting provider.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Iterative vs recursive queries</div>
+      <div class="two-col">
+        <div>
+          <h3>Iterative (preferred by root/TLD)</h3>
+          <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;padding:14px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.9;">
+            Local DNS → Root: "Who is cs.umass.edu?"<br>
+            Root → Local DNS: "Ask the .edu TLD"<br>
+            Local DNS → TLD: "Who is cs.umass.edu?"<br>
+            TLD → Local DNS: "Ask umass.edu auth server"<br>
+            Local DNS → Auth: "Who is cs.umass.edu?"<br>
+            Auth → Local DNS: "128.119.240.10" ✓
+          </div>
+          <p style="font-size:12.5px;margin-top:8px;">The local DNS resolver does all the work. Root and TLD just redirect, not do the work themselves.</p>
+        </div>
+        <div>
+          <h3>Recursive (heavier for upper levels)</h3>
+          <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;padding:14px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.9;">
+            Local DNS → Root: "Who is cs.umass.edu?"<br>
+            Root → TLD: "Who is cs.umass.edu?"<br>
+            TLD → Auth: "Who is cs.umass.edu?"<br>
+            Auth → TLD: "128.119.240.10"<br>
+            TLD → Root: "128.119.240.10"<br>
+            Root → Local DNS: "128.119.240.10" ✓
+          </div>
+          <p style="font-size:12.5px;margin-top:8px;">Each server contacts the next on the requester's behalf. Heavy load at root/TLD — this is why they prefer iterative.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">DNS caching and TTL</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--dns)"></span>Any name server that learns a mapping caches it. Future queries for the same name are answered from cache — no need to traverse the hierarchy.</li>
+        <li><span class="dot" style="background:var(--dns)"></span>Cached entries expire after their <strong>TTL (Time To Live)</strong> — a value set by the authoritative server and included in DNS responses.</li>
+        <li><span class="dot" style="background:var(--bad)"></span><strong>Why DNS changes take time to propagate:</strong> when you update an IP address for a domain, old cached entries across the Internet don't disappear immediately. Every cached copy must wait for its TTL to expire before fetching the updated record. With a TTL of 24 hours, a change can take up to 24 hours to be visible everywhere.</li>
+      </ul>
+      <div class="hb hb-dns">
+        <div class="hb-label">TTL tradeoff</div>
+        Short TTL → fresher data, faster propagation of changes, but more DNS queries (more load on authoritative servers).<br>
+        Long TTL → stale data possible, but reduces load on authoritative servers significantly. Most TLD entries are cached in local name servers to reduce load on root and TLD servers.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ICMP ══ -->
+  <div id="icmp" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon" style="color:var(--icmp);">📡</div>
+      <div>
+        <div class="lec-badge lb-icmp">ICMP</div>
+        <div class="sec-title">ICMP — Ping &amp; Traceroute</div>
+        <div class="sec-desc">Diagnostic tool — not user data</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">What ICMP is and is not</div>
+      <div class="hb hb-icmp">
+        <div class="hb-label">ICMP is for diagnostics and error reporting only</div>
+        ICMP (Internet Control Message Protocol) carries diagnostic messages and error reports between network devices — it does not carry application data. It lives at the network layer (same as IP) but is not a transport protocol. Key ICMP message types: Echo Request/Reply (ping), Time Exceeded (traceroute), Destination Unreachable.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">How ping works</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--icmp)"></span>Sender sends an <strong>ICMP Echo Request</strong> to the target IP address.</li>
+        <li><span class="dot" style="background:var(--icmp)"></span>Target replies with an <strong>ICMP Echo Reply</strong>.</li>
+        <li><span class="dot" style="background:var(--icmp)"></span>Sender measures the elapsed time = <strong>round-trip time (RTT)</strong>.</li>
+        <li><span class="dot" style="background:var(--icmp)"></span>Multiple probes are sent; ping reports min/avg/max RTT and packet loss.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">How traceroute works — interactive simulation</div>
+      <p style="margin-bottom:12px;">Traceroute sends packets with increasing TTL values. Each router that decrements TTL to 0 sends back an ICMP Time Exceeded message, revealing its IP and RTT.</p>
+
+      <div class="tr-wrap">
+        <div class="tr-output" id="tr-output">Click "Run traceroute" to start...</div>
+        <div class="tr-controls">
+          <button class="tr-btn primary" onclick="runTrace()">Run traceroute ▶</button>
+          <button class="tr-btn" onclick="resetTrace()">Reset</button>
+        </div>
+      </div>
+
+      <div class="hb hb-icmp" style="margin-top:12px;">
+        <div class="hb-label">The TTL trick explained</div>
+        Traceroute sends probe packets with TTL=1, TTL=2, TTL=3, etc. Each router decrements TTL by 1 before forwarding. When TTL reaches 0, the router discards the packet and sends back an ICMP Time Exceeded message with its own source IP. This reveals each hop along the path. <code>* * *</code> means that hop didn't reply (firewall blocking ICMP or no reply).
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ IPv6 & NAT ══ -->
+  <div id="ipv6" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon" style="color:var(--ipv6);">6</div>
+      <div>
+        <div class="lec-badge lb-ipv6">IPv6 &amp; NAT</div>
+        <div class="sec-title">IPv6, NAT &amp; the Transition Problem</div>
+        <div class="sec-desc">Address exhaustion, the end-to-end violation, and why IPv6 adoption is slow</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">IPv4 address exhaustion — the fundamental problem</div>
+      <div class="two-col">
+        <div style="padding:14px;background:var(--bad-bg);border:1px solid rgba(255,80,96,0.25);border-radius:8px;text-align:center;">
+          <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--bad);margin-bottom:6px;">2³²</div>
+          <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">IPv4: ~4.3 billion addresses</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6;">IANA exhausted its pool in 2011. Regional registries ran out by 2019. Not enough for all devices on Earth.</div>
+        </div>
+        <div style="padding:14px;background:var(--ipv6-bg);border:1px solid rgba(200,128,255,0.25);border-radius:8px;text-align:center;">
+          <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--ipv6);margin-bottom:6px;">2¹²⁸</div>
+          <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">IPv6: ~3.4 × 10³⁸ addresses</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6;">Enough to assign billions of addresses to every atom on Earth's surface. Address exhaustion is solved permanently.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">NAT — how it works and why it breaks the end-to-end principle</div>
+      <p style="margin-bottom:12px;">NAT (Network Address Translation) lets many devices share one public IP address by rewriting port numbers:</p>
+
+      <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:16px;margin-bottom:12px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;">Outbound packet translation</div>
+        <div class="nat-row"><div class="nat-box nb-int">10.0.0.5:12345</div><span class="nat-arrow">→</span><div class="nat-box nb-nat">NAT router<br>203.1.1.1</div><span class="nat-arrow">→</span><div class="nat-box nb-ext">203.1.1.1:50001</div><span style="font-size:12px;color:var(--muted);margin-left:6px;">→ Internet</span></div>
+        <div class="nat-row"><div class="nat-box nb-int">10.0.0.7:45678</div><span class="nat-arrow">→</span><div class="nat-box nb-nat">NAT router<br>203.1.1.1</div><span class="nat-arrow">→</span><div class="nat-box nb-ext">203.1.1.1:50002</div><span style="font-size:12px;color:var(--muted);margin-left:6px;">→ Internet</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6;">Both internal hosts appear as the same public IP. NAT table maps (public IP, port) back to (internal IP, port) for return traffic.</div>
+      </div>
+
+      <div class="hb hb-bad">
+        <div class="hb-label">Why NAT violates the end-to-end principle</div>
+        The end-to-end principle says the network should transport packets without modifying them — intelligence lives at the endpoints. NAT violates this by:<br><br>
+        1. <strong>Rewriting IP headers and transport-layer port numbers</strong> inside the network — not at endpoints.<br>
+        2. <strong>Breaking inbound connection initiation:</strong> an external host cannot initiate a connection to an internal host behind NAT, because the internal host has no public IP. This breaks P2P applications, hosting servers, VoIP, games — anything requiring inbound connections.<br>
+        3. <strong>Breaking certain protocols</strong> that embed IP addresses in the data payload (FTP, SIP) — NAT can't see or update those embedded addresses.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">IPv6 transition — dual-stack and why adoption is slow</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--ipv6)"></span><strong>Dual-stack:</strong> devices run both IPv4 and IPv6 simultaneously. They use IPv6 when the destination supports it, fall back to IPv4 otherwise. This avoids a hard cutover.</li>
+        <li><span class="dot" style="background:var(--ipv6)"></span><strong>Why adoption has been slow:</strong> IPv4 + NAT works well enough for typical consumer use. Consumers can browse, stream, and use apps without IPv6 — there's no immediate pain driving adoption.</li>
+        <li><span class="dot" style="background:var(--bad)"></span><strong>The chicken-and-egg problem:</strong> ISPs won't deploy IPv6 until customers demand it; customers don't demand it because everything works with IPv4/NAT.</li>
+      </ul>
+      <table class="cmp-tbl" style="margin-top:12px;">
+        <thead><tr><th>Property</th><th>IPv4</th><th>IPv6</th></tr></thead>
+        <tbody>
+          <tr><td>Address size</td><td>32 bits (~4.3B)</td><td>128 bits (~3.4×10³⁸)</td></tr>
+          <tr><td>Header checksum</td><td>Yes (recomputed at every hop)</td><td>No (relies on transport checksum)</td></tr>
+          <tr><td>Fragmentation</td><td>Routers can fragment</td><td>Only source host fragments</td></tr>
+          <tr><td>Options</td><td>In header (variable length)</td><td>Extension headers (cleaner)</td></tr>
+          <tr><td>NAT required?</td><td>Often yes (address exhaustion)</td><td>No — huge address space</td></tr>
+          <tr><td>Adoption (2024)</td><td>Still dominant</td><td>~40–50% of Google traffic</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ FLASHCARDS ══ -->
+  <div id="flashcards" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon" style="color:var(--http);">◧</div>
+      <div>
+        <div class="sec-title">Flashcards</div>
+        <div class="sec-desc">Click to flip · 16 cards covering all topics</div>
+      </div>
+    </div>
+    <div class="flashcard" id="fc" onclick="flipCard()">
+      <div class="fc-inner">
+        <div class="fc-side fc-front"><div class="fc-hint">tap to flip</div><div class="fc-q" id="fc-q"></div></div>
+        <div class="fc-side fc-back"><div class="fc-albl">Answer</div><div class="fc-a" id="fc-a"></div></div>
+      </div>
+    </div>
+    <div class="fc-nav">
+      <button class="fc-btn" onclick="prevCard()">← Prev</button>
+      <span class="fc-prog" id="fc-prog">1 / 16</span>
+      <button class="fc-btn" onclick="nextCard()">Next →</button>
+    </div>
+  </div>
+
+  <!-- ══ QUIZ ══ -->
+  <div id="quiz" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon" style="color:var(--http);">✎</div>
+      <div>
+        <div class="sec-title">Self-Check Quiz</div>
+        <div class="sec-desc">12 questions · all topics</div>
+      </div>
+    </div>
+    <div id="quiz-container"></div>
+  </div>
+
+</div>
+
+<script>
+/* ── Tabs ── */
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+/* ── HTTP version stepper ── */
+function hvToggle(el) {
+  document.querySelectorAll('.hv-step').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ── Conditional GET simulator ── */
+let cgetMode = null;
+function addCgetMsg(who, arrow, to, content, note) {
+  const el = document.createElement('div');
+  el.className = 'cget-msg';
+  el.innerHTML = `<div class="cm-who cm-${who}">${who==='client'?'Cache':'Server'}</div>
+    <div style="color:var(--muted);font-size:12px;margin-top:6px;flex-shrink:0;">${arrow} ${to}</div>
+    <div class="cm-bubble">${content}<span class="cm-note">${note}</span></div>`;
+  document.getElementById('cget-msgs').appendChild(el);
+  setTimeout(()=>el.classList.add('visible'),20);
+}
+
+function cgetFresh() {
+  cgetReset();
+  const d = new Date(); d.setDate(d.getDate()-3);
+  const dateStr = d.toUTCString();
+  setTimeout(()=>addCgetMsg('client','→','Origin Server',`GET /index.html HTTP/1.1<br><span class="cm-val">If-Modified-Since: ${dateStr}</span>`,'Cache has a copy; asking if it changed'),100);
+  setTimeout(()=>addCgetMsg('server','→','Cache',`<span class="cm-val" style="color:var(--email);">HTTP/1.1 304 Not Modified</span><br>(no object body sent)`,'Object unchanged since that date — use cached copy'),700);
+  setTimeout(()=>{ const s=document.getElementById('cget-msgs'); const note=document.createElement('div'); note.style.cssText='font-size:13px;color:var(--email);padding:8px 12px;background:var(--em-bg);border:1px solid rgba(80,224,160,0.2);border-radius:6px;'; note.textContent='✓ Cache serves its stored copy — no data transferred over the network.'; s.appendChild(note); },1400);
+}
+
+function cgetStale() {
+  cgetReset();
+  const d = new Date(); d.setDate(d.getDate()-3);
+  const dateStr = d.toUTCString();
+  setTimeout(()=>addCgetMsg('client','→','Origin Server',`GET /index.html HTTP/1.1<br><span class="cm-val">If-Modified-Since: ${dateStr}</span>`,'Cache has a copy; asking if it changed'),100);
+  setTimeout(()=>addCgetMsg('server','→','Cache',`<span class="cm-val" style="color:var(--dns);">HTTP/1.1 200 OK</span><br>Last-Modified: (newer date)<br>&lt;full object data&gt;`,'Object WAS modified — sending new version'),700);
+  setTimeout(()=>{ const s=document.getElementById('cget-msgs'); const note=document.createElement('div'); note.style.cssText='font-size:13px;color:var(--dns);padding:8px 12px;background:var(--dns-bg);border:1px solid rgba(255,184,64,0.2);border-radius:6px;'; note.textContent='↺ Cache updates its stored copy and forwards new version to client.'; s.appendChild(note); },1400);
+}
+
+function cgetReset() { document.getElementById('cget-msgs').innerHTML=''; }
+
+/* ── Traceroute simulator ── */
+const hops = [
+  { ttl:1, ip:'192.168.1.1',   name:'home-router',           rtt:[1.2,1.4,1.3] },
+  { ttl:2, ip:'10.10.1.1',     name:'isp-edge',              rtt:[5.1,5.3,5.2] },
+  { ttl:3, ip:'67.17.80.1',    name:'isp-backbone-1',        rtt:[8.4,8.6,8.5] },
+  { ttl:4, ip:'*',             name:'*',                     rtt:['*','*','*'] },
+  { ttl:5, ip:'198.32.162.30', name:'peering-exchange',      rtt:[22.1,22.3,22.2] },
+  { ttl:6, ip:'142.250.69.14', name:'google-backbone',       rtt:[24.8,24.9,24.7] },
+  { ttl:7, ip:'142.250.208.14',name:'google-datacenter',     rtt:[25.1,25.0,25.2] },
+  { ttl:8, ip:'8.8.8.8',       name:'dns.google (dest)',     rtt:[25.4,25.3,25.5] },
+];
+
+let traceRunning = false;
+let traceIdx = 0;
+let traceTimer;
+
+function runTrace() {
+  if (traceRunning) return;
+  resetTrace();
+  document.getElementById('tr-output').innerHTML = '<span style="color:var(--muted);font-size:12px;">traceroute to 8.8.8.8 (dns.google), 30 hops max</span>\n';
+  traceRunning = true; traceIdx = 0;
+  runNextHop();
+}
+
+function runNextHop() {
+  if (traceIdx >= hops.length) { traceRunning = false; return; }
+  const h = hops[traceIdx];
+  const el = document.createElement('div');
+  el.className = 'tr-hop';
+  const container = document.getElementById('tr-output');
+  const num = `<span class="tr-num">${h.ttl}</span>`;
+  if (h.ip === '*') {
+    el.innerHTML = `${num} <span class="tr-star">* * *</span> <span class="tr-note">  (no ICMP reply — firewall or router doesn't respond)</span>`;
+  } else {
+    const rtts = h.rtt.map(r=>`<span class="tr-rtt">${r} ms</span>`).join('  ');
+    el.innerHTML = `${num} <span class="tr-ip">${h.ip}</span> (<span style="color:var(--muted);">${h.name}</span>)  ${rtts}`;
+  }
+  container.appendChild(el);
+  setTimeout(()=>el.classList.add('visible'),20);
+  traceIdx++;
+  traceTimer = setTimeout(runNextHop, 600);
+}
+
+function resetTrace() {
+  clearTimeout(traceTimer); traceRunning = false; traceIdx = 0;
+  document.getElementById('tr-output').textContent = 'Click "Run traceroute" to start...';
+}
+
+/* ══ FLASHCARDS ══ */
+const cards = [
+  {q:"What does persistent HTTP save compared to non-persistent HTTP?",a:"Non-persistent: new TCP connection per object = 1 RTT for TCP handshake + 1 RTT for request/response per object. Persistent: single TCP connection reused — subsequent objects cost ~1 RTT each (no handshake). Saves: (1) TCP handshake overhead, and (2) TCP slow-start penalty — non-persistent connections restart slow-start (CW=1) for every object."},
+  {q:"Why is HTTP stateless, and what mechanism adds state?",a:"HTTP is stateless by design: simpler server implementation (no state to maintain), easier horizontal scaling (any server can handle any request), easier recovery (no shared state to resynchronize after crashes). Cookies add state: the server sends Set-Cookie in a response; the browser stores it and includes it in every subsequent request to that server."},
+  {q:"How do third-party cookies enable cross-site tracking?",a:"A third-party cookie is set by a domain you did not choose to visit (e.g., AdX.com embedding an ad on nytimes.com). Your browser sends that cookie on every request to AdX.com — including requests triggered by other sites (socks.com, nytimes arts). AdX thus learns which sites you visit without you ever going to AdX.com directly. It can build a profile of your browsing across all sites using its ads."},
+  {q:"What is a web cache and how does the conditional GET mechanism work?",a:"A web cache (proxy) stores copies of recently fetched objects and serves them locally — reducing response time (cache is closer) and bandwidth usage (less traffic on the access link). Conditional GET: the cache includes If-Modified-Since: <date> in its request to the origin server. If the object hasn't changed since that date: 304 Not Modified (no object sent). If it has changed: 200 OK + new object. Avoids re-transmitting unchanged content."},
+  {q:"What is HOL blocking in HTTP/1.1 and how do HTTP/2 and HTTP/3 address it?",a:"HOL blocking: HTTP/1.1 responses must be delivered in order. A large slow object blocks all smaller objects behind it. HTTP/2 fix: divides objects into frames and interleaves frames from different objects — small objects aren't stuck behind large ones at the application layer. But TCP-level HOL remains: one dropped TCP segment stalls all HTTP/2 streams. HTTP/3 fix: uses QUIC over UDP — each stream is independent, so a packet loss in one stream doesn't stall others."},
+  {q:"Describe the full path of an email from Alice to Bob. Which hops are push and which are pull?",a:"1. Alice's mail client → Alice's mail server (SMTP — push). 2. Alice's mail server → Bob's mail server (SMTP — push). 3. Bob's mail server → Bob's mail client (IMAP or POP — pull). SMTP is push: the sending server initiates and delivers. IMAP/POP is pull: Bob's client connects and retrieves when he chooses. The recipient's mail server is necessary because Bob's device may be offline; the server holds messages until he connects."},
+  {q:"Why is a centralized DNS server impractical?",a:"Four reasons: (1) Single point of failure — if the server goes down, DNS fails globally. (2) Traffic volume — Comcast alone handles 600B DNS queries/day; no single server can handle all Internet DNS traffic. (3) Distance — one server is far from most of the world, causing high latency for billions of users. (4) Maintenance — billions of constantly-changing records; no single organization can maintain all of them."},
+  {q:"Describe the three levels of the DNS hierarchy and what each provides.",a:"(1) Root servers: 13 logical servers (~200 physical), contact of last resort. Return addresses of appropriate TLD servers. Don't have individual hostname records. (2) TLD servers (.com, .org, .edu): return addresses of authoritative servers for domains in their TLD (e.g., where to find amazon.com's authoritative server). (3) Authoritative servers: organization-maintained, contain the actual hostname→IP mappings (A records) for that domain."},
+  {q:"What is the difference between iterative and recursive DNS queries?",a:"Iterative: the local DNS resolver does all the work. It contacts root, gets redirected to TLD, contacts TLD, gets redirected to authoritative, contacts authoritative, gets the answer. Root and TLD just redirect — they don't do the lookup. Recursive: each server contacts the next on the requester's behalf. Root contacts TLD, TLD contacts authoritative, answer bubbles back up. Root and TLD prefer iterative to limit their load — recursive puts heavy burden on high-level servers."},
+  {q:"Why do DNS changes take time to propagate?",a:"DNS entries are cached across the Internet with a TTL (Time To Live) set by the authoritative server. When you update a record, every cached copy must wait for its individual TTL to expire before fetching the updated record. With a TTL of 86400 (24 hours), the change can take up to 24 hours to be visible globally. Reducing TTL before a planned change helps, but stale entries elsewhere will persist until they expire."},
+  {q:"How does traceroute work? What ICMP messages does it rely on?",a:"Traceroute sends probe packets with incrementing TTL values: TTL=1, TTL=2, TTL=3, etc. Each router decrements TTL by 1 before forwarding. When TTL hits 0, the router discards the packet and sends back an ICMP Time Exceeded message with its own source IP. Traceroute records that IP and RTT, then sends the next probe with TTL+1, revealing the next hop. This continues until the destination responds (with ICMP Echo Reply or a port-unreachable message). * * * means that hop didn't send an ICMP reply."},
+  {q:"What is NAT and why does it violate the end-to-end principle?",a:"NAT (Network Address Translation) lets many internal devices share one public IP by rewriting source port numbers in outbound packets and maintaining a translation table for return traffic. It violates end-to-end because: (1) routers inside the network modify IP addresses and port numbers (transport-layer information) — functionality that should be at endpoints only. (2) External hosts cannot initiate connections to internal hosts (they have no public IP), breaking P2P applications, server hosting, VoIP, and games that require inbound connections."},
+  {q:"What is the dual-stack IPv6 transition approach and why has IPv6 adoption been slow?",a:"Dual-stack: devices run both IPv4 and IPv6 simultaneously, using IPv6 when available and falling back to IPv4 otherwise. No hard cutover required. Slow adoption reasons: IPv4 + NAT works well enough for most consumers — they can browse, stream, and use apps without IPv6. There's no immediate pain point forcing migration. ISPs won't upgrade until customers demand it; customers don't demand it because IPv4 works. Classic chicken-and-egg stalemate."},
+  {q:"A web page has a base HTML file + 10 images. Calculate RTTs needed with non-persistent vs persistent HTTP.",a:"Non-persistent: base HTML = 1 RTT (TCP SYN) + 1 RTT (HTTP request) = 2 RTT. Each of 10 images = 2 RTT each. Total = 2 + 10×2 = 22 RTTs (plus transmission times). With parallel connections: 2 RTT for base HTML + 2 RTT (all images in parallel) = ~4 RTTs. Persistent: 2 RTT for base HTML setup + ~1 RTT per image = ~12 RTTs. Persistent pipelining can approach 2 RTT total (all in one request burst)."},
+  {q:"What is the difference between IMAP and POP for email retrieval?",a:"POP (Post Office Protocol): downloads messages to the client device and (by default) deletes them from the server. Simple, works offline, but email only on one device. IMAP (Internet Mail Access Protocol): messages remain on the server; client syncs a view. Supports folders, flags, search on server. Accessible from multiple devices — changes sync across all of them. Modern email systems (Gmail, etc.) use IMAP or HTTP-based access."},
+  {q:"What does ICMP provide and what does ping measure?",a:"ICMP (Internet Control Message Protocol) provides network-layer diagnostic and error reporting — not user data. It cannot be used for application data transfer. Ping sends ICMP Echo Request packets to a destination IP. The destination replies with ICMP Echo Reply. Ping measures: round-trip time (RTT) for each probe, and packet loss percentage. It tells you whether a host is reachable and how long packets take to arrive and return."},
+];
+
+let curCard=0;
+function renderCard(){document.getElementById('fc-q').textContent=cards[curCard].q;document.getElementById('fc-a').textContent=cards[curCard].a;document.getElementById('fc-prog').textContent=(curCard+1)+' / '+cards.length;document.getElementById('fc').classList.remove('flipped');}
+function flipCard(){document.getElementById('fc').classList.toggle('flipped');}
+function nextCard(){curCard=(curCard+1)%cards.length;renderCard();}
+function prevCard(){curCard=(curCard-1+cards.length)%cards.length;renderCard();}
+renderCard();
+
+/* ══ QUIZ ══ */
+const questions=[
+  {q:"A browser fetches a page with 1 base HTML file and 5 images using non-persistent HTTP (no parallel connections). How many RTTs does this cost (excluding transmission time)?",opts:["6 RTTs","10 RTTs","12 RTTs","2 RTTs"],correct:2,fb:"Non-persistent: each object = 2 RTTs (1 for TCP handshake + 1 for HTTP). 6 objects × 2 RTTs = 12 RTTs. Persistent HTTP would allow the same in ~7 RTTs (2 for first object, 1 each for remaining 5)."},
+  {q:"HTTP is stateless. What exactly does 'stateless' mean and which mechanism adds state?",opts:["The server encrypts all data so no session state is needed","The server keeps no information about past requests — each HTTP transaction is independent. Cookies add state by storing a user identifier that the browser sends on every request.","The server stores state in the URL query string","Stateless means the server uses UDP instead of TCP"],correct:1,fb:"Stateless means the server treats every HTTP request independently, with no memory of previous requests. This simplifies server design and enables horizontal scaling. Cookies add state: server sets a cookie ID, browser returns it on every request, allowing the server to identify returning users."},
+  {q:"What does a web cache send to the origin server to check whether its cached copy is still valid?",opts:["A new HTTP GET with no headers","An HTTP DELETE request for the old object","An HTTP GET with the If-Modified-Since: <date> header","An ICMP Echo Request to test latency"],correct:2,fb:"Conditional GET: the cache includes 'If-Modified-Since: <date>' in the request header. If the object hasn't changed since that date, the server returns 304 Not Modified (no body — saves bandwidth). If it has changed, the server returns 200 OK with the new object."},
+  {q:"HTTP/2 uses frame multiplexing to reduce HOL blocking. Why does HTTP/3 (QUIC over UDP) still represent an improvement?",opts:["HTTP/3 is faster because UDP has lower latency than TCP","HTTP/2 still runs over a single TCP connection — one dropped TCP segment stalls all HTTP/2 streams (TCP-level HOL blocking). QUIC gives each stream independent reliability, so a loss in one stream doesn't affect others.","HTTP/3 removes the need for TLS","HTTP/3 uses more connections than HTTP/2"],correct:1,fb:"HTTP/2 fixes application-layer HOL blocking with frame interleaving, but still runs on TCP. TCP delivers bytes in order — one dropped segment blocks everything until retransmission. QUIC over UDP implements per-stream reliability: a loss in stream A doesn't block streams B or C, eliminating TCP-level HOL blocking."},
+  {q:"Alice sends an email to Bob. Which hops use SMTP and which use IMAP/POP?",opts:["SMTP: client→server; IMAP: server→server","SMTP: all hops; IMAP: only the last hop","SMTP: Alice's client→Alice's server, AND Alice's server→Bob's server (both push). IMAP/POP: Bob's client←Bob's server (pull).","IMAP: all hops"],correct:2,fb:"SMTP is a push protocol used for delivery: Alice's client pushes to her mail server, which pushes to Bob's mail server. IMAP (or POP) is a pull protocol: Bob's client connects to his mail server and retrieves messages when he chooses. The recipient's mail server is necessary because Bob may be offline."},
+  {q:"Why do DNS root and TLD servers prefer iterative rather than recursive queries?",opts:["Iterative is more secure against DNS cache poisoning","Recursive queries require encrypted connections","In recursive, each server contacts the next on the requester's behalf — this puts massive load on root and TLD servers for billions of queries per day. Iterative just returns a referral; the local resolver does the work.","Iterative queries have shorter TTLs"],correct:2,fb:"Recursive DNS puts the burden on the server: root contacts TLD, TLD contacts authoritative, answer bubbles back. If every query were recursive, root servers would need to make billions of outbound queries per day. Iterative keeps the work at the local resolver and lets root/TLD simply respond with referrals."},
+  {q:"You update your domain's A record from IP 1.2.3.4 to 5.6.7.8. Why doesn't the change take effect immediately everywhere?",opts:["DNS changes require a 24-hour security review","DNS entries are cached with a TTL (Time To Live). All cached copies of the old record across the Internet must expire individually before those resolvers fetch the new record. With TTL=86400 (1 day), the change can take up to 24 hours to propagate fully.","Root servers must approve all DNS changes","The registrar takes 24 hours to process updates"],correct:1,fb:"TTL controls caching. Every DNS resolver that cached your old A record holds it until the TTL expires. You can reduce TTL before a planned change to speed propagation, but existing cached copies with the old (longer) TTL won't update until they expire individually."},
+  {q:"How does traceroute reveal the IP address of each router on a path to a destination?",opts:["It sends ARP requests to each hop in sequence","It uses SNMP to query routing tables","It sends packets with TTL=1, 2, 3, etc. Each router decrements TTL by 1; when TTL hits 0, the router drops the packet and sends back an ICMP Time Exceeded message with its own IP. This reveals each hop in sequence.","It uses DNS PTR records to map IPs to names"],correct:2,fb:"The TTL trick: TTL=1 packet is dropped by hop 1 (sends back ICMP Time Exceeded with its IP). TTL=2 packet reaches hop 2, which drops it and responds. And so on. Traceroute collects each ICMP reply, revealing the IP (and thus name via reverse DNS) of every router on the path."},
+  {q:"NAT violates the end-to-end principle. What specifically does this mean?",opts:["NAT prevents all encryption from working","NAT modifies IP addresses and port numbers inside the network (not at endpoints), and prevents external hosts from initiating connections to internal hosts — breaking P2P, server hosting, and any application requiring inbound connections.","NAT is only a problem for IPv6","NAT reduces throughput by 50%"],correct:1,fb:"End-to-end principle: network just delivers packets; intelligence at endpoints. NAT breaks this by rewriting transport-layer info mid-network, and by making internal hosts unreachable from outside (no public IP = can't accept inbound connections). This breaks BitTorrent, running a web server, VoIP, and many games."},
+  {q:"Why is IPv6 adoption slow despite IPv4 address exhaustion?",opts:["IPv6 is less secure than IPv4","IPv6 packets are too large for existing routers","IPv4 + NAT works well enough for typical consumer use — users can browse and stream without IPv6. There's no immediate pain driving adoption, creating a chicken-and-egg stalemate between ISP deployment and consumer demand.","IPv6 requires replacing all existing computers"],correct:2,fb:"The fundamental reason is that IPv4 + NAT is a functional workaround for most users. From a consumer's perspective, nothing is broken — the Internet works. This removes the economic incentive for ISPs to upgrade. IPv6 penetration has slowly grown due to mobile (mobile operators often use IPv6 natively) but fixed broadband adoption remains patchy."},
+  {q:"A page loads an embedded ad from AdX.com. You've never visited AdX.com directly. What kind of cookie does AdX set, and what risk does it create?",opts:["A first-party cookie, which is safe since it only tracks you on that site","A third-party cookie. Since your browser sends this cookie on every page that loads AdX content, AdX can track your browsing across all sites that use its ad network — without you ever choosing to visit AdX.com.","A session cookie that expires when you close the browser","An HTTPS cookie — it's encrypted so privacy is protected"],correct:1,fb:"Third-party cookies are set by domains you didn't choose to visit. The key risk: your browser sends the same AdX cookie every time any page loads an AdX resource. AdX correlates these requests and builds a profile of your browsing behavior across many sites. This is why Firefox and Safari now block third-party cookies by default."},
+  {q:"What is the fundamental problem IPv6 was designed to solve, and what scale difference exists between IPv4 and IPv6?",opts:["IPv6 solves routing table overflow; it has 64-bit vs 32-bit addresses","IPv6 solves IPv4 address exhaustion; 32-bit IPv4 provides ~4.3 billion addresses, while 128-bit IPv6 provides ~3.4×10³⁸ addresses — a scale difference of about 10²⁹×.","IPv6 solves congestion; it has bigger packets","IPv6 solves DNS scalability with 64-bit addresses"],correct:1,fb:"IPv4 exhaustion: the 32-bit address space (~4.3B) ran out. IANA exhausted its pool in 2011. IPv6 uses 128-bit addresses — 3.4×10³⁸ total, enough to give billions of addresses to every atom on Earth's surface. The scale difference is around 7.9×10²⁸ times more addresses."},
+];
+
+let qIdx=0,score=0,answered=false;
+function renderQuiz(){
+  const c=document.getElementById('quiz-container');
+  if(qIdx>=questions.length){const pct=Math.round(score/questions.length*100);c.innerHTML=`<div class="score-box"><div class="score-num">${score}/${questions.length}</div><div class="score-lbl">${pct}% — ${pct>=80?'Solid grasp of application layer concepts':'Review the tabs above and try the simulators'}</div><button class="restart-btn" onclick="restartQuiz()">Restart</button></div>`;return;}
+  const q=questions[qIdx];
+  c.innerHTML=`<div class="card"><div class="quiz-counter">QUESTION ${qIdx+1} / ${questions.length}</div><div class="quiz-q">${q.q}</div><div class="quiz-opts">${q.opts.map((o,i)=>`<button class="quiz-opt" id="opt-${i}" onclick="selectOpt(${i})">${o}</button>`).join('')}</div><div class="quiz-fb" id="qfb"></div><button class="quiz-next" id="qnext" onclick="nextQ()">Next →</button></div>`;
+}
+function selectOpt(i){if(answered)return;answered=true;const q=questions[qIdx];document.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);const fb=document.getElementById('qfb');if(i===q.correct){score++;document.getElementById('opt-'+i).classList.add('opt-correct');fb.className='quiz-fb qf-ok';fb.innerHTML='✓ Correct. '+q.fb;}else{document.getElementById('opt-'+i).classList.add('opt-wrong');document.getElementById('opt-'+q.correct).classList.add('opt-correct');fb.className='quiz-fb qf-bad';fb.innerHTML='✗ Not quite. '+q.fb;}fb.style.display='block';document.getElementById('qnext').style.display='inline-block';}
+function nextQ(){qIdx++;answered=false;renderQuiz();}
+function restartQuiz(){qIdx=0;score=0;answered=false;renderQuiz();}
+renderQuiz();
+</script>
+</body>
+</html>

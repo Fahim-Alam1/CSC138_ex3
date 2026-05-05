@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Guide: Authentication &amp; Security Systems — Chapters 8.4–8.5</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --bg:      #08090e;
+    --bg2:     #0c0e18;
+    --bg3:     #10121e;
+    --surf:    #151826;
+    --bdr:     rgba(160,200,255,0.1);
+    --bdr2:    rgba(160,200,255,0.2);
+    --text:    #c8d4f0;
+    --muted:   #556080;
+    --auth:    #60c8ff;   /* authentication blue */
+    --tls:     #50dfa0;   /* TLS green */
+    --fw:      #ff9050;   /* firewall orange */
+    --wifi:    #d080ff;   /* wireless purple */
+    --good:    #50dfa0;
+    --bad:     #ff5060;
+    --nonce:   #ffb840;   /* nonce gold */
+    --auth-bg: rgba(96,200,255,0.07);
+    --tls-bg:  rgba(80,223,160,0.07);
+    --fw-bg:   rgba(255,144,80,0.07);
+    --wifi-bg: rgba(208,128,255,0.07);
+    --good-bg: rgba(80,223,160,0.07);
+    --bad-bg:  rgba(255,80,96,0.07);
+    --non-bg:  rgba(255,184,64,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 52px 40px 42px;
+    text-align: center;
+    position: relative; overflow: hidden;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(96,200,255,0.07) 0%, transparent 65%),
+      radial-gradient(ellipse 60% 50% at 80% 50%, rgba(208,128,255,0.07) 0%, transparent 65%);
+    border-bottom: 1px solid var(--bdr);
+  }
+  .hero::before {
+    content: 'AUTH';
+    position: absolute; bottom: -30px; right: -10px;
+    font-family: 'Syne', sans-serif; font-size: 160px; font-weight: 800;
+    opacity: 0.025; pointer-events: none; line-height: 1; color: #fff;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--auth); border: 1px solid rgba(96,200,255,0.3);
+    background: rgba(96,200,255,0.06);
+    padding: 4px 14px; border-radius: 2px; margin-bottom: 18px;
+  }
+
+  h1 { font-family: 'Syne', sans-serif; font-size: 38px; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 10px; color: #fff; }
+  h1 .a { color: var(--auth); }
+  h1 .t { color: var(--tls); }
+  .hero-sub { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); letter-spacing: 0.05em; }
+
+  /* ── Tab bar ── */
+  .tab-bar {
+    display: flex; overflow-x: auto;
+    background: var(--bg2); border-bottom: 1px solid var(--bdr);
+    padding: 0 18px;
+    position: sticky; top: 0; z-index: 20;
+  }
+  .tab {
+    padding: 13px 15px; background: none; border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+    transition: all 0.13s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--auth); border-bottom-color: var(--auth); font-weight: 600; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .container { max-width: 940px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  .sec-hd { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--bdr); }
+  .sec-icon { font-family: 'DM Mono', monospace; font-size: 28px; color: var(--auth); opacity: 0.4; line-height: 1; flex-shrink: 0; }
+  .sec-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: #fff; }
+  .sec-desc  { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  .lec-badge {
+    display: inline-block; font-family: 'DM Mono', monospace;
+    font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 2px; margin-bottom: 4px;
+  }
+  .lb-84 { background: var(--auth-bg); color: var(--auth); border: 1px solid rgba(96,200,255,0.25); }
+  .lb-85 { background: var(--tls-bg);  color: var(--tls);  border: 1px solid rgba(80,223,160,0.25); }
+
+  .card {
+    background: var(--bg2); border: 1px solid var(--bdr);
+    border-radius: 10px; padding: 22px; margin-bottom: 16px;
+    transition: border-color 0.13s;
+  }
+  .card:hover { border-color: var(--bdr2); }
+  .card-title {
+    font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--bdr);
+  }
+
+  .hb { border-radius: 7px; padding: 12px 16px; margin: 12px 0; font-size: 13.5px; line-height: 1.7; }
+  .hb-label { font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 5px; }
+  .hb-auth { background:var(--auth-bg); border-left:3px solid var(--auth); } .hb-auth .hb-label { color:var(--auth); }
+  .hb-tls  { background:var(--tls-bg);  border-left:3px solid var(--tls);  } .hb-tls  .hb-label { color:var(--tls);  }
+  .hb-fw   { background:var(--fw-bg);   border-left:3px solid var(--fw);   } .hb-fw   .hb-label { color:var(--fw);   }
+  .hb-wifi { background:var(--wifi-bg); border-left:3px solid var(--wifi); } .hb-wifi .hb-label { color:var(--wifi); }
+  .hb-bad  { background:var(--bad-bg);  border-left:3px solid var(--bad);  } .hb-bad  .hb-label { color:var(--bad);  }
+  .hb-non  { background:var(--non-bg);  border-left:3px solid var(--nonce);} .hb-non  .hb-label { color:var(--nonce);}
+
+  .kp { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .kp li { display: flex; gap: 11px; align-items: flex-start; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--bdr); border-radius: 7px; font-size: 13.5px; line-height: 1.6; transition: border-color 0.13s; }
+  .kp li:hover { border-color: var(--bdr2); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 9px; flex-shrink: 0; }
+
+  code { font-family: 'DM Mono', monospace; background: var(--bg3); border: 1px solid var(--bdr); border-radius: 3px; padding: 1px 6px; font-size: 12px; color: var(--auth); }
+  strong { font-weight: 600; color: #fff; }
+  p { color: var(--muted); font-size: 13.5px; line-height: 1.7; margin-bottom: 10px; }
+  h3 { font-size: 15px; font-weight: 600; color: #fff; margin: 16px 0 8px; font-family: 'Syne', sans-serif; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── AP Protocol stepper ── */
+  .ap-steps { border: 1px solid var(--bdr); border-radius: 10px; overflow: hidden; }
+
+  .ap-step {
+    border-bottom: 1px solid var(--bdr); cursor: pointer;
+    transition: background 0.13s; display: flex; gap: 0; align-items: stretch;
+  }
+  .ap-step:last-child { border-bottom: none; }
+
+  .ap-badge {
+    padding: 14px 16px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    min-width: 72px; flex-shrink: 0;
+    font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 700;
+    border-right: 1px solid var(--bdr);
+  }
+  .ap-badge .verdict {
+    font-size: 11px; font-weight: 400; margin-top: 2px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .ap-fail { background: var(--bad-bg); }  .ap-fail .ap-badge { color: var(--bad); }
+  .ap-ok   { background: var(--good-bg); } .ap-ok   .ap-badge { color: var(--good); }
+
+  .ap-content { padding: 14px 18px; flex: 1; }
+  .ap-name    { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .ap-exchange{ font-family: 'DM Mono', monospace; font-size: 12px; line-height: 1.9; margin-bottom: 6px; color: var(--text); background: var(--bg3); border-radius: 5px; padding: 8px 10px; }
+  .ap-attack  { font-size: 12.5px; line-height: 1.6; }
+  .ap-fail .ap-attack { color: var(--bad); }
+  .ap-ok   .ap-attack { color: var(--good); }
+
+  /* ── Interactive nonce simulator ── */
+  .nonce-sim {
+    background: var(--bg3); border: 1px solid var(--bdr);
+    border-radius: 10px; overflow: hidden; margin: 14px 0;
+  }
+  .nonce-header {
+    padding: 12px 16px; background: var(--bg2);
+    border-bottom: 1px solid var(--bdr);
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nonce-body { padding: 16px; }
+
+  .nonce-msg {
+    display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px;
+    opacity: 0; transform: translateY(8px);
+    transition: all 0.3s ease;
+  }
+  .nonce-msg.visible { opacity: 1; transform: translateY(0); }
+
+  .nm-who {
+    font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700;
+    padding: 5px 10px; border-radius: 4px; flex-shrink: 0;
+    min-width: 56px; text-align: center; margin-top: 3px;
+  }
+  .nm-alice { background: var(--auth-bg); color: var(--auth); border: 1px solid rgba(96,200,255,0.25); }
+  .nm-bob   { background: var(--tls-bg);  color: var(--tls);  border: 1px solid rgba(80,223,160,0.25); }
+  .nm-arrow { font-size: 12px; color: var(--muted); margin-top: 6px; flex-shrink: 0; }
+
+  .nm-bubble {
+    background: var(--bg2); border: 1px solid var(--bdr);
+    border-radius: 7px; padding: 9px 13px;
+    font-family: 'DM Mono', monospace; font-size: 12.5px; line-height: 1.7;
+    flex: 1;
+  }
+  .nm-val { color: var(--nonce); font-weight: 600; }
+  .nm-comment { color: var(--muted); font-size: 11px; display: block; margin-top: 2px; }
+
+  .nonce-controls {
+    padding: 14px 16px; border-top: 1px solid var(--bdr);
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .nc-btn {
+    padding: 8px 16px; border-radius: 5px; border: 1px solid var(--bdr2);
+    background: var(--bg2); color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.13s;
+  }
+  .nc-btn.primary { background: var(--auth); color: var(--bg); border-color: var(--auth); font-weight: 700; }
+  .nc-btn.primary:hover { opacity: 0.85; }
+  .nc-btn:hover:not(.primary) { border-color: var(--auth); color: var(--auth); }
+  .nc-replay { border-color: rgba(255,80,96,0.4); color: var(--bad); }
+  .nc-replay:hover { background: var(--bad-bg) !important; color: var(--bad) !important; border-color: var(--bad) !important; }
+
+  .nonce-status {
+    padding: 10px 16px; border-top: 1px solid var(--bdr);
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    min-height: 38px; transition: all 0.2s;
+  }
+
+  /* ── TLS table ── */
+  .cmp-tbl { width:100%; border-collapse:collapse; font-size:13px; margin:12px 0; }
+  .cmp-tbl th { text-align:left; padding:9px 12px; font-family:'DM Mono',monospace; font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); border-bottom:1px solid var(--bdr2); background:var(--bg3); }
+  .cmp-tbl td { padding:10px 12px; border-bottom:1px solid var(--bdr); vertical-align:top; line-height:1.65; }
+  .cmp-tbl tr:last-child td { border-bottom:none; }
+  .cmp-tbl tr:hover td { background:var(--bg3); }
+  .cmp-tbl td:first-child { font-family:'DM Mono',monospace; font-size:11px; color:var(--auth); font-weight:500; white-space:nowrap; }
+
+  /* ── Firewall rule builder ── */
+  .fw-rule-builder {
+    background: var(--bg3); border: 1px solid var(--bdr);
+    border-radius: 8px; overflow: hidden; margin: 14px 0;
+  }
+  .fw-rule-header {
+    padding: 10px 14px; background: var(--bg2);
+    border-bottom: 1px solid var(--bdr);
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted);
+  }
+
+  .fw-packets { padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+
+  .fw-packet {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 12px; border-radius: 6px; border: 1px solid var(--bdr);
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    cursor: pointer; transition: all 0.2s; background: var(--bg2);
+  }
+  .fw-packet:hover { border-color: var(--bdr2); }
+  .fw-packet.blocked { border-color: rgba(255,80,96,0.4); background: var(--bad-bg); }
+  .fw-packet.allowed { border-color: rgba(80,223,160,0.4); background: var(--good-bg); }
+
+  .fw-tag {
+    padding: 2px 7px; border-radius: 3px;
+    font-size: 10px; font-weight: 700; flex-shrink: 0;
+  }
+  .ft-src { background: var(--auth-bg); color: var(--auth); }
+  .ft-dst { background: var(--tls-bg);  color: var(--tls);  }
+  .ft-port{ background: var(--non-bg);  color: var(--nonce);}
+  .ft-flag{ background: var(--fw-bg);   color: var(--fw);   }
+  .ft-dir { background: var(--wifi-bg); color: var(--wifi); }
+
+  .fw-verdict {
+    margin-left: auto; padding: 2px 10px; border-radius: 3px;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .fv-allow { background: var(--good-bg); color: var(--good); border: 1px solid rgba(80,223,160,0.3); }
+  .fv-block { background: var(--bad-bg);  color: var(--bad);  border: 1px solid rgba(255,80,96,0.25); }
+
+  .fw-explanation {
+    padding: 12px 14px; border-top: 1px solid var(--bdr);
+    font-size: 12.5px; color: var(--muted); line-height: 1.6;
+    min-height: 44px;
+  }
+
+  .fw-rule-display {
+    padding: 12px 14px; border-top: 1px solid var(--bdr);
+    font-family: 'DM Mono', monospace; font-size: 11.5px;
+    color: var(--fw); background: var(--bg2); line-height: 1.9;
+  }
+
+  /* ── 802.11 stepper ── */
+  .wifi-steps { display:flex; flex-direction:column; gap:0; border:1px solid var(--bdr); border-radius:10px; overflow:hidden; }
+  .wifi-step {
+    padding:14px 18px; cursor:pointer; border-bottom:1px solid var(--bdr);
+    transition:background 0.13s; display:flex; gap:14px; align-items:flex-start;
+  }
+  .wifi-step:last-child { border-bottom:none; }
+  .wifi-step:hover { background:var(--bg3); }
+  .wifi-step.active { background:var(--wifi-bg); border-left:3px solid var(--wifi); }
+  .ws-num { font-family:'DM Mono',monospace; font-size:11px; font-weight:700; color:var(--wifi); min-width:60px; margin-top:2px; flex-shrink:0; }
+  .ws-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:#fff; margin-bottom:4px; }
+  .ws-detail { font-size:13px; color:var(--muted); line-height:1.7; display:none; }
+  .wifi-step.active .ws-detail { display:block; }
+
+  /* ── Flashcards ── */
+  .flashcard { perspective:1000px; min-height:165px; position:relative; cursor:pointer; margin-bottom:12px; }
+  .fc-inner  { width:100%; min-height:165px; transform-style:preserve-3d; transition:transform 0.42s; position:relative; }
+  .flashcard.flipped .fc-inner { transform:rotateY(180deg); }
+  .fc-side   { position:absolute; width:100%; min-height:165px; backface-visibility:hidden; border-radius:10px; padding:24px; display:flex; flex-direction:column; justify-content:center; }
+  .fc-front  { background:var(--bg2); border:1px solid var(--bdr); }
+  .fc-back   { background:var(--surf); border:1px solid var(--bdr2); transform:rotateY(180deg); }
+  .fc-hint   { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .fc-q      { font-size:15px; font-weight:600; color:#fff; line-height:1.5; font-family:'Syne',sans-serif; }
+  .fc-albl   { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--tls); margin-bottom:8px; }
+  .fc-a      { font-size:13.5px; color:var(--text); line-height:1.7; }
+  .fc-nav    { display:flex; align-items:center; justify-content:space-between; margin-top:10px; }
+  .fc-btn    { padding:8px 18px; background:var(--bg2); border:1px solid var(--bdr2); color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; border-radius:6px; cursor:pointer; transition:all 0.13s; }
+  .fc-btn:hover { border-color:var(--auth); color:var(--auth); }
+  .fc-prog   { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
+
+  /* ── Quiz ── */
+  .quiz-counter { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; margin-bottom:13px; }
+  .quiz-q   { font-size:15px; font-weight:600; color:#fff; line-height:1.5; margin-bottom:13px; font-family:'Syne',sans-serif; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:8px; }
+  .quiz-opt { padding:11px 15px; border:1px solid var(--bdr); border-radius:7px; background:var(--bg2); font-family:'DM Sans',sans-serif; font-size:13.5px; color:var(--text); cursor:pointer; text-align:left; line-height:1.5; transition:all 0.12s; }
+  .quiz-opt:hover:not(:disabled) { border-color:var(--bdr2); background:var(--bg3); }
+  .quiz-opt.opt-correct { border-color:var(--good); background:var(--good-bg); }
+  .quiz-opt.opt-wrong   { border-color:var(--bad);  background:var(--bad-bg);  }
+  .quiz-opt:disabled { cursor:not-allowed; }
+  .quiz-fb  { margin-top:11px; padding:12px 15px; border-radius:7px; font-size:13px; line-height:1.65; display:none; }
+  .qf-ok  { background:var(--good-bg); border:1px solid rgba(80,223,160,0.25); color:var(--good); }
+  .qf-bad { background:var(--bad-bg);  border:1px solid rgba(255,80,96,0.22);  color:var(--bad);  }
+  .quiz-next { margin-top:10px; padding:9px 20px; background:var(--auth); color:var(--bg); border:none; border-radius:6px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700; cursor:pointer; display:none; transition:opacity 0.13s; }
+  .quiz-next:hover { opacity:0.85; }
+  .score-box { text-align:center; padding:44px; background:var(--bg2); border:1px solid var(--bdr); border-radius:10px; }
+  .score-num { font-family:'Syne',sans-serif; font-size:64px; font-weight:800; color:var(--auth); }
+  .score-lbl { color:var(--muted); font-size:13px; margin-top:6px; }
+  .restart-btn { margin-top:20px; padding:10px 26px; background:var(--bg3); border:1px solid var(--bdr2); color:var(--text); border-radius:7px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; }
+  .restart-btn:hover { background:var(--surf); }
+</style>
+</head>
+<body>
+
+<a href="index.html" style="display:inline-flex;align-items:center;gap:8px;position:fixed;top:16px;left:16px;z-index:100;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#506080;background:#0b0d18;border:1px solid rgba(140,200,255,0.1);border-radius:6px;padding:7px 14px;text-decoration:none;transition:color 0.13s,border-color 0.13s;" onmouseover="this.style.color='#50c8ff';this.style.borderColor='rgba(80,200,255,0.3)'" onmouseout="this.style.color='#506080';this.style.borderColor='rgba(140,200,255,0.1)'">← Home</a>
+
+<div class="hero">
+  <div class="tag">Chapters 8.4 – 8.5</div>
+  <h1><span class="a">Authentication</span> Protocols<br>&amp; <span class="t">Security Systems</span></h1>
+  <p class="hero-sub">ap1.0–ap5.0 · nonce challenge-response · TLS · firewalls · 802.11 security</p>
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="showTab('overview')">Objectives</button>
+  <button class="tab" onclick="showTab('auth')">8.4 — Auth Protocols</button>
+  <button class="tab" onclick="showTab('nonce')">Nonce Simulator</button>
+  <button class="tab" onclick="showTab('tls')">8.5 — TLS</button>
+  <button class="tab" onclick="showTab('firewall')">Firewalls</button>
+  <button class="tab" onclick="showTab('wifi')">802.11 Security</button>
+  <button class="tab" onclick="showTab('flashcards')">Flashcards</button>
+  <button class="tab" onclick="showTab('quiz')">Quiz</button>
+</div>
+
+<div class="container">
+
+  <!-- ══ OBJECTIVES ══ -->
+  <div id="overview" class="section active">
+    <div class="sec-hd">
+      <div class="sec-icon">✓</div>
+      <div>
+        <div class="sec-title">Exam Objectives — Chapters 8.4–8.5</div>
+        <div class="sec-desc">All required knowledge points from your professor's guide</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="lec-badge lb-84">§8.4</span> Authentication Protocols</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--bad)"></span><strong>ap1.0 — Identity claim fails:</strong> stating your identity is not enough — anyone can claim to be Alice.</li>
+        <li><span class="dot" style="background:var(--bad)"></span><strong>ap2.0/3.0 — Passwords fail:</strong> sending a password over the network is vulnerable to eavesdropping (ap2.0) and replay attacks (ap3.0 — capture the encrypted password and resend it).</li>
+        <li><span class="dot" style="background:var(--nonce)"></span><strong>ap5.0 — Nonce-based challenge-response works:</strong> a nonce (one-time random number) defeats replay attacks because each response is computed fresh over a value the attacker has never seen before.</li>
+        <li><span class="dot" style="background:var(--auth)"></span><strong>Be able to walk through</strong> the full nonce-based authentication exchange: Bob sends nonce R → Alice signs or HMACs R → Bob verifies.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="lec-badge lb-85">§8.5</span> Example Security Systems</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--tls)"></span><strong>TLS — three services:</strong> confidentiality (symmetric encryption), integrity (MAC per record), authentication (public key certificates). Know which cryptographic technique provides each.</li>
+        <li><span class="dot" style="background:var(--tls)"></span><strong>TLS handshake</strong> derives multiple keys from a master secret — separate keys for each direction and purpose.</li>
+        <li><span class="dot" style="background:var(--tls)"></span><strong>Why MAC per record (not per stream):</strong> so the receiver can detect tampering immediately on each record without waiting for the entire stream.</li>
+        <li><span class="dot" style="background:var(--fw)"></span><strong>Stateless packet filtering</strong> — examines individual packet headers (IP addresses, ports, TCP flags) with no memory of prior packets.</li>
+        <li><span class="dot" style="background:var(--fw)"></span><strong>Stateful filtering</strong> — tracks connection state, can reject packets that don't belong to an established connection. Stronger than stateless.</li>
+        <li><span class="dot" style="background:var(--fw)"></span><strong>Reasoning about rules:</strong> blocking inbound SYN packets prevents external hosts from initiating connections to internal servers.</li>
+        <li><span class="dot" style="background:var(--wifi)"></span><strong>802.11 security — four steps:</strong> discovery → mutual authentication with Authentication Server (AS) → key distribution → encrypted communication.</li>
+        <li><span class="dot" style="background:var(--wifi)"></span><strong>Why authenticate to the AS, not the AP:</strong> the AP is untrusted infrastructure — authenticating to it would let a rogue AP impersonate the network. The AS is a trusted server inside the network.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══ AUTH PROTOCOLS ══ -->
+  <div id="auth" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">🔐</div>
+      <div>
+        <div class="lec-badge lb-84">Section 8.4</div>
+        <div class="sec-title">Authentication Protocol Progression</div>
+        <div class="sec-desc">From naive identity claim to secure nonce challenge-response</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The progression — ap1.0 through ap5.0</div>
+      <p style="margin-bottom:14px;">Each version fixes the flaw of the previous. Know why each of ap1.0–ap4.0 fails and exactly why ap5.0 works.</p>
+
+      <div class="ap-steps">
+
+        <div class="ap-step ap-fail">
+          <div class="ap-badge">
+            ap1.0
+            <div class="verdict" style="color:var(--bad)">✗ Broken</div>
+          </div>
+          <div class="ap-content">
+            <div class="ap-name">Just state your identity</div>
+            <div class="ap-exchange">Alice → Bob: "I am Alice"</div>
+            <div class="ap-attack">Attack: Anyone can send this message. Trudy types "I am Alice" and Bob cannot tell the difference. No proof of identity whatsoever.</div>
+          </div>
+        </div>
+
+        <div class="ap-step ap-fail">
+          <div class="ap-badge">
+            ap2.0
+            <div class="verdict" style="color:var(--bad)">✗ Broken</div>
+          </div>
+          <div class="ap-content">
+            <div class="ap-name">Send a shared secret (password) in plaintext</div>
+            <div class="ap-exchange">Alice → Bob: "I am Alice, password = hunter2"</div>
+            <div class="ap-attack">Attack: Trudy eavesdrops and learns Alice's password. She then uses it to authenticate as Alice. Password exposed on every login.</div>
+          </div>
+        </div>
+
+        <div class="ap-step ap-fail">
+          <div class="ap-badge">
+            ap3.0
+            <div class="verdict" style="color:var(--bad)">✗ Broken</div>
+          </div>
+          <div class="ap-content">
+            <div class="ap-name">Encrypt the password</div>
+            <div class="ap-exchange">Alice → Bob: "I am Alice" + Encrypt(K_AB, password)</div>
+            <div class="ap-attack">Replay attack: Trudy records the entire encrypted message. Later she replays it verbatim to Bob. Bob cannot distinguish a replay from a fresh login — the ciphertext is identical.</div>
+          </div>
+        </div>
+
+        <div class="ap-step ap-fail">
+          <div class="ap-badge">
+            ap4.0
+            <div class="verdict" style="color:var(--bad)">✗ Broken</div>
+          </div>
+          <div class="ap-content">
+            <div class="ap-name">Use a nonce — but only with symmetric key</div>
+            <div class="ap-exchange">Bob → Alice: nonce R<br>Alice → Bob: Encrypt(K_AB, R)</div>
+            <div class="ap-attack">Works against replay but requires a pre-shared secret key K_AB. Does not scale well — Bob needs a unique shared key with every entity he authenticates. Man-in-the-middle is still possible without authentication of the nonce source.</div>
+          </div>
+        </div>
+
+        <div class="ap-step ap-ok">
+          <div class="ap-badge">
+            ap5.0
+            <div class="verdict" style="color:var(--good)">✓ Secure</div>
+          </div>
+          <div class="ap-content">
+            <div class="ap-name">Nonce + public key digital signature</div>
+            <div class="ap-exchange">Bob → Alice: nonce R (random, never used before)<br>Alice → Bob: (Alice's certificate) + Sign(Alice's private key, R)<br>Bob verifies: check cert with CA, then verify signature on R</div>
+            <div class="ap-attack">Why this works: Trudy cannot replay — each R is unique. Trudy cannot forge the signature — she lacks Alice's private key. The certificate proves the signing key belongs to Alice. Fresh, unforgeable, and authenticated.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="hb hb-non" style="margin-top:14px;">
+        <div class="hb-label">What makes a nonce powerful</div>
+        A nonce (Number used ONCE) is a random value generated fresh for each authentication attempt. Because Alice must compute her response over this specific nonce, a captured response from a previous session is useless — it was computed over a different nonce that Bob will never send again. The nonce is the "freshness proof."
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Why replay attacks break password-based schemes</div>
+      <div class="hb hb-bad">
+        <div class="hb-label">The replay attack — step by step</div>
+        1. Alice authenticates to Bob normally, sending <code>Encrypt(K, password)</code>.<br>
+        2. Trudy records this encrypted message — she doesn't need to decrypt it.<br>
+        3. Alice logs out. Later, Trudy sends the recorded message to Bob verbatim.<br>
+        4. Bob decrypts it, gets Alice's password, and lets Trudy in as Alice.<br><br>
+        <strong>The problem:</strong> the encrypted password is the same every time. Bob has no way to know if the message is fresh or a recording from the past. A nonce forces the response to be different every single time.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ NONCE SIMULATOR ══ -->
+  <div id="nonce" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">🎲</div>
+      <div>
+        <div class="sec-title">Nonce Authentication Simulator</div>
+        <div class="sec-desc">Step through a real ap5.0 exchange — then try to replay it</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Interactive nonce-based challenge-response (ap5.0)</div>
+
+      <div class="nonce-sim">
+        <div class="nonce-header">
+          Protocol simulation
+          <span style="margin-left:auto;color:var(--nonce)" id="nonce-display">R = —</span>
+        </div>
+        <div class="nonce-body" id="nonce-msgs"></div>
+        <div class="nonce-controls">
+          <button class="nc-btn primary" id="nc-next" onclick="nonceNext()">Next step ▶</button>
+          <button class="nc-btn nc-replay" id="nc-replay" onclick="nonceReplay()" style="display:none;">⚠ Try replay attack</button>
+          <button class="nc-btn" onclick="nonceReset()">Reset</button>
+        </div>
+        <div class="nonce-status" id="nonce-status" style="color:var(--muted);">Click "Next step" to start the protocol.</div>
+      </div>
+
+      <div class="hb hb-auth">
+        <div class="hb-label">What to observe</div>
+        Each time you click "Reset" and run the protocol, a new random nonce R is generated. The nonce is what makes the response different every run — even if Alice uses the same private key. Try the replay attack button to see why a captured response is useless against a fresh nonce.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Full ap5.0 exchange — what each message does</div>
+      <div style="overflow-x:auto;">
+        <table class="cmp-tbl">
+          <thead><tr><th>Message</th><th>Sender → Receiver</th><th>Content</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Alice → Bob</td><td>"I am Alice"</td><td>Declares identity (still needed to tell Bob which certificate to expect)</td></tr>
+            <tr><td>2</td><td>Bob → Alice</td><td>Nonce R (random)</td><td>Challenge — fresh value Alice must respond to. Prevents replay.</td></tr>
+            <tr><td>3</td><td>Alice → Bob</td><td>Certificate + Sign(privKey, R)</td><td>Certificate proves the signing key belongs to Alice. Signature proves Alice's private key was used on this specific R.</td></tr>
+            <tr><td>4 (Bob)</td><td>Verification</td><td>Verify cert with CA; verify signature on R</td><td>If both pass: Alice is authenticated. Only Alice could have signed R, and only this R (freshness guaranteed).</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TLS ══ -->
+  <div id="tls" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">🔒</div>
+      <div>
+        <div class="lec-badge lb-85">Section 8.5</div>
+        <div class="sec-title">TLS — Transport Layer Security</div>
+        <div class="sec-desc">Three services, the handshake, and why MAC per record</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The three security services TLS provides</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0;">
+        <div style="padding:16px;background:var(--tls-bg);border:1px solid rgba(80,223,160,0.25);border-radius:8px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--tls);border-radius:8px 8px 0 0;"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tls);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Confidentiality</div>
+          <div style="font-size:13px;line-height:1.65;"><strong>Mechanism:</strong> Symmetric encryption (AES) using session keys derived from the master secret.<br><br>After the handshake, all data is encrypted so eavesdroppers see only ciphertext.</div>
+        </div>
+        <div style="padding:16px;background:var(--auth-bg);border:1px solid rgba(96,200,255,0.25);border-radius:8px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--auth);border-radius:8px 8px 0 0;"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--auth);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Integrity</div>
+          <div style="font-size:13px;line-height:1.65;"><strong>Mechanism:</strong> MAC (HMAC) computed over each individual record.<br><br>The receiver verifies the MAC before accepting any record. Tampering is detected immediately without waiting for the stream to end.</div>
+        </div>
+        <div style="padding:16px;background:var(--non-bg);border:1px solid rgba(255,184,64,0.25);border-radius:8px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--nonce);border-radius:8px 8px 0 0;"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--nonce);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Authentication</div>
+          <div style="font-size:13px;line-height:1.65;"><strong>Mechanism:</strong> Public key certificates (verified via CA chain).<br><br>During the handshake, the server (and optionally the client) presents a certificate proving their identity.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The TLS handshake — how multiple keys are derived</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--tls)"></span>Client and server negotiate cipher suites and exchange random values.</li>
+        <li><span class="dot" style="background:var(--nonce)"></span>A <strong>pre-master secret</strong> is established (via RSA or Diffie-Hellman key exchange, protected by the server's public key).</li>
+        <li><span class="dot" style="background:var(--tls)"></span>Both sides independently derive a <strong>master secret</strong> from the pre-master secret and the random values exchanged earlier.</li>
+        <li><span class="dot" style="background:var(--tls)"></span>From the master secret, <strong>multiple session keys</strong> are derived using a pseudorandom function (PRF):
+          <ul style="margin-top:6px;padding-left:16px;font-size:13px;color:var(--muted);line-height:1.9;">
+            <li>Client → Server encryption key</li>
+            <li>Server → Client encryption key</li>
+            <li>Client → Server MAC key</li>
+            <li>Server → Client MAC key</li>
+          </ul>
+        </li>
+      </ul>
+      <div class="hb hb-tls">
+        <div class="hb-label">Why separate keys for each direction?</div>
+        Using the same key in both directions could create vulnerabilities where a message from one direction could be mistaken for a message from the other. Separate keys ensure that client-to-server traffic and server-to-client traffic are cryptographically independent.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Why TLS computes a MAC per record — not over the entire stream</div>
+      <div class="two-col">
+        <div style="padding:14px;background:var(--bad-bg);border:1px solid rgba(255,80,96,0.25);border-radius:7px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--bad);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">MAC over entire stream (hypothetical)</div>
+          <div style="font-size:13px;line-height:1.7;">The receiver must wait until all data arrives before verifying. An attacker could inject or drop records in the middle of a long stream, and the tampering would only be detected at the very end — after the data was already processed.</div>
+        </div>
+        <div style="padding:14px;background:var(--tls-bg);border:1px solid rgba(80,223,160,0.25);border-radius:7px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tls);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">MAC per record (actual TLS)</div>
+          <div style="font-size:13px;line-height:1.7;">The receiver verifies each record's MAC immediately upon receipt. Tampering is detected the moment the corrupted or injected record arrives — before it is processed or passed to the application. Provides immediate, fine-grained integrity checking.</div>
+        </div>
+      </div>
+      <div class="hb hb-tls" style="margin-top:12px;">
+        <div class="hb-label">Analogy</div>
+        Think of per-record MAC like checking the seal on each page of a document before reading it, versus checking only the final page. If someone swaps page 5, per-record checking catches it at page 5. Stream-only checking catches it only after you've read the whole document.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FIREWALLS ══ -->
+  <div id="firewall" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">🧱</div>
+      <div>
+        <div class="lec-badge lb-85">Section 8.5</div>
+        <div class="sec-title">Firewalls</div>
+        <div class="sec-desc">Stateless vs stateful filtering — and reasoning about rules</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Stateless vs stateful packet filtering</div>
+      <div class="two-col">
+        <div>
+          <h3 style="color:var(--fw);">Stateless Packet Filtering</h3>
+          <ul class="kp">
+            <li><span class="dot" style="background:var(--fw)"></span>Examines each packet <strong>independently</strong> — no memory of previous packets.</li>
+            <li><span class="dot" style="background:var(--fw)"></span>Makes decisions based on: source IP, destination IP, source port, destination port, TCP flags (SYN, ACK, FIN), protocol (TCP/UDP).</li>
+            <li><span class="dot" style="background:var(--fw)"></span>Simple and fast. Cannot detect attacks that span multiple packets.</li>
+            <li><span class="dot" style="background:var(--bad)"></span>Weakness: cannot distinguish an ACK that belongs to an established connection from a spoofed ACK injected by an attacker.</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="color:var(--tls);">Stateful Packet Filtering</h3>
+          <ul class="kp">
+            <li><span class="dot" style="background:var(--tls)"></span>Tracks <strong>connection state</strong> — remembers which connections have been established.</li>
+            <li><span class="dot" style="background:var(--tls)"></span>Maintains a table of active connections (src IP, src port, dst IP, dst port, TCP state).</li>
+            <li><span class="dot" style="background:var(--tls)"></span>Can reject packets that don't belong to any established connection — even if headers look valid.</li>
+            <li><span class="dot" style="background:var(--tls)"></span>Stronger: detects spoofed ACKs, half-open SYN attacks, and out-of-state packets.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Interactive firewall — click a packet to see if it's blocked</div>
+      <p style="margin-bottom:12px;">Rule: <strong>Block inbound SYN packets</strong> (prevent external hosts from initiating connections to internal servers). Click each packet to see the firewall's decision and reasoning.</p>
+
+      <div class="fw-rule-builder">
+        <div class="fw-rule-header">Firewall rule set</div>
+        <div class="fw-rule-display" id="fw-rules">
+          RULE 1: BLOCK  direction=INBOUND  flags=SYN (no ACK)  →  prevents external connection initiation<br>
+          RULE 2: ALLOW  direction=INBOUND  flags=ACK  state=ESTABLISHED  →  reply traffic for outbound connections<br>
+          RULE 3: ALLOW  direction=OUTBOUND  any  →  internal hosts can initiate connections<br>
+          RULE 4: BLOCK  any  default  →  deny everything else
+        </div>
+
+        <div class="fw-packets" id="fw-packets">
+          <!-- Populated by JS -->
+        </div>
+        <div class="fw-explanation" id="fw-exp">Click a packet above to see the firewall's reasoning.</div>
+      </div>
+
+      <div class="hb hb-fw" style="margin-top:12px;">
+        <div class="hb-label">Why blocking inbound SYN stops external initiation</div>
+        A TCP connection always begins with a SYN packet from the initiating host. By blocking inbound SYNs (from external → internal), the firewall prevents any external host from starting a connection to an internal server. Internal hosts can still initiate outbound connections (their SYNs go outbound), and the reply SYN-ACK and ACK packets (which have the ACK flag set and match an existing state entry) are allowed back in.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">What each header field tells the firewall</div>
+      <table class="cmp-tbl">
+        <thead><tr><th>Field</th><th>What stateless filtering can check</th><th>Limitation</th></tr></thead>
+        <tbody>
+          <tr><td>Source IP</td><td>Block packets from specific external addresses</td><td>IP spoofing — attacker can forge source IP</td></tr>
+          <tr><td>Dest IP / Port</td><td>Block access to specific internal servers or services</td><td>Cannot distinguish authorized vs unauthorized client</td></tr>
+          <tr><td>TCP SYN flag</td><td>Block new connection attempts (inbound SYN = new connection)</td><td>An ACK packet could be injected; stateless filter can't tell if ACK is legitimate</td></tr>
+          <tr><td>TCP ACK flag</td><td>Allow reply traffic (ACK = part of established flow)</td><td>Attacker can craft a packet with ACK set — stateless filter may let it through</td></tr>
+          <tr><td>Connection state</td><td>N/A — stateless has no state table</td><td>Stateful filtering required to check if packet belongs to an established connection</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 802.11 SECURITY ══ -->
+  <div id="wifi" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">📡</div>
+      <div>
+        <div class="lec-badge lb-85">Section 8.5</div>
+        <div class="sec-title">802.11 Wireless Security</div>
+        <div class="sec-desc">Four-step secure connection process and why the AS matters</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The four-step secure wireless connection process — click each to expand</div>
+      <div class="wifi-steps">
+        <div class="wifi-step active" onclick="wifiToggle(this)">
+          <div class="ws-num">Step 1</div>
+          <div>
+            <div class="ws-title">Discovery</div>
+            <div class="ws-detail">The mobile device scans for available networks. The Access Point (AP) broadcasts its SSID (network name) and lists the security capabilities it supports (e.g., WPA2-Enterprise, cipher suites). The mobile selects a network and initiates the association process. No keys have been exchanged yet — this is purely capability discovery.</div>
+          </div>
+        </div>
+        <div class="wifi-step" onclick="wifiToggle(this)">
+          <div class="ws-num">Step 2</div>
+          <div>
+            <div class="ws-title">Mutual Authentication with the Authentication Server (AS)</div>
+            <div class="ws-detail">The mobile and the Authentication Server (AS) — a trusted server inside the network, separate from the AP — authenticate each other. This typically uses EAP (Extensible Authentication Protocol) over TLS or similar. The mobile proves its identity to the AS (e.g., via certificate or password). The AS proves its identity to the mobile (via its certificate). The AP forwards EAP messages but cannot read or modify them. Neither side trusts the AP for authentication.</div>
+          </div>
+        </div>
+        <div class="wifi-step" onclick="wifiToggle(this)">
+          <div class="ws-num">Step 3</div>
+          <div>
+            <div class="ws-title">Key Distribution</div>
+            <div class="ws-detail">After mutual authentication succeeds, the AS and mobile derive a shared Master Session Key (MSK). The AS securely sends a derived key to the AP. Both the mobile and AP now have a shared key — but the AP never knew the mobile's credentials and the mobile never trusted the AP during authentication. The key is distributed by the trusted AS, not negotiated with the AP.</div>
+          </div>
+        </div>
+        <div class="wifi-step" onclick="wifiToggle(this)">
+          <div class="ws-num">Step 4</div>
+          <div>
+            <div class="ws-title">Encrypted Communication</div>
+            <div class="ws-detail">The mobile and AP use the distributed key (via a 4-way handshake defined in 802.11i/WPA2) to derive pairwise temporal keys (PTK) for encrypting all wireless frames. Data is now encrypted using AES-CCMP. Each frame is confidential and integrity-protected. The 4-way handshake also ensures both sides possess the same key before data flows.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Why authenticate to the AS — not directly to the AP</div>
+      <div class="hb hb-wifi">
+        <div class="hb-label">The rogue AP attack — why the AP can't be trusted</div>
+        An attacker can set up a rogue AP with the same SSID as a legitimate network. If authentication happened directly between the mobile and AP, the mobile would authenticate to the rogue AP — handing its credentials directly to the attacker. The attacker now impersonates the mobile to the real network.
+      </div>
+      <div class="two-col" style="margin-top:12px;">
+        <div style="padding:14px;background:var(--bad-bg);border:1px solid rgba(255,80,96,0.25);border-radius:7px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--bad);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">If mobile authenticated to the AP</div>
+          <div style="font-size:13px;line-height:1.7;">Rogue AP intercepts credentials. Mobile thinks it is connected to the real network. Attacker has full MITM position. No defense against rogue APs.</div>
+        </div>
+        <div style="padding:14px;background:var(--wifi-bg);border:1px solid rgba(208,128,255,0.25);border-radius:7px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--wifi);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Mobile authenticates to the AS</div>
+          <div style="font-size:13px;line-height:1.7;">The AS is a trusted server with a certificate. The mobile verifies the AS's certificate before proceeding. A rogue AP cannot impersonate the AS — it doesn't have the AS's private key. Authentication is secure even over untrusted AP infrastructure.</div>
+        </div>
+      </div>
+      <div class="hb hb-wifi" style="margin-top:12px;">
+        <div class="hb-label">Key insight for the exam</div>
+        The AP is just a radio relay — it is untrusted infrastructure, just like an Ethernet switch. Trust is placed in the Authentication Server, which is inside the secure network perimeter and holds a verifiable certificate. The AP forwards authentication messages without being able to read or forge them.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">802.11 security at a glance</div>
+      <table class="cmp-tbl">
+        <thead><tr><th>Standard</th><th>Authentication</th><th>Encryption</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>WEP (original)</td><td>Shared key (weak)</td><td>RC4 with static key</td><td style="color:var(--bad);">Broken — do not use</td></tr>
+          <tr><td>WPA (interim)</td><td>PSK or 802.1X/EAP</td><td>TKIP (RC4 with per-packet keys)</td><td style="color:var(--fw);">Deprecated</td></tr>
+          <tr><td>WPA2 (802.11i)</td><td>PSK or 802.1X/EAP + AS</td><td>AES-CCMP</td><td style="color:var(--tls);">Current standard</td></tr>
+          <tr><td>WPA3</td><td>SAE (replaces PSK) or 802.1X</td><td>AES-GCMP (256-bit)</td><td style="color:var(--tls);">Recommended (newer)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ FLASHCARDS ══ -->
+  <div id="flashcards" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">◧</div>
+      <div>
+        <div class="sec-title">Flashcards</div>
+        <div class="sec-desc">Click to flip · 13 cards covering §8.4–8.5</div>
+      </div>
+    </div>
+    <div class="flashcard" id="fc" onclick="flipCard()">
+      <div class="fc-inner">
+        <div class="fc-side fc-front"><div class="fc-hint">tap to flip</div><div class="fc-q" id="fc-q"></div></div>
+        <div class="fc-side fc-back"><div class="fc-albl">Answer</div><div class="fc-a" id="fc-a"></div></div>
+      </div>
+    </div>
+    <div class="fc-nav">
+      <button class="fc-btn" onclick="prevCard()">← Prev</button>
+      <span class="fc-prog" id="fc-prog">1 / 13</span>
+      <button class="fc-btn" onclick="nextCard()">Next →</button>
+    </div>
+  </div>
+
+  <!-- ══ QUIZ ══ -->
+  <div id="quiz" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">✎</div>
+      <div>
+        <div class="sec-title">Self-Check Quiz</div>
+        <div class="sec-desc">10 questions · all §8.4–8.5 objectives</div>
+      </div>
+    </div>
+    <div id="quiz-container"></div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+/* ── Tab ── */
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+/* ── Wifi stepper ── */
+function wifiToggle(el) {
+  document.querySelectorAll('.wifi-step').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ══ NONCE SIMULATOR ══ */
+let nonceStep = 0;
+let currentNonce = 0;
+let capturedNonce = 0;
+let capturedSig = '';
+
+function randNonce() { return Math.floor(Math.random() * 90000) + 10000; }
+function fakeSign(n) { return 'sig_' + (n * 31337 % 99991).toString(16).padStart(5,'0'); }
+
+const nonceScenario = [
+  { who:'alice', dir:'→', to:'Bob', msg: () => '"I am Alice"', comment: 'Alice announces her identity' },
+  { who:'bob',   dir:'→', to:'Alice', msg: () => `nonce R = <span class="nm-val">${currentNonce}</span>`, comment: 'Bob sends a fresh random challenge — never used before' },
+  { who:'alice', dir:'→', to:'Bob', msg: () => `[Alice's certificate] + Sign(privKey, R=${currentNonce}) = <span class="nm-val">${capturedSig}</span>`, comment: 'Alice signs the nonce with her private key and sends her certificate' },
+  { who:'bob',   dir:'→', to:null, msg: () => `Verify cert via CA ✓  |  Verify Sign(<span class="nm-val">${capturedSig}</span>, AlicePubKey, R=<span class="nm-val">${currentNonce}</span>) ✓`, comment: '→ Authentication SUCCESSFUL. Alice is verified.' },
+];
+
+function nonceNext() {
+  if (nonceStep === 0) {
+    currentNonce = randNonce();
+    capturedNonce = currentNonce;
+    capturedSig = fakeSign(currentNonce);
+    document.getElementById('nonce-display').textContent = 'R = ' + currentNonce;
+  }
+
+  if (nonceStep >= nonceScenario.length) return;
+
+  const step = nonceScenario[nonceStep];
+  const container = document.getElementById('nonce-msgs');
+
+  const div = document.createElement('div');
+  div.className = 'nonce-msg';
+  div.innerHTML = `
+    <div class="nm-who nm-${step.who}">${step.who === 'alice' ? 'Alice' : 'Bob'}</div>
+    <div class="nm-arrow">${step.to ? '→ ' + step.to : '🔍'}</div>
+    <div class="nm-bubble">${step.msg()}<span class="nm-comment">${step.comment}</span></div>
+  `;
+  container.appendChild(div);
+  setTimeout(() => div.classList.add('visible'), 20);
+
+  nonceStep++;
+
+  const nextBtn = document.getElementById('nc-next');
+  const status = document.getElementById('nonce-status');
+
+  if (nonceStep >= nonceScenario.length) {
+    nextBtn.disabled = true;
+    nextBtn.style.opacity = '0.4';
+    document.getElementById('nc-replay').style.display = 'inline-block';
+    status.style.color = 'var(--good)';
+    status.textContent = '✓ Authentication complete. Alice is verified. Now try the replay attack →';
+  } else {
+    status.style.color = 'var(--muted)';
+    status.textContent = `Step ${nonceStep} of ${nonceScenario.length} complete. Continue →`;
+  }
+}
+
+function nonceReplay() {
+  const status = document.getElementById('nonce-status');
+  const container = document.getElementById('nonce-msgs');
+
+  // New session — new nonce
+  const newNonce = randNonce();
+  document.getElementById('nonce-display').textContent = 'R = ' + newNonce + ' (NEW SESSION)';
+
+  const divNew = document.createElement('div');
+  divNew.className = 'nonce-msg';
+  divNew.innerHTML = `<div class="nm-who nm-bob">Bob</div><div class="nm-arrow">→ Alice</div><div class="nm-bubble" style="border-color:rgba(255,80,96,0.3);">New nonce R = <span class="nm-val" style="color:var(--bad);">${newNonce}</span><span class="nm-comment">New session — Bob generates a fresh nonce</span></div>`;
+  container.appendChild(divNew);
+  setTimeout(() => divNew.classList.add('visible'), 20);
+
+  setTimeout(() => {
+    const divReplay = document.createElement('div');
+    divReplay.className = 'nonce-msg';
+    divReplay.innerHTML = `<div class="nm-who" style="background:var(--bad-bg);color:var(--bad);border:1px solid rgba(255,80,96,0.3);">Trudy</div><div class="nm-arrow">→ Bob</div><div class="nm-bubble" style="border-color:rgba(255,80,96,0.3);">REPLAY: old signature <span class="nm-val" style="color:var(--bad);">${capturedSig}</span> (was computed over R=${capturedNonce})<span class="nm-comment">Trudy replays the captured signature from the previous session</span></div>`;
+    container.appendChild(divReplay);
+    setTimeout(() => divReplay.classList.add('visible'), 20);
+  }, 600);
+
+  setTimeout(() => {
+    const divFail = document.createElement('div');
+    divFail.className = 'nonce-msg';
+    divFail.innerHTML = `<div class="nm-who nm-bob">Bob</div><div class="nm-arrow">🔍</div><div class="nm-bubble" style="border-color:rgba(255,80,96,0.3);background:var(--bad-bg);">Verify Sign(<span class="nm-val" style="color:var(--bad);">${capturedSig}</span>, AlicePubKey, R=<span class="nm-val" style="color:var(--bad);">${newNonce}</span>) = <strong style="color:var(--bad);">FAIL ✗</strong><span class="nm-comment">The signature was computed over R=${capturedNonce}, not R=${newNonce}. Replay rejected.</span></div>`;
+    container.appendChild(divFail);
+    setTimeout(() => divFail.classList.add('visible'), 20);
+    status.style.color = 'var(--bad)';
+    status.textContent = `✗ Replay rejected! The old signature was for nonce ${capturedNonce}; Bob sent nonce ${newNonce}. Trudy cannot forge a new signature without Alice's private key.`;
+    document.getElementById('nc-replay').style.display = 'none';
+  }, 1200);
+}
+
+function nonceReset() {
+  nonceStep = 0; currentNonce = 0; capturedNonce = 0; capturedSig = '';
+  document.getElementById('nonce-msgs').innerHTML = '';
+  document.getElementById('nonce-display').textContent = 'R = —';
+  document.getElementById('nonce-status').style.color = 'var(--muted)';
+  document.getElementById('nonce-status').textContent = 'Click "Next step" to start the protocol.';
+  const nb = document.getElementById('nc-next'); nb.disabled = false; nb.style.opacity = '1';
+  document.getElementById('nc-replay').style.display = 'none';
+}
+
+/* ══ FIREWALL PACKETS ══ */
+const packets = [
+  { src:'203.0.113.5 (external)', dst:'10.0.0.22:80', port:80, flags:'SYN', dir:'INBOUND',  blocked:true,  reason:'Inbound SYN blocked — external host trying to initiate a connection to internal server on port 80. Rule 1 matches.' },
+  { src:'10.0.0.15 (internal)',   dst:'8.8.8.8:443',  port:443, flags:'SYN', dir:'OUTBOUND', blocked:false, reason:'Outbound SYN allowed — internal host initiating a connection to an external HTTPS server. Rule 3 matches.' },
+  { src:'8.8.8.8 (external)',     dst:'10.0.0.15:52341',port:52341, flags:'SYN+ACK', dir:'INBOUND', blocked:false, reason:'Inbound SYN+ACK allowed — this is the server\'s reply to an outbound connection the internal host started. Has ACK flag, and stateful filter finds a matching ESTABLISHED entry.' },
+  { src:'203.0.113.99 (external)',dst:'10.0.0.1:22',  port:22,  flags:'SYN', dir:'INBOUND',  blocked:true,  reason:'Inbound SYN blocked — external host trying to SSH into an internal machine. Rule 1 blocks all inbound SYN packets regardless of destination port.' },
+  { src:'198.51.100.7 (external)',dst:'10.0.0.5:80',  port:80,  flags:'ACK', dir:'INBOUND',  blocked:true,  reason:'Stateful check FAILS — this ACK has no matching established connection in the state table. Likely a spoofed packet. Stateful firewall rejects it; stateless firewall would have allowed it (this is a key difference).' },
+  { src:'10.0.0.44 (internal)',   dst:'1.1.1.1:53',   port:53,  flags:'—',   dir:'OUTBOUND', blocked:false, reason:'Outbound UDP DNS query allowed — internal host looking up a domain name. Rule 3 (allow outbound) matches.' },
+];
+
+function buildFW() {
+  const container = document.getElementById('fw-packets');
+  container.innerHTML = packets.map((p,i) => `
+    <div class="fw-packet" onclick="fwClick(${i})">
+      <span class="fw-tag ft-dir">${p.dir}</span>
+      <span class="fw-tag ft-src">src: ${p.src}</span>
+      <span class="fw-tag ft-dst">dst: ${p.dst}</span>
+      <span class="fw-tag ft-flag">flags: ${p.flags}</span>
+      <span class="fw-verdict ${p.blocked ? 'fv-block' : 'fv-allow'}">${p.blocked ? '✗ BLOCK' : '✓ ALLOW'}</span>
+    </div>
+  `).join('');
+}
+
+function fwClick(i) {
+  document.querySelectorAll('.fw-packet').forEach((el,j) => {
+    el.classList.remove('blocked','allowed');
+    if (j===i) el.classList.add(packets[i].blocked ? 'blocked' : 'allowed');
+  });
+  document.getElementById('fw-exp').textContent = packets[i].reason;
+}
+
+buildFW();
+
+/* ══ FLASHCARDS ══ */
+const cards = [
+  { q:"Why does ap1.0 (stating your identity) fail as an authentication scheme?", a:"Anyone can claim any identity — there is no proof. Trudy can send 'I am Alice' just as easily as Alice can. Without cryptographic evidence tied to something only Alice possesses (a key or secret), identity claims are meaningless." },
+  { q:"Why does encrypting the password (ap3.0) still fail? What attack does it enable?", a:"A replay attack. Trudy records the encrypted password message without decrypting it. Later, she replays the recorded ciphertext verbatim. Bob decrypts it and gets Alice's password — the encrypted message is identical to the original and Bob cannot tell it is a replay. The response is not tied to the current session." },
+  { q:"What is a nonce and why does it defeat replay attacks?", a:"A nonce (Number used ONCE) is a fresh random value generated by the verifier for each authentication attempt. The prover must compute a response that depends on this specific nonce. A replay of a response from a previous session was computed over a different nonce — it will fail verification because the nonce Bob sends this time is new and has never been seen before." },
+  { q:"Walk through the ap5.0 nonce-based exchange. What are the four messages/steps?", a:"1. Alice → Bob: 'I am Alice'. 2. Bob → Alice: nonce R (fresh random). 3. Alice → Bob: her certificate + Sign(private key, R). 4. Bob verifies the CA signature on the cert, then verifies the signature on R using Alice's public key. If both pass: Alice is authenticated. Trudy cannot replay (R is new) or forge (she lacks Alice's private key)." },
+  { q:"Name the three security services TLS provides and the cryptographic mechanism behind each.", a:"1. Confidentiality — symmetric encryption (AES) using session keys derived from the master secret. 2. Integrity — MAC (HMAC) computed per record, verified by receiver before processing. 3. Authentication — public key certificates verified against a CA chain during the handshake." },
+  { q:"Why does TLS compute a MAC per record rather than over the entire stream?", a:"Per-record MAC allows the receiver to detect tampering immediately when each record arrives, before it is processed or passed to the application. A stream-wide MAC would only be verifiable after all data is received — an attacker could inject or drop records in the middle and the tampering would be detected too late." },
+  { q:"What is the difference between stateless and stateful packet filtering?", a:"Stateless: examines each packet independently based on header fields (src/dst IP, ports, TCP flags) — no memory of previous packets. Can be fooled by spoofed ACKs. Stateful: maintains a connection state table, can reject packets that don't belong to an established connection. Much stronger — can detect spoofed packets that look syntactically valid but have no matching connection." },
+  { q:"A firewall rule blocks all inbound SYN packets. What does this prevent and what does it allow?", a:"Prevents: any external host from initiating a new TCP connection to an internal server (SYN is always the first packet of a new connection). Allows: existing outbound connections to continue — the SYN-ACK reply and subsequent ACKs from the external server have the ACK flag set and match established state table entries, so they are permitted." },
+  { q:"Name the four steps of the 802.11 secure connection process.", a:"1. Discovery — mobile scans for APs, AP broadcasts SSID and security capabilities. 2. Mutual authentication with the Authentication Server (AS) — both mobile and AS verify each other using EAP/TLS. 3. Key distribution — AS derives and distributes a session key to the AP. 4. Encrypted communication — mobile and AP use a 4-way handshake to derive temporal keys and begin AES-encrypted data exchange." },
+  { q:"Why does the mobile authenticate to the Authentication Server (AS) rather than directly to the Access Point (AP)?", a:"The AP is untrusted infrastructure — a rogue AP could impersonate a legitimate network. If authentication happened directly with the AP, an attacker's rogue AP could steal credentials. The AS is a trusted server inside the secure network with a verifiable certificate. Even if the AP is malicious, it cannot impersonate the AS (it lacks the AS's private key), so authentication remains secure." },
+  { q:"Why does TLS derive multiple separate session keys from the master secret rather than using one key for everything?", a:"Using separate keys for each direction and purpose (client→server encryption, server→client encryption, client→server MAC, server→client MAC) ensures that traffic in one direction cannot be mistaken for or mixed with traffic in the other. It prevents cryptographic attacks that exploit key reuse across different contexts." },
+  { q:"What is the key weakness of stateless packet filtering that stateful filtering fixes?", a:"Stateless filtering cannot tell whether an ACK packet belongs to a legitimately established connection or is a spoofed packet injected by an attacker. An attacker can craft a packet with the ACK flag set that passes a stateless rule allowing inbound ACKs. Stateful filtering checks the connection state table — if no matching connection exists, the packet is rejected regardless of its flags." },
+  { q:"In ap3.0 (encrypted password) vs ap5.0 (nonce + signature), what is the fundamental structural difference that makes ap5.0 secure?", a:"In ap3.0, Alice's response is always the same — it's the same password encrypted the same way. A replay works because the ciphertext is identical every session. In ap5.0, Alice's response must incorporate the fresh nonce R, which is different every session. Even if Trudy captures a signature from one session, it was computed over a different R and will fail verification in any future session." },
+];
+
+let curCard=0;
+function renderCard(){document.getElementById('fc-q').textContent=cards[curCard].q;document.getElementById('fc-a').textContent=cards[curCard].a;document.getElementById('fc-prog').textContent=(curCard+1)+' / '+cards.length;document.getElementById('fc').classList.remove('flipped');}
+function flipCard(){document.getElementById('fc').classList.toggle('flipped');}
+function nextCard(){curCard=(curCard+1)%cards.length;renderCard();}
+function prevCard(){curCard=(curCard-1+cards.length)%cards.length;renderCard();}
+renderCard();
+
+/* ══ QUIZ ══ */
+const questions=[
+  {q:"Alice sends her password encrypted with a shared key K to Bob. Trudy records this message. Next week, Trudy sends the recorded message to Bob. What is this attack called and why does it succeed?",opts:["Eavesdropping — Trudy decrypted the message and learned the password","Replay attack — the encrypted message is identical every time, so Bob cannot distinguish it from a fresh login","Injection — Trudy created a new fake message","Man-in-the-middle — Trudy inserted herself between Alice and Bob"],correct:1,fb:"This is a replay attack. The encrypted password is the same every session — Bob cannot tell if the message is fresh or recorded. A nonce defeats this by forcing Alice to compute a response over a value Bob only sends once."},
+  {q:"In the ap5.0 nonce protocol, Bob sends R=42837 to Alice. Alice computes Sign(privateKey, 42837). Trudy captures this signature. Next session, Bob sends R=71204. Trudy replays the captured signature. What happens?",opts:["Bob accepts — the signature is still cryptographically valid","Bob rejects — the captured signature was computed over R=42837, not R=71204. Verification fails.","Bob cannot tell the difference between the two nonces","Trudy needs to know Alice's public key to replay successfully"],correct:1,fb:"The nonce is what the signature covers. A signature over R=42837 will not verify against R=71204. Trudy cannot forge a new valid signature without Alice's private key. This is exactly why the nonce makes replay attacks impossible."},
+  {q:"TLS provides three security services. Which cryptographic mechanism provides integrity?",opts:["Public key certificates from a CA","Symmetric AES encryption of each record","A MAC (HMAC) computed over each individual record","Diffie-Hellman key exchange during the handshake"],correct:2,fb:"TLS provides integrity via a per-record MAC (HMAC). The sender appends a MAC to each record; the receiver verifies it before processing. AES provides confidentiality; certificates provide authentication; Diffie-Hellman is used for key establishment."},
+  {q:"Why does TLS compute a MAC per record rather than a single MAC over the entire stream?",opts:["Computing one large MAC would be too slow","Per-record MAC allows immediate tamper detection — the receiver verifies each record as it arrives, before processing. A stream-wide MAC only detects tampering after all data is received.","Per-record MAC is required by the AES specification","The MAC covers only the headers, not the payload"],correct:1,fb:"Per-record MAC provides immediate integrity checking. If a record is tampered with or injected, the receiver detects it right away and can reject the connection before any corrupted data reaches the application. A stream-wide MAC would be too late."},
+  {q:"A firewall has the rule: BLOCK inbound SYN (no ACK). An external server sends back a SYN+ACK in response to a connection your browser initiated. Is this packet blocked?",opts:["Yes — it contains a SYN flag so it is blocked","No — it also has the ACK flag set, and a stateful firewall finds a matching established connection entry. The rule targets SYN without ACK (new connections only).","Yes — all inbound traffic from external hosts is blocked","No — SYN+ACK packets bypass all firewall rules"],correct:1,fb:"The rule blocks inbound SYN *without* ACK — i.e., new connection attempts from outside. A SYN+ACK has the ACK flag set and corresponds to an already-established outbound connection. A stateful firewall finds it in the connection table and allows it."},
+  {q:"What is the key difference between stateless and stateful packet filtering?",opts:["Stateless is faster but only works on UDP; stateful works on TCP","Stateless inspects each packet independently using header fields; stateful tracks connection state and can reject packets that don't belong to any established connection","Stateful filtering requires deep packet inspection; stateless does not","Stateless requires more memory than stateful"],correct:1,fb:"Stateless: per-packet decision using header fields (IP, port, flags) — no memory. Stateful: maintains a connection table, rejects packets that don't match any known connection. Stateful is stronger because a spoofed ACK with no matching connection will be rejected, even though it looks syntactically valid."},
+  {q:"In 802.11 enterprise security, why does the mobile authenticate to the Authentication Server (AS) rather than directly to the Access Point (AP)?",opts:["The AP does not have enough processing power to perform authentication","The AP is untrusted infrastructure — a rogue AP could steal credentials if authentication targeted it. The AS has a verifiable certificate and is inside the secure network, so authentication is secure even over an untrusted AP.","The AS is closer to the mobile, reducing authentication latency","APs are not allowed to store keys by the 802.11 specification"],correct:1,fb:"The AP is just a radio relay — it could be rogue or compromised. If the mobile authenticated directly to the AP, an evil twin AP could impersonate the network and steal credentials. The AS has a certificate that the mobile can verify independently of the AP, so its identity is trustworthy."},
+  {q:"In the 802.11 four-step process, which step involves both the mobile and the network proving their identities to each other?",opts:["Step 1 (Discovery)","Step 2 (Mutual authentication with the Authentication Server)","Step 3 (Key distribution)","Step 4 (Encrypted communication)"],correct:1,fb:"Step 2 is mutual authentication — both the mobile and the AS verify each other's identity, typically using EAP over TLS with certificates. The AP forwards EAP messages but cannot participate in the authentication itself."},
+  {q:"Bob currently has no outbound connection to 198.51.100.9. A packet arrives from 198.51.100.9 with TCP flags: ACK. The firewall rule says ALLOW inbound ACK packets in ESTABLISHED connections. What does a stateful firewall do?",opts:["Allow — the packet has ACK set, matching the rule","Block — a stateful firewall finds no matching established connection entry for this source, so the packet is rejected as unsolicited","Allow — the source IP is not on a blocklist","Block — ACK packets are never allowed inbound"],correct:1,fb:"Stateful filtering checks the connection table. Since Bob never initiated a connection to 198.51.100.9, there is no matching entry. Even though the packet has ACK set (which a stateless rule might allow), a stateful firewall rejects it as an unsolicited or spoofed packet. This is the key advantage of stateful over stateless filtering."},
+  {q:"TLS derives multiple keys from a master secret. Why are separate keys used for the client-to-server direction vs the server-to-client direction?",opts:["To save memory — shorter keys are used in each direction","To prevent cryptographic attacks that exploit key reuse: if the same key encrypted traffic in both directions, an attacker might confuse or mix messages from one direction with the other. Separate keys ensure each direction is cryptographically independent.","Because AES requires different keys for encryption and decryption","The CA requires separate keys for compliance reasons"],correct:1,fb:"Using the same key in both directions could create reflection and other attacks where a message sent in one direction could be passed off as coming from the other. Separate keys for each direction and each purpose (encryption key, MAC key) ensure full cryptographic independence between all communication channels."},
+];
+
+let qIdx=0,score=0,answered=false;
+function renderQuiz(){
+  const c=document.getElementById('quiz-container');
+  if(qIdx>=questions.length){const pct=Math.round(score/questions.length*100);c.innerHTML=`<div class="score-box"><div class="score-num">${score}/${questions.length}</div><div class="score-lbl">${pct}% — ${pct>=80?'Strong command of authentication and security protocols':'Review the tabs above and try the nonce simulator'}</div><button class="restart-btn" onclick="restartQuiz()">Restart</button></div>`;return;}
+  const q=questions[qIdx];
+  c.innerHTML=`<div class="card"><div class="quiz-counter">QUESTION ${qIdx+1} / ${questions.length}</div><div class="quiz-q">${q.q}</div><div class="quiz-opts">${q.opts.map((o,i)=>`<button class="quiz-opt" id="opt-${i}" onclick="selectOpt(${i})">${o}</button>`).join('')}</div><div class="quiz-fb" id="qfb"></div><button class="quiz-next" id="qnext" onclick="nextQ()">Next →</button></div>`;
+}
+function selectOpt(i){if(answered)return;answered=true;const q=questions[qIdx];document.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);const fb=document.getElementById('qfb');if(i===q.correct){score++;document.getElementById('opt-'+i).classList.add('opt-correct');fb.className='quiz-fb qf-ok';fb.innerHTML='✓ Correct. '+q.fb;}else{document.getElementById('opt-'+i).classList.add('opt-wrong');document.getElementById('opt-'+q.correct).classList.add('opt-correct');fb.className='quiz-fb qf-bad';fb.innerHTML='✗ Not quite. '+q.fb;}fb.style.display='block';document.getElementById('qnext').style.display='inline-block';}
+function nextQ(){qIdx++;answered=false;renderQuiz();}
+function restartQuiz(){qIdx=0;score=0;answered=false;renderQuiz();}
+renderQuiz();
+</script>
+</body>
+</html>

@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Guide: Network Security — Chapters 8.1–8.3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --bg:      #080a10;
+    --bg2:     #0c0f1a;
+    --bg3:     #111420;
+    --surf:    #171b28;
+    --bdr:     rgba(160,200,255,0.1);
+    --bdr2:    rgba(160,200,255,0.2);
+    --text:    #c8d8f0;
+    --muted:   #586080;
+    --cia-c:   #50c8ff;   /* confidentiality */
+    --cia-i:   #50e0a0;   /* integrity */
+    --cia-a:   #ff9050;   /* availability */
+    --sym:     #7ab0ff;   /* symmetric */
+    --pub:     #d080ff;   /* public key */
+    --hash:    #50e0a0;   /* hash/digest */
+    --ca:      #ffb840;   /* CA gold */
+    --threat:  #ff5060;   /* threat red */
+    --c-bg:    rgba(80,200,255,0.07);
+    --i-bg:    rgba(80,224,160,0.07);
+    --a-bg:    rgba(255,144,80,0.07);
+    --sym-bg:  rgba(122,176,255,0.07);
+    --pub-bg:  rgba(208,128,255,0.07);
+    --hash-bg: rgba(80,224,160,0.07);
+    --ca-bg:   rgba(255,184,64,0.07);
+    --thr-bg:  rgba(255,80,96,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 54px 40px 44px;
+    text-align: center;
+    position: relative; overflow: hidden;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(80,200,255,0.07) 0%, transparent 65%),
+      radial-gradient(ellipse 60% 50% at 80% 50%, rgba(208,128,255,0.07) 0%, transparent 65%);
+    border-bottom: 1px solid var(--bdr);
+  }
+  .hero::before {
+    content: 'SECURE';
+    position: absolute; bottom: -30px; right: -10px;
+    font-family: 'Syne', sans-serif; font-size: 160px; font-weight: 800;
+    opacity: 0.025; pointer-events: none; line-height: 1; color: #fff;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--cia-c); border: 1px solid rgba(80,200,255,0.3);
+    background: rgba(80,200,255,0.06);
+    padding: 4px 14px; border-radius: 2px; margin-bottom: 18px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 40px; font-weight: 800; line-height: 1.15;
+    letter-spacing: -0.02em; margin-bottom: 10px; color: #fff;
+  }
+  h1 .c { color: var(--cia-c); }
+  h1 .p { color: var(--pub); }
+
+  .hero-sub { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); letter-spacing: 0.05em; }
+
+  /* ── Tab bar ── */
+  .tab-bar {
+    display: flex; overflow-x: auto;
+    background: var(--bg2); border-bottom: 1px solid var(--bdr);
+    padding: 0 18px;
+    position: sticky; top: 0; z-index: 20;
+  }
+  .tab {
+    padding: 13px 15px; background: none; border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+    transition: all 0.13s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--cia-c); border-bottom-color: var(--cia-c); font-weight: 600; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── Container ── */
+  .container { max-width: 940px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  /* ── Section header ── */
+  .sec-hd {
+    display: flex; align-items: flex-start; gap: 14px;
+    margin-bottom: 24px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--bdr);
+  }
+  .sec-icon { font-family: 'DM Mono', monospace; font-size: 28px; color: var(--cia-c); opacity: 0.4; line-height: 1; flex-shrink: 0; }
+  .sec-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: #fff; }
+  .sec-desc  { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  .lec-badge {
+    display: inline-block; font-family: 'DM Mono', monospace;
+    font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 2px; margin-bottom: 4px;
+  }
+  .lb-81 { background: var(--c-bg); color: var(--cia-c); border: 1px solid rgba(80,200,255,0.25); }
+  .lb-82 { background: var(--sym-bg); color: var(--sym); border: 1px solid rgba(122,176,255,0.25); }
+  .lb-83 { background: var(--ca-bg); color: var(--ca); border: 1px solid rgba(255,184,64,0.25); }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg2); border: 1px solid var(--bdr);
+    border-radius: 10px; padding: 22px; margin-bottom: 16px;
+    transition: border-color 0.13s;
+  }
+  .card:hover { border-color: var(--bdr2); }
+  .card-title {
+    font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--bdr);
+  }
+
+  /* ── HB ── */
+  .hb { border-radius: 7px; padding: 12px 16px; margin: 12px 0; font-size: 13.5px; line-height: 1.7; }
+  .hb-label { font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 5px; }
+  .hb-c    { background:var(--c-bg);   border-left:3px solid var(--cia-c); } .hb-c    .hb-label { color:var(--cia-c); }
+  .hb-i    { background:var(--i-bg);   border-left:3px solid var(--cia-i); } .hb-i    .hb-label { color:var(--cia-i); }
+  .hb-sym  { background:var(--sym-bg); border-left:3px solid var(--sym);  } .hb-sym  .hb-label { color:var(--sym);  }
+  .hb-pub  { background:var(--pub-bg); border-left:3px solid var(--pub);  } .hb-pub  .hb-label { color:var(--pub);  }
+  .hb-hash { background:var(--hash-bg);border-left:3px solid var(--hash); } .hb-hash .hb-label { color:var(--hash); }
+  .hb-ca   { background:var(--ca-bg);  border-left:3px solid var(--ca);   } .hb-ca   .hb-label { color:var(--ca);   }
+  .hb-thr  { background:var(--thr-bg); border-left:3px solid var(--threat);} .hb-thr  .hb-label { color:var(--threat);}
+
+  .kp { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .kp li { display: flex; gap: 11px; align-items: flex-start; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--bdr); border-radius: 7px; font-size: 13.5px; line-height: 1.6; transition: border-color 0.13s; }
+  .kp li:hover { border-color: var(--bdr2); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 9px; flex-shrink: 0; }
+
+  code { font-family: 'DM Mono', monospace; background: var(--bg3); border: 1px solid var(--bdr); border-radius: 3px; padding: 1px 6px; font-size: 12px; color: var(--cia-c); }
+  strong { font-weight: 600; color: #fff; }
+  p { color: var(--muted); font-size: 13.5px; line-height: 1.7; margin-bottom: 10px; }
+  h3 { font-size: 15px; font-weight: 600; color: #fff; margin: 16px 0 8px; font-family: 'Syne', sans-serif; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── CIA Triad interactive ── */
+  .cia-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin: 14px 0; }
+  @media (max-width: 560px) { .cia-grid { grid-template-columns: 1fr; } }
+
+  .cia-card {
+    border-radius: 10px; padding: 20px; text-align: center;
+    cursor: pointer; transition: all 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .cia-card::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; border-radius:10px 10px 0 0; }
+  .cia-c-card { background:var(--c-bg); border:1px solid rgba(80,200,255,0.2); }
+  .cia-c-card::before { background:var(--cia-c); }
+  .cia-i-card { background:var(--i-bg); border:1px solid rgba(80,224,160,0.2); }
+  .cia-i-card::before { background:var(--cia-i); }
+  .cia-a-card { background:var(--a-bg); border:1px solid rgba(255,144,80,0.2); }
+  .cia-a-card::before { background:var(--cia-a); }
+
+  .cia-card:hover { transform: translateY(-2px); }
+  .cia-letter { font-family:'Syne',sans-serif; font-size:40px; font-weight:800; line-height:1; margin-bottom:8px; }
+  .cia-c-card .cia-letter { color:var(--cia-c); }
+  .cia-i-card .cia-letter { color:var(--cia-i); }
+  .cia-a-card .cia-letter { color:var(--cia-a); }
+  .cia-word { font-size:14px; font-weight:600; color:#fff; margin-bottom:6px; }
+  .cia-def  { font-size:12px; color:var(--muted); line-height:1.55; }
+  .cia-detail { margin-top:10px; font-size:12px; line-height:1.6; display:none; }
+  .cia-card.expanded .cia-detail { display:block; color:var(--text); }
+
+  /* ── Crypto comparison ── */
+  .cmp-tbl {
+    width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0;
+  }
+  .cmp-tbl th {
+    text-align: left; padding: 9px 12px;
+    font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted);
+    border-bottom: 1px solid var(--bdr2); background: var(--bg3);
+  }
+  .cmp-tbl th.sym-h { color: var(--sym); background: rgba(122,176,255,0.06); }
+  .cmp-tbl th.pub-h { color: var(--pub); background: rgba(208,128,255,0.06); }
+  .cmp-tbl td { padding: 10px 12px; border-bottom: 1px solid var(--bdr); vertical-align: top; line-height: 1.65; }
+  .cmp-tbl tr:last-child td { border-bottom: none; }
+  .cmp-tbl tr:hover td { background: var(--bg3); }
+  .cmp-tbl td:first-child { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); font-weight: 500; white-space: nowrap; }
+  .cmp-tbl td.sym-c { background: rgba(122,176,255,0.03); }
+  .cmp-tbl td.pub-c { background: rgba(208,128,255,0.03); }
+
+  /* ── DH interactive ── */
+  .dh-box {
+    background: var(--bg3); border: 1px solid var(--bdr2);
+    border-radius: 8px; padding: 16px; margin: 12px 0;
+    font-family: 'DM Mono', monospace; font-size: 12.5px;
+  }
+  .dh-row { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .dh-label { color: var(--muted); font-size: 11px; min-width: 140px; }
+  .dh-val   { color: var(--cia-c); font-weight: 600; }
+  .dh-input {
+    background: var(--bg2); border: 1px solid var(--bdr2);
+    border-radius: 4px; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    padding: 5px 8px; width: 60px; outline: none;
+    transition: border-color 0.15s;
+  }
+  .dh-input:focus { border-color: var(--cia-c); }
+
+  /* ── Protocol flow diagram ── */
+  .flow-wrap {
+    background: var(--bg3); border: 1px solid var(--bdr);
+    border-radius: 8px; padding: 16px; margin: 14px 0;
+  }
+
+  .flow-row {
+    display: flex; align-items: center; gap: 0; margin-bottom: 10px;
+  }
+  .flow-row:last-child { margin-bottom: 0; }
+
+  .flow-node {
+    width: 80px; min-height: 40px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 600;
+    flex-shrink: 0; text-align: center;
+  }
+  .fn-alice { background: rgba(80,200,255,0.15); border: 1px solid rgba(80,200,255,0.3); color: var(--cia-c); }
+  .fn-bob   { background: rgba(80,224,160,0.12); border: 1px solid rgba(80,224,160,0.3); color: var(--cia-i); }
+  .fn-trudy { background: rgba(255,80,96,0.12);  border: 1px solid rgba(255,80,96,0.3);  color: var(--threat); }
+  .fn-ca    { background: rgba(255,184,64,0.12); border: 1px solid rgba(255,184,64,0.3); color: var(--ca); }
+
+  .flow-arrow {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 40px;
+  }
+  .arrow-line {
+    width: 100%; height: 2px; background: var(--bdr2); position: relative;
+  }
+  .arrow-line::after {
+    content: ''; position: absolute; right: 0; top: -4px;
+    border: 5px solid transparent; border-left-color: var(--bdr2);
+  }
+  .arrow-line.enc   { background: var(--sym);   } .arrow-line.enc::after   { border-left-color: var(--sym);   }
+  .arrow-line.pub   { background: var(--pub);   } .arrow-line.pub::after   { border-left-color: var(--pub);   }
+  .arrow-line.bad   { background: var(--threat);} .arrow-line.bad::after   { border-left-color: var(--threat);}
+  .arrow-line.ca-l  { background: var(--ca);    } .arrow-line.ca-l::after  { border-left-color: var(--ca);    }
+  .arrow-line.rev   { background: var(--pub); transform: scaleX(-1); } .arrow-line.rev::after { border-left-color: var(--pub); }
+  .arrow-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-align: center; }
+
+  /* ── MITM stepper ── */
+  .mitm-step {
+    padding: 13px 18px; cursor: pointer;
+    border-bottom: 1px solid var(--bdr);
+    transition: background 0.13s; display: flex; gap: 14px; align-items: flex-start;
+  }
+  .mitm-step:last-child { border-bottom: none; }
+  .mitm-step:hover { background: var(--bg3); }
+  .mitm-step.active { background: var(--thr-bg); border-left: 3px solid var(--threat); }
+  .ms-num { font-family:'DM Mono',monospace; font-size:11px; font-weight:700; color:var(--threat); min-width:24px; margin-top:2px; flex-shrink:0; }
+  .ms-title { font-family:'DM Mono',monospace; font-size:13px; font-weight:600; color:#fff; margin-bottom:4px; }
+  .ms-detail { font-size:13px; color:var(--muted); line-height:1.6; display:none; }
+  .mitm-step.active .ms-detail { display:block; }
+
+  /* ── Flashcards ── */
+  .flashcard { perspective:1000px; min-height:165px; position:relative; cursor:pointer; margin-bottom:12px; }
+  .fc-inner  { width:100%; min-height:165px; transform-style:preserve-3d; transition:transform 0.42s; position:relative; }
+  .flashcard.flipped .fc-inner { transform:rotateY(180deg); }
+  .fc-side   { position:absolute; width:100%; min-height:165px; backface-visibility:hidden; border-radius:10px; padding:24px; display:flex; flex-direction:column; justify-content:center; }
+  .fc-front  { background:var(--bg2); border:1px solid var(--bdr); }
+  .fc-back   { background:var(--surf); border:1px solid var(--bdr2); transform:rotateY(180deg); }
+  .fc-hint   { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .fc-q      { font-size:15px; font-weight:600; color:#fff; line-height:1.5; font-family:'Syne',sans-serif; }
+  .fc-albl   { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--cia-i); margin-bottom:8px; }
+  .fc-a      { font-size:13.5px; color:var(--text); line-height:1.7; }
+  .fc-nav    { display:flex; align-items:center; justify-content:space-between; margin-top:10px; }
+  .fc-btn    { padding:8px 18px; background:var(--bg2); border:1px solid var(--bdr2); color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; border-radius:6px; cursor:pointer; transition:all 0.13s; }
+  .fc-btn:hover { border-color:var(--cia-c); color:var(--cia-c); }
+  .fc-prog   { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
+
+  /* ── Quiz ── */
+  .quiz-counter { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; margin-bottom:13px; }
+  .quiz-q   { font-size:15px; font-weight:600; color:#fff; line-height:1.5; margin-bottom:13px; font-family:'Syne',sans-serif; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:8px; }
+  .quiz-opt { padding:11px 15px; border:1px solid var(--bdr); border-radius:7px; background:var(--bg2); font-family:'DM Sans',sans-serif; font-size:13.5px; color:var(--text); cursor:pointer; text-align:left; line-height:1.5; transition:all 0.12s; }
+  .quiz-opt:hover:not(:disabled) { border-color:var(--bdr2); background:var(--bg3); }
+  .quiz-opt.opt-correct { border-color:var(--cia-i); background:var(--i-bg); }
+  .quiz-opt.opt-wrong   { border-color:var(--threat); background:var(--thr-bg); }
+  .quiz-opt:disabled { cursor:not-allowed; }
+  .quiz-fb  { margin-top:11px; padding:12px 15px; border-radius:7px; font-size:13px; line-height:1.65; display:none; }
+  .qf-ok  { background:var(--i-bg);   border:1px solid rgba(80,224,160,0.25); color:var(--cia-i);  }
+  .qf-bad { background:var(--thr-bg); border:1px solid rgba(255,80,96,0.22);  color:var(--threat); }
+  .quiz-next { margin-top:10px; padding:9px 20px; background:var(--cia-c); color:var(--bg); border:none; border-radius:6px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700; cursor:pointer; display:none; transition:opacity 0.13s; }
+  .quiz-next:hover { opacity:0.85; }
+  .score-box { text-align:center; padding:44px; background:var(--bg2); border:1px solid var(--bdr); border-radius:10px; }
+  .score-num { font-family:'Syne',sans-serif; font-size:64px; font-weight:800; color:var(--cia-c); }
+  .score-lbl { color:var(--muted); font-size:13px; margin-top:6px; }
+  .restart-btn { margin-top:20px; padding:10px 26px; background:var(--bg3); border:1px solid var(--bdr2); color:var(--text); border-radius:7px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; }
+  .restart-btn:hover { background:var(--surf); }
+</style>
+</head>
+<body>
+
+<a href="index.html" style="display:inline-flex;align-items:center;gap:8px;position:fixed;top:16px;left:16px;z-index:100;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#506080;background:#0b0d18;border:1px solid rgba(140,200,255,0.1);border-radius:6px;padding:7px 14px;text-decoration:none;transition:color 0.13s,border-color 0.13s;" onmouseover="this.style.color='#50c8ff';this.style.borderColor='rgba(80,200,255,0.3)'" onmouseout="this.style.color='#506080';this.style.borderColor='rgba(140,200,255,0.1)'">← Home</a>
+
+<div class="hero">
+  <div class="tag">Chapters 8.1 – 8.3</div>
+  <h1>Network <span class="c">Security</span><br>&amp; <span class="p">Cryptography</span></h1>
+  <p class="hero-sub">CIA triad · symmetric &amp; public key · hashes · digital signatures · CAs</p>
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="showTab('overview')">Objectives</button>
+  <button class="tab" onclick="showTab('cia')">8.1 — Threats &amp; CIA</button>
+  <button class="tab" onclick="showTab('crypto')">8.2 — Cryptography</button>
+  <button class="tab" onclick="showTab('session')">Session Keys</button>
+  <button class="tab" onclick="showTab('hashes')">Hashes &amp; Signatures</button>
+  <button class="tab" onclick="showTab('ca')">8.3 — CAs &amp; MITM</button>
+  <button class="tab" onclick="showTab('flashcards')">Flashcards</button>
+  <button class="tab" onclick="showTab('quiz')">Quiz</button>
+</div>
+
+<div class="container">
+
+  <!-- ══ OBJECTIVES ══ -->
+  <div id="overview" class="section active">
+    <div class="sec-hd">
+      <div class="sec-icon">✓</div>
+      <div>
+        <div class="sec-title">Exam Objectives — Chapters 8.1–8.3</div>
+        <div class="sec-desc">All required knowledge points from your professor's guide</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="lec-badge lb-81">§8.1</span> Trust and Threats</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--cia-c)"></span><strong>CIA Triad:</strong> Confidentiality, Integrity, and Availability — the three goals of network security.</li>
+        <li><span class="dot" style="background:var(--threat)"></span><strong>Trudy model (network intruder capabilities):</strong> eavesdropping, modification, injection, replay, and dropping messages in transit.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="lec-badge lb-82">§8.2</span> Cryptographic Building Blocks</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--sym)"></span><strong>Symmetric key:</strong> same key encrypts and decrypts, fast, but key distribution is the challenge.</li>
+        <li><span class="dot" style="background:var(--pub)"></span><strong>Public key:</strong> key pair (public + private), no shared secret needed, but much slower.</li>
+        <li><span class="dot" style="background:var(--pub)"></span><strong>Public key — confidentiality:</strong> encrypt with recipient's public key. <strong>Authentication/integrity:</strong> sign with sender's private key.</li>
+        <li><span class="dot" style="background:var(--cia-c)"></span><strong>Session key:</strong> why real systems combine both — public key crypto to exchange a session key, symmetric crypto for the actual data (performance reason).</li>
+        <li><span class="dot" style="background:var(--hash)"></span><strong>Message digest (cryptographic hash):</strong> must be deterministic, one-way, and collision-resistant.</li>
+        <li><span class="dot" style="background:var(--hash)"></span><strong>TCP/UDP checksum ≠ cryptographic hash</strong> — easy to find collisions, does not resist intentional modification.</li>
+        <li><span class="dot" style="background:var(--hash)"></span><strong>Digital signatures are applied to the hash</strong> of a message, not the full message.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="lec-badge lb-83">§8.3</span> Key Predistribution and CAs</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--threat)"></span><strong>Man-in-the-middle attack</strong> on naive public key exchange: Trudy intercepts Alice's and Bob's public keys and substitutes her own.</li>
+        <li><span class="dot" style="background:var(--ca)"></span><strong>Certification Authority (CA):</strong> binds an identity to a public key by issuing a signed certificate.</li>
+        <li><span class="dot" style="background:var(--ca)"></span><strong>Verifying a certificate:</strong> check the CA's digital signature using the CA's public key.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══ CIA / THREATS ══ -->
+  <div id="cia" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">🛡</div>
+      <div>
+        <div class="lec-badge lb-81">Section 8.1</div>
+        <div class="sec-title">Trust, Threats &amp; the CIA Triad</div>
+        <div class="sec-desc">The three security goals and the five things a network intruder can do</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The CIA Triad — click each to expand</div>
+      <div class="cia-grid">
+        <div class="cia-card cia-c-card" onclick="this.classList.toggle('expanded')">
+          <div class="cia-letter">C</div>
+          <div class="cia-word">Confidentiality</div>
+          <div class="cia-def">Only authorized parties can read the message.</div>
+          <div class="cia-detail">Achieved through encryption. An eavesdropper who intercepts the ciphertext cannot recover the plaintext without the key. Example: TLS encrypting your credit card number in transit.</div>
+        </div>
+        <div class="cia-card cia-i-card" onclick="this.classList.toggle('expanded')">
+          <div class="cia-letter">I</div>
+          <div class="cia-word">Integrity</div>
+          <div class="cia-def">The message was not modified in transit.</div>
+          <div class="cia-detail">Achieved through message authentication codes (MACs) or digital signatures. Even if an attacker can modify ciphertext, integrity checks detect tampering. Example: HMAC appended to a message.</div>
+        </div>
+        <div class="cia-card cia-a-card" onclick="this.classList.toggle('expanded')">
+          <div class="cia-letter">A</div>
+          <div class="cia-word">Availability</div>
+          <div class="cia-def">The service is accessible to legitimate users.</div>
+          <div class="cia-detail">Threatened by denial-of-service (DoS) attacks, which flood a target with traffic so legitimate users cannot get through. Confidentiality and integrity tools do not protect availability — separate mechanisms are needed.</div>
+        </div>
+      </div>
+      <div class="hb hb-c" style="margin-top:14px;">
+        <div class="hb-label">Why all three matter together</div>
+        Security requires all three. A system that is confidential but not available (DDoSed) is broken. A system that is available and confidential but not integral (message tampered) is dangerous. Encryption alone does not provide integrity — an attacker can randomly modify ciphertext and produce valid-looking plaintext.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The Trudy Model — five capabilities of a network intruder</div>
+      <p style="margin-bottom:12px;">"Trudy" is the conventional name for an adversary who has access to the network. Unlike a passive observer, Trudy can do all of the following:</p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:12px;padding:12px 14px;background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;align-items:flex-start;">
+          <span style="font-family:'DM Mono',monospace;color:var(--threat);font-size:11px;font-weight:700;flex-shrink:0;min-width:90px;margin-top:2px;">Eavesdrop</span>
+          <span style="font-size:13px;line-height:1.65;">Read packets in transit. Trudy is on the path between Alice and Bob and can copy any packet she sees. Threatens <strong>confidentiality</strong>.</span>
+        </div>
+        <div style="display:flex;gap:12px;padding:12px 14px;background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;align-items:flex-start;">
+          <span style="font-family:'DM Mono',monospace;color:var(--threat);font-size:11px;font-weight:700;flex-shrink:0;min-width:90px;margin-top:2px;">Modify</span>
+          <span style="font-size:13px;line-height:1.65;">Change the content of a packet before forwarding it. Bob receives a message that Alice never sent. Threatens <strong>integrity</strong>.</span>
+        </div>
+        <div style="display:flex;gap:12px;padding:12px 14px;background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;align-items:flex-start;">
+          <span style="font-family:'DM Mono',monospace;color:var(--threat);font-size:11px;font-weight:700;flex-shrink:0;min-width:90px;margin-top:2px;">Inject</span>
+          <span style="font-size:13px;line-height:1.65;">Create and send entirely new packets claiming to be from Alice. Trudy impersonates a legitimate participant. Threatens <strong>authentication</strong>.</span>
+        </div>
+        <div style="display:flex;gap:12px;padding:12px 14px;background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;align-items:flex-start;">
+          <span style="font-family:'DM Mono',monospace;color:var(--threat);font-size:11px;font-weight:700;flex-shrink:0;min-width:90px;margin-top:2px;">Replay</span>
+          <span style="font-size:13px;line-height:1.65;">Record a valid packet from Alice and send it again later. Example: replay a "transfer $100" message. Threatens <strong>freshness/integrity</strong>.</span>
+        </div>
+        <div style="display:flex;gap:12px;padding:12px 14px;background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;align-items:flex-start;">
+          <span style="font-family:'DM Mono',monospace;color:var(--threat);font-size:11px;font-weight:700;flex-shrink:0;min-width:90px;margin-top:2px;">Drop</span>
+          <span style="font-size:13px;line-height:1.65;">Discard packets silently. Alice thinks Bob received her message; Bob never did. Threatens <strong>availability and reliability</strong>.</span>
+        </div>
+      </div>
+      <div class="hb hb-thr" style="margin-top:12px;">
+        <div class="hb-label">Why this matters</div>
+        Security mechanisms must be designed against a Trudy-capable adversary, not just passive eavesdroppers. Encryption alone only stops eavesdropping — it does not prevent modification, injection, replay, or dropping.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Trust and threat — the core tradeoff</div>
+      <p>Security is a cost/benefit calculation. Every mechanism adds overhead (latency, CPU, complexity). You must identify which threats to mitigate and which to accept based on:</p>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--cia-c)"></span>The <strong>value of the data</strong> being protected.</li>
+        <li><span class="dot" style="background:var(--cia-c)"></span>The <strong>probability</strong> of an attack.</li>
+        <li><span class="dot" style="background:var(--cia-c)"></span>The <strong>cost</strong> of the countermeasure (performance, complexity, money).</li>
+      </ul>
+      <div class="hb hb-c">
+        <div class="hb-label">Historical context</div>
+        The Internet was designed assuming all actors inside the network were trusted. Security was an afterthought — most tools are retrofitted. A comprehensive redesign would place security at the core from the start.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CRYPTOGRAPHY ══ -->
+  <div id="crypto" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">🔑</div>
+      <div>
+        <div class="lec-badge lb-82">Section 8.2</div>
+        <div class="sec-title">Symmetric vs Public Key Cryptography</div>
+        <div class="sec-desc">Two fundamentally different approaches — when to use each</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Side-by-side comparison</div>
+      <div style="overflow-x:auto;">
+        <table class="cmp-tbl">
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th class="sym-h">Symmetric Key (Secret Key)</th>
+              <th class="pub-h">Public Key (Asymmetric)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Keys</td><td class="sym-c">One shared key for both encrypt and decrypt</td><td class="pub-c">Key pair: public (encrypt) + private (decrypt)</td></tr>
+            <tr><td>Speed</td><td class="sym-c"><strong style="color:var(--cia-i)">Fast</strong> — hardware-efficient (AES)</td><td class="pub-c"><strong style="color:var(--threat)">Slow</strong> — orders of magnitude slower (RSA)</td></tr>
+            <tr><td>Key distribution challenge</td><td class="sym-c"><strong style="color:var(--threat)">Hard</strong> — how do Alice &amp; Bob share a key securely if they've never met?</td><td class="pub-c"><strong style="color:var(--cia-i)">Easier</strong> — public key can be published openly</td></tr>
+            <tr><td>Confidentiality</td><td class="sym-c">Encrypt/decrypt with the shared key</td><td class="pub-c">Encrypt with recipient's <strong>public</strong> key</td></tr>
+            <tr><td>Authentication</td><td class="sym-c">Both parties know the key — proves identity only to each other</td><td class="pub-c">Sign (encrypt) with sender's <strong>private</strong> key — anyone with public key can verify</td></tr>
+            <tr><td>Nonrepudiation</td><td class="sym-c">No — either party could have created the message</td><td class="pub-c">Yes — only private key holder could have signed</td></tr>
+            <tr><td>Examples</td><td class="sym-c">AES, 3DES</td><td class="pub-c">RSA, ElGamal, elliptic curve</td></tr>
+            <tr><td>Primary use in practice</td><td class="sym-c">Bulk data encryption (session data)</td><td class="pub-c">Key exchange and digital signatures</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Public key — how confidentiality and authentication work differently</div>
+      <div class="two-col">
+        <div>
+          <h3>Confidentiality (sending a secret to Bob)</h3>
+          <div class="flow-wrap">
+            <div class="flow-row">
+              <div class="flow-node fn-alice" style="font-size:11px;">Alice<br>plaintext</div>
+              <div class="flow-arrow">
+                <div class="arrow-line pub"></div>
+                <div class="arrow-label">encrypt with<br>Bob's PUBLIC key</div>
+              </div>
+              <div class="flow-node fn-bob" style="font-size:11px;">Bob<br>decrypts</div>
+            </div>
+          </div>
+          <p style="font-size:12.5px;">Only Bob's private key can decrypt. Even Alice can't decrypt after she encrypts.</p>
+        </div>
+        <div>
+          <h3>Authentication (Alice proves she sent it)</h3>
+          <div class="flow-wrap">
+            <div class="flow-row">
+              <div class="flow-node fn-alice" style="font-size:11px;">Alice<br>signs</div>
+              <div class="flow-arrow">
+                <div class="arrow-line enc"></div>
+                <div class="arrow-label">sign with<br>Alice's PRIVATE key</div>
+              </div>
+              <div class="flow-node fn-bob" style="font-size:11px;">Bob<br>verifies</div>
+            </div>
+          </div>
+          <p style="font-size:12.5px;">Anyone with Alice's public key can verify. Only Alice (private key holder) could have signed.</p>
+        </div>
+      </div>
+      <div class="hb hb-pub">
+        <div class="hb-label">The direction rule</div>
+        For <strong>confidentiality:</strong> encrypt with the <em>recipient's</em> public key (only they can decrypt). For <strong>authentication:</strong> sign with the <em>sender's</em> private key (anyone can verify with the sender's public key). These are opposite directions.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SESSION KEYS ══ -->
+  <div id="session" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">⚡</div>
+      <div>
+        <div class="lec-badge lb-82">Section 8.2</div>
+        <div class="sec-title">Session Keys — Combining Both Approaches</div>
+        <div class="sec-desc">Why real systems use public key to set up, then symmetric key for data</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The performance problem with pure public key crypto</div>
+      <p>Public key algorithms (RSA, etc.) are <strong>orders of magnitude slower</strong> than symmetric algorithms (AES). On a modern CPU, AES can encrypt gigabits per second; RSA can encrypt only thousands of bits per second. Using RSA to encrypt an entire HTTPS session would be impractically slow.</p>
+      <div class="hb hb-sym">
+        <div class="hb-label">The hybrid solution</div>
+        Use public key cryptography only for the <strong>key exchange phase</strong> — to securely transmit a randomly generated session key. Then use that session key with a fast symmetric algorithm (AES) for all the actual data. This combines the best of both worlds: the security of public key for key distribution, and the speed of symmetric key for bulk data.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Session key protocol — how it works</div>
+      <div class="flow-wrap">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.1em;">TLS-style handshake (simplified)</div>
+        <div class="flow-row">
+          <div class="flow-node fn-alice" style="min-height:52px;">Alice<br><span style="font-size:10px;">client</span></div>
+          <div class="flow-arrow">
+            <div class="arrow-line pub"></div>
+            <div class="arrow-label">1. Alice generates random session key S<br>2. Encrypts S with Bob's public key<br>3. Sends encrypted S</div>
+          </div>
+          <div class="flow-node fn-bob" style="min-height:52px;">Bob<br><span style="font-size:10px;">server</span></div>
+        </div>
+        <div style="text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:var(--cia-i);margin:10px 0;">Bob decrypts with his private key → both now share session key S</div>
+        <div class="flow-row">
+          <div class="flow-node fn-alice" style="min-height:52px;">Alice</div>
+          <div class="flow-arrow">
+            <div class="arrow-line enc"></div>
+            <div class="arrow-label">All data encrypted with AES using session key S<br>(fast symmetric encryption)</div>
+          </div>
+          <div class="flow-node fn-bob" style="min-height:52px;">Bob</div>
+        </div>
+      </div>
+      <ul class="kp" style="margin-top:12px;">
+        <li><span class="dot" style="background:var(--pub)"></span><strong>Why a session key?</strong> Limits the amount of ciphertext encrypted under any one key. If a key is compromised, only one session is exposed. Fresh key for each session = forward secrecy.</li>
+        <li><span class="dot" style="background:var(--sym)"></span><strong>Why symmetric for data?</strong> AES is thousands of times faster than RSA. Encrypting gigabytes of video with RSA is not feasible.</li>
+        <li><span class="dot" style="background:var(--pub)"></span><strong>Why public key for the handshake?</strong> Alice and Bob can establish the session key without ever having met — no pre-shared secret needed.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══ HASHES & SIGNATURES ══ -->
+  <div id="hashes" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">#</div>
+      <div>
+        <div class="lec-badge lb-82">Section 8.2</div>
+        <div class="sec-title">Hashes, MACs &amp; Digital Signatures</div>
+        <div class="sec-desc">Message digests, why checksums aren't enough, and why we sign the hash</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Cryptographic hash — three required properties</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0;">
+        <div style="padding:14px;background:var(--bg3);border:1px solid rgba(80,224,160,0.2);border-radius:8px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--cia-i);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Deterministic</div>
+          <div style="font-size:12.5px;line-height:1.65;">The same input always produces the same output. <em>hash("hello") is always the same value.</em></div>
+        </div>
+        <div style="padding:14px;background:var(--bg3);border:1px solid rgba(80,224,160,0.2);border-radius:8px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--cia-i);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">One-way</div>
+          <div style="font-size:12.5px;line-height:1.65;">Computationally infeasible to find any input that produces a given output. Cannot reverse the hash to find the plaintext.</div>
+        </div>
+        <div style="padding:14px;background:var(--bg3);border:1px solid rgba(80,224,160,0.2);border-radius:8px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--cia-i);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Collision-resistant</div>
+          <div style="font-size:12.5px;line-height:1.65;">Computationally infeasible to find two different inputs that produce the same output. Finding any collision should require ~2⁶⁴ attempts.</div>
+        </div>
+      </div>
+      <div class="hb hb-hash">
+        <div class="hb-label">What a hash does</div>
+        A cryptographic hash function takes an arbitrary-length message and produces a fixed-length digest (e.g., SHA-256 always produces 256 bits). The digest is like a fingerprint of the message — any change to the message produces a completely different digest.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Why TCP/UDP checksum ≠ cryptographic hash</div>
+      <div class="two-col">
+        <div style="padding:14px;background:var(--thr-bg);border:1px solid rgba(255,80,96,0.25);border-radius:7px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--threat);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">TCP/UDP checksum</div>
+          <div style="font-size:13px;line-height:1.7;">Simple sum of 16-bit words. Designed to catch <strong>accidental</strong> bit errors. An adversary can easily modify a message and adjust the checksum to match — trivial to find collisions. Not a cryptographic tool.</div>
+        </div>
+        <div style="padding:14px;background:var(--hash-bg);border:1px solid rgba(80,224,160,0.25);border-radius:7px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--hash);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Cryptographic hash (SHA-256)</div>
+          <div style="font-size:13px;line-height:1.7;">Designed to resist <strong>deliberate</strong> modification. Finding any other message with the same digest requires ~2⁶⁴ attempts even knowing the hash function. An adversary cannot craft a fake message with a matching digest without the key.</div>
+        </div>
+      </div>
+      <div class="hb hb-thr" style="margin-top:12px;">
+        <div class="hb-label">The key difference</div>
+        TCP checksum detects random errors (bit flips from noisy links). A cryptographic hash prevents intentional, adversarial modification. A determined attacker can trivially forge a TCP checksum; forging a SHA-256 HMAC is computationally infeasible.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Why digital signatures are applied to the hash, not the full message</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--pub)"></span><strong>Public key operations are slow.</strong> RSA encrypting a 10 MB file directly is computationally expensive — could take seconds.</li>
+        <li><span class="dot" style="background:var(--hash)"></span><strong>The hash is always a fixed small size.</strong> SHA-256 always produces 32 bytes regardless of input. Signing 32 bytes with RSA is fast.</li>
+        <li><span class="dot" style="background:var(--hash)"></span><strong>The hash binds the signature to the content.</strong> Signing the hash of the message is equivalent to signing the message itself — any change to the message changes the hash, invalidating the signature.</li>
+      </ul>
+      <div class="flow-wrap" style="margin-top:14px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.1em;">Digital signature process</div>
+        <div style="font-size:13px;color:var(--text);line-height:2;font-family:'DM Mono',monospace;">
+          <span style="color:var(--cia-c)">Sender:</span> &nbsp;hash(message) → digest → sign(digest, private_key) = signature<br>
+          <span style="color:var(--muted)">Transmit:</span> message + signature<br>
+          <span style="color:var(--cia-i)">Receiver:</span> hash(received_message) → digest′ &nbsp;|&nbsp; verify(signature, sender_public_key) → digest<br>
+          <span style="color:var(--cia-i)">Check:</span> digest′ == digest → <strong style="color:var(--cia-i)">authentic &amp; unmodified</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">HMAC — keyed hash for message authentication</div>
+      <p>An HMAC (Hash-based Message Authentication Code) produces an authentication tag that is a function of both the message and a secret key. Only someone with the key can produce or verify the HMAC.</p>
+      <div style="background:var(--bg3);border:1px solid var(--bdr2);border-radius:7px;padding:14px;font-family:'DM Mono',monospace;font-size:12.5px;line-height:2;margin:12px 0;">
+        <span style="color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:0.14em;display:block;margin-bottom:4px;">HMAC formula</span>
+        HMAC = H((K ⊕ opad) || H((K ⊕ ipad) || message))
+      </div>
+      <div class="hb hb-hash">
+        <div class="hb-label">HMAC vs digital signature</div>
+        Both authenticate messages, but HMACs use symmetric keys (fast, no nonrepudiation — both parties know the key). Digital signatures use asymmetric keys (slower, but provide nonrepudiation — only the private key holder could have signed). Use HMAC for performance; use digital signatures when you need a third party to be able to verify.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CAs & MITM ══ -->
+  <div id="ca" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">🏛</div>
+      <div>
+        <div class="lec-badge lb-83">Section 8.3</div>
+        <div class="sec-title">CAs, Certificates &amp; Man-in-the-Middle</div>
+        <div class="sec-desc">Why you can't just publish your public key — and how CAs solve it</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The man-in-the-middle attack on naive public key exchange</div>
+      <p style="margin-bottom:14px;">Click each step to understand the attack:</p>
+      <div style="border:1px solid var(--bdr);border-radius:8px;overflow:hidden;">
+        <div class="mitm-step active" onclick="mitmToggle(this)">
+          <div class="ms-num">1</div>
+          <div>
+            <div class="ms-title">Alice publishes her public key</div>
+            <div class="ms-detail">Alice generates a key pair and wants to share her public key with Bob so he can send her encrypted messages or verify her signatures. She posts it on a server or sends it directly. But the channel is not authenticated.</div>
+          </div>
+        </div>
+        <div class="mitm-step" onclick="mitmToggle(this)">
+          <div class="ms-num">2</div>
+          <div>
+            <div class="ms-title">Trudy intercepts and substitutes her own public key</div>
+            <div class="ms-detail">Trudy sits between Alice and Bob. When Alice's public key is transmitted to Bob, Trudy intercepts it and sends her own public key to Bob instead. Bob now has Trudy's key, believing it is Alice's. Similarly, when Bob sends his public key to Alice, Trudy substitutes her own.</div>
+          </div>
+        </div>
+        <div class="mitm-step" onclick="mitmToggle(this)">
+          <div class="ms-num">3</div>
+          <div>
+            <div class="ms-title">Bob encrypts to "Alice" — actually to Trudy</div>
+            <div class="ms-detail">Bob encrypts a message using what he thinks is Alice's public key. Since it's actually Trudy's key, Trudy can decrypt it. Trudy reads the message, re-encrypts it with Alice's real public key, and forwards it. Neither Alice nor Bob know Trudy is in the middle.</div>
+          </div>
+        </div>
+        <div class="mitm-step" onclick="mitmToggle(this)">
+          <div class="ms-num">4</div>
+          <div>
+            <div class="ms-title">Result: Trudy reads and can modify all traffic</div>
+            <div class="ms-detail">Trudy has established a session with both Alice and Bob, each of whom believes they are talking directly to the other. Trudy can read, modify, and inject messages into both directions — a complete man-in-the-middle compromise. This is why naive public key exchange without authentication is useless.</div>
+          </div>
+        </div>
+      </div>
+      <div class="hb hb-thr" style="margin-top:12px;">
+        <div class="hb-label">The root problem</div>
+        Public key exchange is only secure if Bob can verify that the public key he received actually belongs to Alice — and not to Trudy impersonating Alice. Without a trusted third party or some authenticated channel, Bob has no way to make this verification.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">What a Certification Authority (CA) does</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--ca)"></span>A CA is a trusted third party that <strong>binds an identity to a public key</strong> by issuing a digitally signed certificate.</li>
+        <li><span class="dot" style="background:var(--ca)"></span>The CA verifies that the entity claiming to own a public key actually controls the corresponding identity (domain name, email, organization).</li>
+        <li><span class="dot" style="background:var(--ca)"></span>The CA then signs the certificate with its own private key. Anyone who trusts the CA and knows the CA's public key can verify the certificate.</li>
+        <li><span class="dot" style="background:var(--ca)"></span>Your browser comes pre-loaded with the public keys of dozens of trusted root CAs — this is the basis of HTTPS.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">What a certificate contains</div>
+      <div style="background:var(--bg3);border:1px solid var(--bdr2);border-radius:8px;padding:16px;font-family:'DM Mono',monospace;font-size:12.5px;line-height:2.1;margin:12px 0;">
+        <span style="color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:0.14em;display:block;margin-bottom:6px;">X.509 Certificate fields</span>
+        <span style="color:var(--ca)">Identity:</span> &nbsp;alice@example.com (or www.example.com)<br>
+        <span style="color:var(--cia-c)">Public key:</span> &nbsp;Alice's actual public key value<br>
+        <span style="color:var(--muted)">CA identity:</span> &nbsp;VeriSign (the signer)<br>
+        <span style="color:var(--pub)">Signature:</span> &nbsp;CA's digital signature over the above fields<br>
+        <span style="color:var(--muted)">Sig. algorithm:</span> &nbsp;RSA with SHA-256<br>
+        <span style="color:var(--cia-a)">Expiration:</span> &nbsp;2026-01-01 (optional but common)
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">How a recipient verifies a certificate — the exact process</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:12px;padding:12px 14px;background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;font-size:13px;align-items:flex-start;">
+          <span style="font-family:'DM Mono',monospace;color:var(--ca);font-size:11px;flex-shrink:0;min-width:20px;margin-top:2px;">1</span>
+          <span>Bob receives Alice's certificate. It contains: Alice's identity, Alice's public key, and the CA's digital signature over those fields.</span>
+        </div>
+        <div style="display:flex;gap:12px;padding:12px 14px;background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;font-size:13px;align-items:flex-start;">
+          <span style="font-family:'DM Mono',monospace;color:var(--ca);font-size:11px;flex-shrink:0;min-width:20px;margin-top:2px;">2</span>
+          <span>Bob looks up the CA's public key (which he obtained out-of-band — it may be pre-installed in his browser or OS).</span>
+        </div>
+        <div style="display:flex;gap:12px;padding:12px 14px;background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;font-size:13px;align-items:flex-start;">
+          <span style="font-family:'DM Mono',monospace;color:var(--ca);font-size:11px;flex-shrink:0;min-width:20px;margin-top:2px;">3</span>
+          <span>Bob verifies the CA's digital signature on the certificate using the CA's public key. If the signature is valid, the certificate was genuinely signed by the CA.</span>
+        </div>
+        <div style="display:flex;gap:12px;padding:12px 14px;background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;font-size:13px;align-items:flex-start;">
+          <span style="font-family:'DM Mono',monospace;color:var(--ca);font-size:11px;flex-shrink:0;min-width:20px;margin-top:2px;">4</span>
+          <span>Since the CA verified Alice's identity before signing, and the signature is valid, Bob now trusts that the public key in the certificate really belongs to Alice — not Trudy.</span>
+        </div>
+      </div>
+      <div class="hb hb-ca" style="margin-top:12px;">
+        <div class="hb-label">Why this stops the MITM attack</div>
+        Trudy can intercept Alice's certificate, but she cannot forge the CA's signature (she doesn't have the CA's private key). If Trudy sends her own certificate claiming to be Alice, the CA's signature on it will say "Trudy.com" not "Alice.com" — Bob's verification will fail or show the wrong identity.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FLASHCARDS ══ -->
+  <div id="flashcards" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">◧</div>
+      <div>
+        <div class="sec-title">Flashcards</div>
+        <div class="sec-desc">Click to flip · 14 cards covering all three sections</div>
+      </div>
+    </div>
+    <div class="flashcard" id="fc" onclick="flipCard()">
+      <div class="fc-inner">
+        <div class="fc-side fc-front"><div class="fc-hint">tap to flip</div><div class="fc-q" id="fc-q"></div></div>
+        <div class="fc-side fc-back"><div class="fc-albl">Answer</div><div class="fc-a" id="fc-a"></div></div>
+      </div>
+    </div>
+    <div class="fc-nav">
+      <button class="fc-btn" onclick="prevCard()">← Prev</button>
+      <span class="fc-prog" id="fc-prog">1 / 14</span>
+      <button class="fc-btn" onclick="nextCard()">Next →</button>
+    </div>
+  </div>
+
+  <!-- ══ QUIZ ══ -->
+  <div id="quiz" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">✎</div>
+      <div>
+        <div class="sec-title">Self-Check Quiz</div>
+        <div class="sec-desc">10 questions · all §8.1–8.3 objectives</div>
+      </div>
+    </div>
+    <div id="quiz-container"></div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+/* ── Tab ── */
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+/* ── MITM stepper ── */
+function mitmToggle(el) {
+  document.querySelectorAll('.mitm-step').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ══ FLASHCARDS ══ */
+const cards = [
+  { q: "What are the three goals of the CIA Triad?", a: "Confidentiality — only authorized parties can read the message (achieved by encryption). Integrity — the message was not modified in transit (achieved by MACs or digital signatures). Availability — the service is accessible to legitimate users (threatened by DoS attacks). All three are required for a fully secure system." },
+  { q: "Name the five things the Trudy model says a network intruder can do.", a: "1. Eavesdrop — read packets in transit. 2. Modify — change packet content. 3. Inject — create and send new packets impersonating a legitimate participant. 4. Replay — resend a previously captured valid packet. 5. Drop — silently discard packets. Encryption alone only stops eavesdropping." },
+  { q: "What is the key difference between symmetric key and public key cryptography?", a: "Symmetric: one shared key used to both encrypt and decrypt. Fast. Key distribution is the hard problem — how do parties share the key securely? Public key: a pair (public for encryption, private for decryption). No shared secret needed. Much slower (orders of magnitude) — used mainly for key exchange and signatures, not bulk data." },
+  { q: "How does public key cryptography provide confidentiality? How does it provide authentication?", a: "Confidentiality: encrypt with the recipient's PUBLIC key. Only the recipient (who has the private key) can decrypt. Authentication: sign with the sender's PRIVATE key. Anyone with the sender's public key can verify the signature — only the private key holder could have produced it." },
+  { q: "What is a session key and why do real systems use one?", a: "A session key is a fresh symmetric key generated for one communication session. Systems use the slow public key algorithm only to securely exchange this session key, then switch to fast symmetric encryption (AES) for all actual data. This gives both security (no pre-shared secret needed) and performance (gigabits/sec with AES vs kilobits/sec with RSA)." },
+  { q: "What three properties must a cryptographic hash function have?", a: "1. Deterministic — same input always produces same output. 2. One-way — computationally infeasible to find any input that produces a given digest. 3. Collision-resistant — computationally infeasible to find two different inputs that produce the same digest. Finding any collision should require ~2⁶⁴ hash computations." },
+  { q: "Why is the TCP/UDP checksum NOT a cryptographic hash?", a: "The TCP/UDP checksum is a simple sum of 16-bit words, designed to catch accidental bit errors (noisy links). An adversary can trivially modify a message and recalculate the checksum to match — it offers zero resistance to intentional modification. A cryptographic hash like SHA-256 requires ~2⁶⁴ attempts to find a collision, making forgery computationally infeasible." },
+  { q: "Why are digital signatures applied to the hash of a message, not the full message?", a: "Two reasons: (1) Public key operations are very slow — signing 32 bytes (a SHA-256 digest) is much faster than signing a multi-megabyte file directly. (2) The hash binds the signature to the message content — any change to the message changes the digest, invalidating the signature. Signing the hash is mathematically equivalent to signing the full message." },
+  { q: "Describe the man-in-the-middle attack on naive public key exchange.", a: "Trudy sits between Alice and Bob. When Alice sends her public key to Bob, Trudy intercepts it and substitutes her own. When Bob sends his public key to Alice, Trudy does the same. Now Bob has Trudy's key (thinking it's Alice's), and vice versa. All traffic passes through Trudy, who can decrypt, read, modify, and re-encrypt everything. Neither Alice nor Bob can tell." },
+  { q: "What does a Certification Authority (CA) do?", a: "A CA is a trusted third party that binds an identity (e.g., a domain name or email address) to a public key by issuing a digitally signed certificate. The CA verifies the entity's identity out-of-band, then signs a certificate containing the identity + public key with the CA's own private key. Anyone who trusts the CA and knows its public key can verify the binding." },
+  { q: "How does a recipient verify a certificate?", a: "1. Recipient has the CA's public key (pre-installed or obtained out-of-band). 2. They check the CA's digital signature on the certificate using the CA's public key. 3. If the signature is valid, the certificate was genuinely signed by that CA. 4. Since the CA verified the identity before signing, the public key in the certificate really belongs to the stated entity — not an impersonator." },
+  { q: "Why does a CA stop the man-in-the-middle attack?", a: "Trudy cannot forge the CA's signature (she doesn't have the CA's private key). If Trudy intercepts Alice's certificate and replaces it with her own, Bob's verification fails — the CA's signature on Trudy's certificate says 'Trudy' not 'Alice'. Bob sees the mismatch and rejects the connection. The CA's signature is unforgeable without the CA's private key." },
+  { q: "Encryption alone does not provide integrity. Why not?", a: "An attacker can randomly modify ciphertext and produce something that decrypts to valid-looking plaintext — the tampering is undetectable without a separate integrity mechanism. For example, flipping bits in CBC-mode ciphertext predictably changes the plaintext. Encryption hides content but does not prevent modification. A MAC or digital signature is required for integrity." },
+  { q: "What is an HMAC and when would you use it instead of a digital signature?", a: "An HMAC (Hash-based Message Authentication Code) uses a secret shared key to produce an authentication tag: HMAC = H((K⊕opad) || H((K⊕ipad) || message)). Use HMAC when both parties share a secret key and performance matters — it's much faster than RSA signing. Use digital signatures when nonrepudiation is needed (a third party must be able to verify the signature without sharing a key)." },
+];
+
+let curCard=0;
+function renderCard(){document.getElementById('fc-q').textContent=cards[curCard].q;document.getElementById('fc-a').textContent=cards[curCard].a;document.getElementById('fc-prog').textContent=(curCard+1)+' / '+cards.length;document.getElementById('fc').classList.remove('flipped');}
+function flipCard(){document.getElementById('fc').classList.toggle('flipped');}
+function nextCard(){curCard=(curCard+1)%cards.length;renderCard();}
+function prevCard(){curCard=(curCard-1+cards.length)%cards.length;renderCard();}
+renderCard();
+
+/* ══ QUIZ ══ */
+const questions=[
+  {q:"Which element of the CIA triad does a denial-of-service attack primarily threaten?",opts:["Confidentiality","Integrity","Availability","Authentication"],correct:2,fb:"DoS attacks flood a service with traffic so legitimate users cannot access it — this is an availability attack. Confidentiality and integrity are not threatened by DoS."},
+  {q:"Trudy intercepts a packet from Alice and changes the amount in a bank transfer from $10 to $1,000 before forwarding it to Bob. Which Trudy capability is this?",opts:["Eavesdropping","Modification","Injection","Replay"],correct:1,fb:"Modification means changing the content of a packet in transit. Eavesdropping is passive (just reading). Injection creates new packets. Replay resends a previously captured packet."},
+  {q:"Alice wants to send a confidential message to Bob using public key cryptography. Which key does she use to encrypt?",opts:["Alice's private key","Alice's public key","Bob's private key","Bob's public key"],correct:3,fb:"For confidentiality, encrypt with the RECIPIENT'S public key. Only Bob (who has the matching private key) can decrypt. Remember the direction: confidentiality uses the recipient's public key; authentication uses the sender's private key."},
+  {q:"Bob receives a digitally signed message from Alice. He verifies the signature. Which key does he use?",opts:["Bob's private key","Bob's public key","Alice's private key","Alice's public key"],correct:3,fb:"To verify a digital signature, use the SENDER'S public key. Alice signed with her private key; Bob verifies with Alice's public key. If verification succeeds, only Alice (private key holder) could have created the signature."},
+  {q:"Why do real systems use public key crypto only for the handshake, then switch to AES for data?",opts:["AES requires a pre-shared key which public key exchange provides; AES is orders of magnitude faster than RSA for bulk data","RSA is faster than AES but less secure","Public key crypto requires a CA; AES does not","AES cannot provide confidentiality; only RSA can"],correct:0,fb:"RSA is thousands of times slower than AES. Using RSA to encrypt gigabytes of data is not feasible. The hybrid approach uses slow-but-no-pre-shared-secret RSA to exchange a session key, then fast AES for all actual data. This is the basis of TLS/HTTPS."},
+  {q:"Which of the following is NOT a required property of a cryptographic hash function?",opts:["Deterministic — same input always gives same output","One-way — cannot reverse the hash to find the input","Variable output length — longer messages produce longer digests","Collision-resistant — infeasible to find two inputs with the same output"],correct:2,fb:"Cryptographic hashes produce a FIXED-length output regardless of input length (e.g., SHA-256 always produces 256 bits). The three required properties are: deterministic, one-way, and collision-resistant."},
+  {q:"An adversary modifies a packet and adjusts the TCP checksum to match. What does this demonstrate?",opts:["The TCP checksum provides strong integrity protection","The TCP checksum is not a cryptographic hash — it is trivial to forge for intentional modifications","The attacker must know a secret key to adjust the checksum","TCP checksums are only for IPv6"],correct:1,fb:"The TCP checksum is a simple arithmetic sum, not a cryptographic hash. An adversary who can compute the checksum (which is public knowledge) can trivially forge it for any modified message. A cryptographic HMAC or digital signature would detect this tampering."},
+  {q:"Why are digital signatures applied to the hash of a message rather than the full message?",opts:["Hashes are encrypted; messages are not","Public key signing is slow — signing a small fixed-size digest is much faster than signing the full message, while providing equivalent security","Hashes can be transmitted without encryption","Full messages cannot be signed due to size limits in RSA"],correct:1,fb:"RSA signing is computationally expensive. A SHA-256 digest is always 32 bytes regardless of message size — signing 32 bytes is fast. Any change to the message changes the hash, so the signature still binds to the full content."},
+  {q:"Describe the man-in-the-middle attack on public key exchange. What is Trudy's key action?",opts:["Trudy decrypts Alice's messages using Bob's public key","Trudy intercepts Alice's and Bob's public keys and substitutes her own, so each party unknowingly encrypts to Trudy","Trudy replays old session keys to decrypt future messages","Trudy forges the CA's signature on Alice's certificate"],correct:1,fb:"Trudy intercepts and replaces the public keys. Bob gets Trudy's key thinking it's Alice's; Alice gets Trudy's key thinking it's Bob's. All traffic flows through Trudy who can decrypt and re-encrypt everything. This is why unauthenticated public key exchange is insecure."},
+  {q:"Bob wants to verify Alice's certificate. He uses the CA's public key and the signature passes. What has Bob established?",opts:["That Alice's private key is secure","That the public key in the certificate was genuinely bound to Alice's identity by a CA that verified her identity before signing","That Alice is currently online and available","That the message Alice sent is unmodified"],correct:1,fb:"A valid CA signature means: (1) the certificate was genuinely issued by that CA (CA's signature is unforgeable without the CA's private key), and (2) the CA verified Alice's identity before issuing. Therefore, the public key in the certificate really belongs to Alice. This is the entire purpose of PKI and CAs."},
+];
+
+let qIdx=0,score=0,answered=false;
+function renderQuiz(){
+  const c=document.getElementById('quiz-container');
+  if(qIdx>=questions.length){const pct=Math.round(score/questions.length*100);c.innerHTML=`<div class="score-box"><div class="score-num">${score}/${questions.length}</div><div class="score-lbl">${pct}% — ${pct>=80?'Strong grasp of cryptography and security':'Review the sections above'}</div><button class="restart-btn" onclick="restartQuiz()">Restart</button></div>`;return;}
+  const q=questions[qIdx];
+  c.innerHTML=`<div class="card"><div class="quiz-counter">QUESTION ${qIdx+1} / ${questions.length}</div><div class="quiz-q">${q.q}</div><div class="quiz-opts">${q.opts.map((o,i)=>`<button class="quiz-opt" id="opt-${i}" onclick="selectOpt(${i})">${o}</button>`).join('')}</div><div class="quiz-fb" id="qfb"></div><button class="quiz-next" id="qnext" onclick="nextQ()">Next →</button></div>`;
+}
+function selectOpt(i){if(answered)return;answered=true;const q=questions[qIdx];document.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);const fb=document.getElementById('qfb');if(i===q.correct){score++;document.getElementById('opt-'+i).classList.add('opt-correct');fb.className='quiz-fb qf-ok';fb.innerHTML='✓ Correct. '+q.fb;}else{document.getElementById('opt-'+i).classList.add('opt-wrong');document.getElementById('opt-'+q.correct).classList.add('opt-correct');fb.className='quiz-fb qf-bad';fb.innerHTML='✗ Not quite. '+q.fb;}fb.style.display='block';document.getElementById('qnext').style.display='inline-block';}
+function nextQ(){qIdx++;answered=false;renderQuiz();}
+function restartQuiz(){qIdx=0;score=0;answered=false;renderQuiz();}
+renderQuiz();
+</script>
+</body>
+</html>

@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Guide: TCP Congestion Control — Section 6.3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --bg:      #08080f;
+    --bg2:     #0d0d18;
+    --bg3:     #131320;
+    --surf:    #181828;
+    --bdr:     rgba(180,160,255,0.1);
+    --bdr2:    rgba(180,160,255,0.2);
+    --text:    #ccc8f0;
+    --muted:   #5a5880;
+    --aimd:    #7ab0ff;
+    --ss:      #50dfa0;
+    --fr:      #ff9050;
+    --loss:    #ff5060;
+    --purple:  #c880ff;
+    --aimd-bg: rgba(122,176,255,0.07);
+    --ss-bg:   rgba(80,223,160,0.07);
+    --fr-bg:   rgba(255,144,80,0.07);
+    --loss-bg: rgba(255,80,96,0.07);
+    --pur-bg:  rgba(200,128,255,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 52px 40px 42px;
+    text-align: center;
+    position: relative; overflow: hidden;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(122,176,255,0.08) 0%, transparent 65%),
+      radial-gradient(ellipse 60% 50% at 80% 50%, rgba(80,223,160,0.06) 0%, transparent 65%);
+    border-bottom: 1px solid var(--bdr);
+  }
+
+  .hero::before {
+    content: 'AIMD';
+    position: absolute; bottom: -30px; right: -10px;
+    font-family: 'Syne', sans-serif; font-size: 160px; font-weight: 800;
+    opacity: 0.03; pointer-events: none; line-height: 1; color: #fff;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--aimd); border: 1px solid rgba(122,176,255,0.3);
+    background: rgba(122,176,255,0.06);
+    padding: 4px 14px; border-radius: 2px; margin-bottom: 18px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 40px; font-weight: 800; line-height: 1.15;
+    letter-spacing: -0.02em; margin-bottom: 10px; color: #fff;
+  }
+
+  h1 .a { color: var(--aimd); }
+  h1 .s { color: var(--ss); }
+
+  .hero-sub {
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    color: var(--muted); letter-spacing: 0.05em;
+  }
+
+  /* ── Exam focus banner ── */
+  .exam-banner {
+    background: rgba(255,80,96,0.1);
+    border-top: 1px solid rgba(255,80,96,0.25);
+    border-bottom: 1px solid rgba(255,80,96,0.25);
+    padding: 12px 24px;
+    text-align: center;
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    color: var(--loss); letter-spacing: 0.06em;
+  }
+
+  /* ── Tab bar ── */
+  .tab-bar {
+    display: flex; overflow-x: auto;
+    background: var(--bg2); border-bottom: 1px solid var(--bdr);
+    padding: 0 18px;
+    position: sticky; top: 0; z-index: 20;
+  }
+
+  .tab {
+    padding: 13px 15px; background: none; border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+    transition: all 0.13s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--aimd); border-bottom-color: var(--aimd); font-weight: 600; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── Container ── */
+  .container { max-width: 940px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  /* ── Section header ── */
+  .sec-hd {
+    display: flex; align-items: flex-start; gap: 14px;
+    margin-bottom: 24px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--bdr);
+  }
+  .sec-icon { font-family: 'DM Mono', monospace; font-size: 28px; color: var(--aimd); opacity: 0.4; line-height: 1; flex-shrink: 0; }
+  .sec-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: #fff; }
+  .sec-desc  { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg2); border: 1px solid var(--bdr);
+    border-radius: 10px; padding: 22px; margin-bottom: 16px;
+    transition: border-color 0.13s;
+  }
+  .card:hover { border-color: var(--bdr2); }
+
+  .card-title {
+    font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--bdr);
+  }
+
+  /* ── HB ── */
+  .hb { border-radius: 7px; padding: 12px 16px; margin: 12px 0; font-size: 13.5px; line-height: 1.7; }
+  .hb-label { font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 5px; }
+  .hb-aimd { background:var(--aimd-bg); border-left:3px solid var(--aimd); } .hb-aimd .hb-label { color:var(--aimd); }
+  .hb-ss   { background:var(--ss-bg);   border-left:3px solid var(--ss);   } .hb-ss   .hb-label { color:var(--ss);   }
+  .hb-fr   { background:var(--fr-bg);   border-left:3px solid var(--fr);   } .hb-fr   .hb-label { color:var(--fr);   }
+  .hb-loss { background:var(--loss-bg); border-left:3px solid var(--loss); } .hb-loss .hb-label { color:var(--loss); }
+  .hb-pur  { background:var(--pur-bg);  border-left:3px solid var(--purple);} .hb-pur  .hb-label { color:var(--purple);}
+
+  .kp { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .kp li { display: flex; gap: 11px; align-items: flex-start; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--bdr); border-radius: 7px; font-size: 13.5px; line-height: 1.6; transition: border-color 0.13s; }
+  .kp li:hover { border-color: var(--bdr2); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 9px; flex-shrink: 0; }
+
+  code { font-family: 'DM Mono', monospace; background: var(--bg3); border: 1px solid var(--bdr); border-radius: 3px; padding: 1px 6px; font-size: 12px; color: var(--aimd); }
+  strong { font-weight: 600; color: #fff; }
+  p { color: var(--muted); font-size: 13.5px; line-height: 1.7; margin-bottom: 10px; }
+  h3 { font-size: 15px; font-weight: 600; color: #fff; margin: 16px 0 8px; font-family: 'Syne', sans-serif; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── Formula box ── */
+  .formula {
+    background: var(--bg3); border: 1px solid var(--bdr2);
+    border-radius: 7px; padding: 14px 18px;
+    font-family: 'DM Mono', monospace; font-size: 12.5px;
+    line-height: 2.2; margin: 12px 0;
+  }
+  .formula .fl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 4px; display: block; }
+
+  /* ═══════════════════════════════════════
+     CWND TRACER — the big interactive tool
+  ═══════════════════════════════════════ */
+  .tracer-wrap {
+    background: var(--bg3); border: 1px solid var(--bdr);
+    border-radius: 10px; overflow: hidden;
+    margin: 14px 0;
+  }
+
+  .tracer-canvas-area {
+    padding: 14px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--bdr);
+  }
+
+  #tracer-canvas { display: block; width: 100%; border-radius: 6px; }
+
+  .tracer-table-wrap { overflow-x: auto; }
+
+  .tracer-table {
+    width: 100%; border-collapse: collapse;
+    font-family: 'DM Mono', monospace; font-size: 12px;
+  }
+
+  .tracer-table th {
+    padding: 8px 10px;
+    background: var(--bg3); border-bottom: 1px solid var(--bdr2);
+    font-size: 9px; font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--muted); text-align: center;
+  }
+
+  .tracer-table td {
+    padding: 8px 10px; border-bottom: 1px solid var(--bdr);
+    text-align: center; font-size: 12px;
+  }
+
+  .tracer-table tr:last-child td { border-bottom: none; }
+  .tracer-table tr.current td { background: rgba(122,176,255,0.08); }
+  .tracer-table tr.loss-row td { background: rgba(255,80,96,0.08); color: var(--loss); font-weight: 600; }
+  .tracer-table tr.dupACK-row td { background: rgba(255,144,80,0.08); color: var(--fr); font-weight: 600; }
+
+  .tracer-controls {
+    padding: 14px;
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    border-bottom: 1px solid var(--bdr);
+  }
+
+  .t-btn {
+    padding: 8px 14px; border: 1px solid var(--bdr2);
+    border-radius: 5px; background: var(--bg3);
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+    cursor: pointer; color: var(--text); transition: all 0.13s; white-space: nowrap;
+  }
+  .t-btn:hover { border-color: var(--aimd); color: var(--aimd); }
+  .t-btn.primary { background: var(--aimd); color: var(--bg); border-color: var(--aimd); font-weight: 700; }
+  .t-btn.primary:hover { opacity: 0.85; }
+  .t-btn.loss-t { border-color: rgba(255,80,96,0.5); color: var(--loss); }
+  .t-btn.loss-t:hover { background: var(--loss-bg); }
+  .t-btn.fr-t   { border-color: rgba(255,144,80,0.5); color: var(--fr); }
+  .t-btn.fr-t:hover { background: var(--fr-bg); }
+
+  .tracer-status {
+    padding: 12px 14px;
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    display: flex; gap: 20px; flex-wrap: wrap;
+  }
+
+  .ts-item { display: flex; flex-direction: column; gap: 2px; }
+  .ts-val  { font-size: 20px; font-weight: 700; line-height: 1; }
+  .ts-lbl  { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+
+  /* scenario chooser */
+  .scenario-bar {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
+  }
+  .sc-btn {
+    padding: 7px 14px; border: 1px solid var(--bdr2);
+    border-radius: 5px; background: var(--bg2);
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+    cursor: pointer; color: var(--muted); transition: all 0.13s;
+  }
+  .sc-btn:hover { border-color: var(--bdr2); color: var(--text); }
+  .sc-btn.active { background: var(--ss-bg); border-color: var(--ss); color: var(--ss); font-weight: 600; }
+
+  /* ── Sawtooth explainer canvas ── */
+  .saw-wrap {
+    background: var(--bg); border: 1px solid var(--bdr);
+    border-radius: 8px; padding: 12px; margin: 12px 0;
+  }
+  #saw-canvas { display: block; width: 100%; }
+
+  /* ── Comparison table ── */
+  .cmp-tbl {
+    width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0;
+  }
+  .cmp-tbl th {
+    text-align: left; padding: 9px 12px;
+    font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted);
+    border-bottom: 1px solid var(--bdr2); background: var(--bg3);
+  }
+  .cmp-tbl td { padding: 10px 12px; border-bottom: 1px solid var(--bdr); vertical-align: top; line-height: 1.65; }
+  .cmp-tbl tr:last-child td { border-bottom: none; }
+  .cmp-tbl tr:hover td { background: var(--bg3); }
+  .cmp-tbl td:first-child { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--aimd); font-weight: 500; white-space: nowrap; }
+
+  /* ── Flashcards ── */
+  .flashcard { perspective: 1000px; min-height: 165px; position: relative; cursor: pointer; margin-bottom: 12px; }
+  .fc-inner  { width: 100%; min-height: 165px; transform-style: preserve-3d; transition: transform 0.42s; position: relative; }
+  .flashcard.flipped .fc-inner { transform: rotateY(180deg); }
+  .fc-side   { position: absolute; width: 100%; min-height: 165px; backface-visibility: hidden; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; justify-content: center; }
+  .fc-front  { background: var(--bg2); border: 1px solid var(--bdr); }
+  .fc-back   { background: var(--surf); border: 1px solid var(--bdr2); transform: rotateY(180deg); }
+  .fc-hint   { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .fc-q      { font-size: 15px; font-weight: 600; color: #fff; line-height: 1.5; font-family: 'Syne', sans-serif; }
+  .fc-albl   { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ss); margin-bottom: 8px; }
+  .fc-a      { font-size: 13.5px; color: var(--text); line-height: 1.7; }
+  .fc-nav    { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .fc-btn    { padding: 8px 18px; background: var(--bg2); border: 1px solid var(--bdr2); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; border-radius: 6px; cursor: pointer; transition: all 0.13s; }
+  .fc-btn:hover { border-color: var(--aimd); color: var(--aimd); }
+  .fc-prog   { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+
+  /* ── Quiz ── */
+  .quiz-counter { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 13px; }
+  .quiz-q   { font-size: 15px; font-weight: 600; color: #fff; line-height: 1.5; margin-bottom: 13px; font-family: 'Syne', sans-serif; }
+  .quiz-opts{ display: flex; flex-direction: column; gap: 8px; }
+  .quiz-opt { padding: 11px 15px; border: 1px solid var(--bdr); border-radius: 7px; background: var(--bg2); font-family: 'DM Sans', sans-serif; font-size: 13.5px; color: var(--text); cursor: pointer; text-align: left; line-height: 1.5; transition: all 0.12s; }
+  .quiz-opt:hover:not(:disabled) { border-color: var(--bdr2); background: var(--bg3); }
+  .quiz-opt.opt-correct { border-color: var(--ss);   background: var(--ss-bg);   }
+  .quiz-opt.opt-wrong   { border-color: var(--loss); background: var(--loss-bg); }
+  .quiz-opt:disabled { cursor: not-allowed; }
+  .quiz-fb  { margin-top: 11px; padding: 12px 15px; border-radius: 7px; font-size: 13px; line-height: 1.65; display: none; }
+  .qf-ok  { background: var(--ss-bg);   border: 1px solid rgba(80,223,160,0.25); color: var(--ss);   }
+  .qf-bad { background: var(--loss-bg); border: 1px solid rgba(255,80,96,0.22);  color: var(--loss); }
+  .quiz-next { margin-top: 10px; padding: 9px 20px; background: var(--aimd); color: var(--bg); border: none; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; display: none; transition: opacity 0.13s; }
+  .quiz-next:hover { opacity: 0.85; }
+  .score-box { text-align: center; padding: 44px; background: var(--bg2); border: 1px solid var(--bdr); border-radius: 10px; }
+  .score-num { font-family: 'Syne', sans-serif; font-size: 64px; font-weight: 800; color: var(--aimd); }
+  .score-lbl { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .restart-btn { margin-top: 20px; padding: 10px 26px; background: var(--bg3); border: 1px solid var(--bdr2); color: var(--text); border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .restart-btn:hover { background: var(--surf); }
+</style>
+</head>
+<body>
+
+<a href="index.html" style="display:inline-flex;align-items:center;gap:8px;position:fixed;top:16px;left:16px;z-index:100;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#506080;background:#0b0d18;border:1px solid rgba(140,200,255,0.1);border-radius:6px;padding:7px 14px;text-decoration:none;transition:color 0.13s,border-color 0.13s;" onmouseover="this.style.color='#50c8ff';this.style.borderColor='rgba(80,200,255,0.3)'" onmouseout="this.style.color='#506080';this.style.borderColor='rgba(140,200,255,0.1)'">← Home</a>
+
+<div class="hero">
+  <div class="tag">Section 6.3 · Major Exam Focus</div>
+  <h1>TCP <span class="a">Congestion</span><br><span class="s">Control</span></h1>
+  <p class="hero-sub">AIMD · sawtooth · slow start · fast retransmit · fast recovery · window tracing</p>
+</div>
+
+<div class="exam-banner">
+  ⚠ MAJOR EXAM FOCUS AREA — your professor flagged every bullet point below as testable. Know all of them.
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="showTab('overview')">Objectives</button>
+  <button class="tab" onclick="showTab('aimd')">AIMD &amp; Sawtooth</button>
+  <button class="tab" onclick="showTab('slowstart')">Slow Start</button>
+  <button class="tab" onclick="showTab('fastretransmit')">Fast Retransmit &amp; Recovery</button>
+  <button class="tab" onclick="showTab('tracer')">CWND Tracer</button>
+  <button class="tab" onclick="showTab('cubic')">CUBIC</button>
+  <button class="tab" onclick="showTab('flashcards')">Flashcards</button>
+  <button class="tab" onclick="showTab('quiz')">Quiz</button>
+</div>
+
+<div class="container">
+
+  <!-- ══ OBJECTIVES ══ -->
+  <div id="overview" class="section active">
+    <div class="sec-hd">
+      <div class="sec-icon">✓</div>
+      <div>
+        <div class="sec-title">Exam Objectives — Section 6.3</div>
+        <div class="sec-desc">Everything your professor said will be tested</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">All required knowledge points</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--aimd)"></span><strong>AIMD:</strong> Additive increase (linear growth) + multiplicative decrease (÷2 on loss). Know why the combination matters — and why <strong>additive decrease would be insufficient</strong> when the network is severely congested.</li>
+        <li><span class="dot" style="background:var(--aimd)"></span><strong>The AIMD sawtooth:</strong> CW grows linearly, drops sharply on loss, repeats. This oscillation is <strong>normal behavior, not a failure</strong>.</li>
+        <li><span class="dot" style="background:var(--ss)"></span><strong>Slow start — window starts at 1 MSS</strong> and doubles each RTT (exponential growth).</li>
+        <li><span class="dot" style="background:var(--ss)"></span><strong>Slow start ends</strong> when CW reaches ssthresh → switch to additive increase.</li>
+        <li><span class="dot" style="background:var(--ss)"></span><strong>After a loss:</strong> new ssthresh = CW/2, restart slow start from 1 MSS.</li>
+        <li><span class="dot" style="background:var(--ss)"></span><strong>Trace CW</strong> through several RTTs of slow start and additive increase — you may need to compute exact values.</li>
+        <li><span class="dot" style="background:var(--ss)"></span><strong>Why "slow":</strong> slow compared to immediately sending at the previous rate (which would burst a full window into the network), NOT slow compared to additive increase.</li>
+        <li><span class="dot" style="background:var(--fr)"></span><strong>Fast retransmit:</strong> 3 duplicate ACKs trigger retransmission without waiting for a timeout. Why 3 and not 1: a single duplicate ACK can be caused by normal packet reordering.</li>
+        <li><span class="dot" style="background:var(--fr)"></span><strong>Fast recovery:</strong> after fast retransmit, halve CW and enter additive increase — do NOT return to slow start. Reasoning: receiving duplicate ACKs means segments are still arriving, so the network is not as severely congested as a timeout suggests.</li>
+        <li><span class="dot" style="background:var(--purple)"></span><strong>Full scenario trace:</strong> slow start → transition to AIMD → loss event → compute new ssthresh and new CW values. This is a likely exam question.</li>
+        <li><span class="dot" style="background:var(--purple)"></span><strong>CUBIC — why standard AIMD is too slow</strong> for high-bandwidth, high-latency links: compute BDP and how many RTTs AIMD needs to recover after a loss.</li>
+        <li><span class="dot" style="background:var(--purple)"></span><strong>CUBIC's three phases:</strong> concave growth (far below W_max), plateau (near W_max where last loss occurred), convex probing (beyond W_max).</li>
+        <li><span class="dot" style="background:var(--purple)"></span><strong>β = 0.7</strong> in CUBIC vs 0.5 in standard TCP — less capacity surrendered on each loss event.</li>
+        <li><span class="dot" style="background:var(--purple)"></span><strong>Time-based adjustment</strong> (not per-ACK) — why this makes CUBIC fairer between short-RTT and long-RTT competing flows.</li>
+      </ul>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">The one-page mental model</div>
+        <div class="formula">
+          <span class="fl">Effective window</span>
+          MaxWindow = MIN(CongWin, AdvWin)<br>
+          EffWin = MaxWindow − (BytesSent − BytesAcked)
+        </div>
+        <p>CongestionWindow is the sender's self-imposed limit based on perceived network capacity. It works alongside the receiver's AdvertisedWindow — the sender respects whichever is smaller.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Two loss signals — different responses</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+          <div style="padding:12px 14px;background:var(--loss-bg);border:1px solid rgba(255,80,96,0.25);border-radius:7px;">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--loss);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.12em;">Timeout → Severe congestion</div>
+            <div style="font-size:13px;line-height:1.6;">ssthresh = CW/2. CW = 1. <strong>Slow start restarts.</strong> Pipe is empty — no ACKs to clock.</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--fr-bg);border:1px solid rgba(255,144,80,0.25);border-radius:7px;">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--fr);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.12em;">3 Dup ACKs → Milder congestion</div>
+            <div style="font-size:13px;line-height:1.6;">ssthresh = CW/2. CW = ssthresh. <strong>Fast recovery → AIMD immediately.</strong> Pipe still has ACKs — network not fully congested.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ AIMD & SAWTOOTH ══ -->
+  <div id="aimd" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">∧</div>
+      <div>
+        <div class="sec-title">AIMD &amp; The Sawtooth</div>
+        <div class="sec-desc">Why additive increase + multiplicative decrease — not any other combination</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Additive increase</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--ss)"></span>When no loss is detected, CW grows by <strong>+1 MSS per RTT</strong>. This is linear (additive) growth.</li>
+        <li><span class="dot" style="background:var(--ss)"></span>Per-ACK increment: <code>Increment = MSS × (MSS / CW)</code>. Each ACK adds a fraction; a full window's worth of ACKs sums to +1 MSS.</li>
+        <li><span class="dot" style="background:var(--ss)"></span>Rationale: cautiously probe for more bandwidth. Overshoot slowly so the network can absorb the ramp-up.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Multiplicative decrease</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--loss)"></span>On a timeout (packet loss): <strong>CW is halved</strong>. Pattern: 16 → 8 → 4 → 2 → 1 MSS. Never below 1 MSS.</li>
+        <li><span class="dot" style="background:var(--loss)"></span>TCP interprets a timeout as congestion — dropped packets are almost always due to router buffers overflowing, not transmission errors (which are rare on modern links).</li>
+        <li><span class="dot" style="background:var(--loss)"></span>Halving immediately cuts the sender's contribution to congestion in half.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Why not additive decrease?</div>
+      <div class="hb hb-loss">
+        <div class="hb-label">The exam will test this reasoning</div>
+        When the network is <strong>severely congested</strong>, an oversized window causes dropped packets which are then <strong>retransmitted</strong>, adding even more traffic — a compounding effect. The sender must exit this state quickly. Additive decrease (−1 MSS per timeout) would take many timeouts to cut a large window; meanwhile congestion compounds. Multiplicative decrease (÷2) cuts the window in half instantly — dramatically reducing load in a single step. This aggressive retreat is what makes the system stable.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The AIMD sawtooth — normal, not a bug</div>
+      <div class="saw-wrap">
+        <canvas id="saw-canvas" height="160"></canvas>
+      </div>
+      <ul class="kp" style="margin-top:12px;">
+        <li><span class="dot" style="background:var(--ss)"></span><strong>Rising slope</strong> = additive increase — sender probing for unused capacity, 1 MSS/RTT.</li>
+        <li><span class="dot" style="background:var(--loss)"></span><strong>Vertical drop</strong> = multiplicative decrease — sender reacts to detected congestion.</li>
+        <li><span class="dot" style="background:var(--aimd)"></span>This sawtooth repeats forever. It is the <strong>steady-state behavior</strong> of a TCP connection in AIMD mode. The oscillation itself is not a problem — it reflects the sender continuously probing and backing off.</li>
+      </ul>
+      <div class="hb hb-aimd">
+        <div class="hb-label">Why not AIAD (additive increase / additive decrease)?</div>
+        AIMD is proven to be a <em>necessary</em> condition for a congestion-control mechanism to be stable. AIAD (−1 on loss, +1 on success) is too symmetric — it takes far too long to reduce load when the network is under severe stress. The asymmetry of AIMD is the key to stability.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLOW START ══ -->
+  <div id="slowstart" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">↑</div>
+      <div>
+        <div class="sec-title">Slow Start</div>
+        <div class="sec-desc">Everything your professor listed — in exam-ready detail</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The mechanics — step by step</div>
+      <div class="formula">
+        <span class="fl">Slow start growth rule</span>
+        Start: CW = 1 MSS<br>
+        Each ACK: CW += 1 MSS<br>
+        Net effect: CW doubles per RTT (1 → 2 → 4 → 8 → 16 → …)<br><br>
+        <span class="fl">Transition rule</span>
+        if CW &lt; ssthresh: exponential growth (slow start)<br>
+        if CW ≥ ssthresh: linear growth (additive increase, +1/RTT)
+      </div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--ss)"></span><strong>Window starts at 1 MSS</strong> — one packet sent, wait for ACK.</li>
+        <li><span class="dot" style="background:var(--ss)"></span><strong>Each ACK adds 1 MSS:</strong> 1 packet → ACK → 2 packets → 2 ACKs → 4 packets. Doubles each RTT.</li>
+        <li><span class="dot" style="background:var(--ss)"></span><strong>Ends when CW = ssthresh:</strong> switch to additive increase (+1 MSS/RTT) for cautious probing.</li>
+        <li><span class="dot" style="background:var(--loss)"></span><strong>On timeout during slow start:</strong> ssthresh = CW / 2; CW reset to 1; slow start restarts toward the new ssthresh.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Why it's called "slow" — the exact reasoning your professor wants</div>
+      <div class="hb hb-ss">
+        <div class="hb-label">The comparison that matters</div>
+        Slow start is exponential and therefore <em>faster</em> than additive increase. But compare it to the <strong>original TCP behavior</strong>: sending an <em>entire advertised window</em> all at once on connection start. That full-window burst would dump potentially thousands of packets into the network simultaneously, overwhelming router buffers. Slow start is "slow" because it starts with 1 MSS and grows gradually — slow <strong>relative to that full-window burst</strong>, not relative to additive increase.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Sample trace — be able to compute exact values</div>
+      <p style="margin-bottom:12px;">ssthresh = 8 MSS at connection start. Trace CW through each RTT:</p>
+      <div style="overflow-x:auto;">
+        <table class="cmp-tbl">
+          <thead><tr><th>RTT</th><th>CW at start of RTT</th><th>Phase</th><th>CW after RTT</th><th>Reasoning</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>1</td><td>Slow Start</td><td>2</td><td>CW(1) &lt; ssthresh(8) → double</td></tr>
+            <tr><td>1</td><td>2</td><td>Slow Start</td><td>4</td><td>CW(2) &lt; ssthresh(8) → double</td></tr>
+            <tr><td>2</td><td>4</td><td>Slow Start</td><td>8</td><td>CW(4) &lt; ssthresh(8) → double</td></tr>
+            <tr><td>3</td><td>8</td><td>AIMD begins</td><td>9</td><td>CW(8) = ssthresh(8) → +1/RTT</td></tr>
+            <tr><td>4</td><td>9</td><td>AIMD</td><td>10</td><td>+1/RTT</td></tr>
+            <tr><td>5</td><td>10</td><td>AIMD</td><td>11</td><td>+1/RTT</td></tr>
+            <tr style="background:rgba(255,80,96,0.08)"><td>6</td><td>11</td><td>TIMEOUT</td><td>→ 1</td><td>ssthresh = 11/2 ≈ 5; CW = 1</td></tr>
+            <tr><td>7</td><td>1</td><td>Slow Start</td><td>2</td><td>CW(1) &lt; ssthresh(5) → double</td></tr>
+            <tr><td>8</td><td>2</td><td>Slow Start</td><td>4</td><td>CW(2) &lt; ssthresh(5) → double</td></tr>
+            <tr><td>9</td><td>4</td><td>Slow Start</td><td>5</td><td>CW(4) &lt; ssthresh(5) → double, capped at 5</td></tr>
+            <tr><td>10</td><td>5</td><td>AIMD</td><td>6</td><td>CW(5) = ssthresh(5) → +1/RTT</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="hb hb-loss" style="margin-top:12px;">
+        <div class="hb-label">Key pattern to memorize</div>
+        After a loss: ssthresh = CW/2 (round down if needed). CW = 1. Slow start races back to ssthresh exponentially, then additive increase takes over. The new ssthresh is always half the window size at the time of loss.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Two situations where slow start runs</div>
+      <div class="two-col">
+        <div style="padding:14px;background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ss);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">1. Connection start</div>
+          <div style="font-size:13px;line-height:1.65;">No information about network capacity. ssthresh is effectively infinite. Slow start runs until the first loss, which sets ssthresh and begins the AIMD cycle.</div>
+        </div>
+        <div style="padding:14px;background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--loss);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">2. After a coarse-grained timeout</div>
+          <div style="font-size:13px;line-height:1.65;">Pipe is empty — no packets in flight, no ACKs to clock. Slow start restarts from CW=1, but now ssthresh gives a target to stop at before switching to AIMD.</div>
+        </div>
+      </div>
+      <div class="hb hb-fr" style="margin-top:12px;">
+        <div class="hb-label">When slow start is SKIPPED</div>
+        After fast retransmit (3 duplicate ACKs), TCP uses fast recovery — it does NOT restart slow start. It goes directly to additive increase at CW = ssthresh. Slow start only runs at connection start and after a coarse-grained timeout.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FAST RETRANSMIT & RECOVERY ══ -->
+  <div id="fastretransmit" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">⚡</div>
+      <div>
+        <div class="sec-title">Fast Retransmit &amp; Fast Recovery</div>
+        <div class="sec-desc">What they are, why 3 ACKs, and the key reasoning difference from a timeout</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Fast retransmit — what and why</div>
+      <ul class="kp">
+        <li><span class="dot" style="background:var(--fr)"></span><strong>Trigger:</strong> 3 duplicate ACKs received at the sender.</li>
+        <li><span class="dot" style="background:var(--fr)"></span><strong>Action:</strong> retransmit the missing packet immediately — without waiting for the retransmission timeout (which could be hundreds of milliseconds).</li>
+        <li><span class="dot" style="background:var(--fr)"></span><strong>Why 3, not 1:</strong> A single duplicate ACK can arise from normal packet reordering — packets arriving out of order. One dup ACK is not reliable evidence of loss. Three is much more likely to indicate a genuinely dropped packet, not just reordering.</li>
+      </ul>
+      <div class="hb hb-fr">
+        <div class="hb-label">How duplicate ACKs arise</div>
+        When packet N is lost but packets N+1, N+2, N+3 arrive, the receiver sends ACK(N-1) for each one — it can't ACK N because it's missing. The sender sees multiple copies of the same ACK. Three copies = three out-of-order packets arrived = strong evidence that N was dropped.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Fast recovery — the key difference from a timeout</div>
+      <div class="two-col">
+        <div style="padding:16px;background:var(--loss-bg);border:1px solid rgba(255,80,96,0.25);border-radius:8px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--loss);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">After timeout</div>
+          <div style="font-size:13px;line-height:1.7;">No packets in flight. No ACKs arriving. The pipe is empty — the network appears completely congested. <strong>Must restart slow start from CW=1.</strong><br><br>ssthresh = CW/2, CW = 1.</div>
+        </div>
+        <div style="padding:16px;background:var(--fr-bg);border:1px solid rgba(255,144,80,0.25);border-radius:8px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--fr);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">After 3 dup ACKs (fast recovery)</div>
+          <div style="font-size:13px;line-height:1.7;">Duplicate ACKs are still arriving — some segments are getting through. The network is not severely congested. <strong>Skip slow start, go directly to AIMD.</strong><br><br>ssthresh = CW/2, CW = ssthresh.</div>
+        </div>
+      </div>
+      <div class="hb hb-pur" style="margin-top:14px;">
+        <div class="hb-label">The reasoning your professor highlighted</div>
+        Receiving duplicate ACKs means segments <strong>are still getting through</strong> to the receiver — duplicate ACKs are only generated when later packets arrive. The network is congested enough to drop one packet but not so congested that nothing is flowing. Therefore, a mild response (halve and continue AIMD) is appropriate rather than the severe response (restart slow start from 1) used after a timeout.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Side-by-side: which mechanism, which action</div>
+      <table class="cmp-tbl">
+        <thead><tr><th>Event</th><th>ssthresh after</th><th>CW after</th><th>Next phase</th></tr></thead>
+        <tbody>
+          <tr><td>Timeout</td><td>CW / 2</td><td>1 MSS</td><td>Slow start → AIMD at ssthresh</td></tr>
+          <tr><td>3 Dup ACKs (fast retransmit)</td><td>CW / 2</td><td>ssthresh (= CW/2)</td><td>AIMD immediately (skip slow start)</td></tr>
+          <tr><td>CW reaches ssthresh (no loss)</td><td>unchanged</td><td>unchanged</td><td>Switch slow start → AIMD</td></tr>
+          <tr><td>Normal ACK during AIMD</td><td>unchanged</td><td>+1 MSS per RTT</td><td>AIMD continues</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ TRACER ══ -->
+  <div id="tracer" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">▶</div>
+      <div>
+        <div class="sec-title">CWND Tracer — Full Scenario Practice</div>
+        <div class="sec-desc">Step through RTTs, trigger loss events, trace the window — exactly as required on the exam</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Load a scenario or build your own step-by-step</div>
+
+      <div class="scenario-bar">
+        <button class="sc-btn active" onclick="loadScenario('blank')">Blank (manual)</button>
+        <button class="sc-btn" onclick="loadScenario('textbook')">Textbook example</button>
+        <button class="sc-btn" onclick="loadScenario('dupACK')">Dup-ACK recovery</button>
+        <button class="sc-btn" onclick="loadScenario('fullcycle')">Full cycle</button>
+      </div>
+
+      <div class="tracer-wrap">
+        <!-- canvas -->
+        <div class="tracer-canvas-area">
+          <canvas id="tracer-canvas" height="220"></canvas>
+        </div>
+
+        <!-- status bar -->
+        <div class="tracer-status">
+          <div class="ts-item"><span class="ts-val" id="ts-cw" style="color:var(--aimd)">1</span><span class="ts-lbl">CW (MSS)</span></div>
+          <div class="ts-item"><span class="ts-val" id="ts-ss" style="color:var(--fr)">∞</span><span class="ts-lbl">ssthresh</span></div>
+          <div class="ts-item"><span class="ts-val" id="ts-ph" style="color:var(--ss)">Slow Start</span><span class="ts-lbl">phase</span></div>
+          <div class="ts-item"><span class="ts-val" id="ts-rtt" style="color:var(--muted)">0</span><span class="ts-lbl">RTT</span></div>
+        </div>
+
+        <!-- controls -->
+        <div class="tracer-controls">
+          <button class="t-btn primary" onclick="trStep()">Next RTT ▶</button>
+          <button class="t-btn loss-t" onclick="trLoss()">⚠ Timeout (loss)</button>
+          <button class="t-btn fr-t"   onclick="trDupACK()">⚡ 3 Dup ACKs</button>
+          <button class="t-btn" onclick="trUndo()">← Undo</button>
+          <button class="t-btn" onclick="trReset()">Reset</button>
+        </div>
+
+        <!-- RTT table -->
+        <div class="tracer-table-wrap">
+          <table class="tracer-table">
+            <thead>
+              <tr>
+                <th>RTT</th>
+                <th>CW (start)</th>
+                <th>ssthresh</th>
+                <th>Phase</th>
+                <th>Event</th>
+                <th>CW (end)</th>
+              </tr>
+            </thead>
+            <tbody id="tracer-tbody">
+              <tr class="current">
+                <td>0</td><td>1</td><td>∞</td><td>Slow Start</td><td>—</td><td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="hb hb-aimd" style="margin-top:4px;">
+        <div class="hb-label">Exam tip: trace exactly what they ask</div>
+        A common exam question gives you an initial ssthresh and asks you to compute CW at each RTT through a series of events. Use the table above: write down CW at the start of each RTT, note the phase, and apply the correct rule. The tracer computes it automatically — use it to check your hand calculations.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CUBIC ══ -->
+  <div id="cubic" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">∿</div>
+      <div>
+        <div class="sec-title">TCP CUBIC — Section 6.3.4</div>
+        <div class="sec-desc">Why standard AIMD fails on fast long-distance links — and how CUBIC fixes it</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Why standard AIMD is too slow — the concrete problem</div>
+      <p>Standard AIMD adds <strong>exactly 1 MSS per RTT</strong> during additive increase. On a high-bandwidth, high-RTT link this is painfully slow. After a loss event cuts the window in half, it takes an enormous number of RTTs to recover — the sender leaves most of the pipe unused for a long time.</p>
+      <div class="hb hb-pur">
+        <div class="hb-label">Worked example — be able to compute this</div>
+        <span style="font-family:'DM Mono',monospace;font-size:12.5px;line-height:2.2;display:block;">
+          Link: 10 Gbps &nbsp;&nbsp; RTT: 100 ms<br>
+          BDP = 10×10⁹ bits/s × 0.1 s = 1×10⁹ bits = 125 MB<br>
+          Segments to fill pipe ≈ 125 MB / 1500 B ≈ 83,333 MSS<br><br>
+          After a loss: window drops to ~41,667 MSS (÷2)<br>
+          RTTs to recover at +1 MSS/RTT: ~41,667 RTTs<br>
+          Time to recover: 41,667 × 0.1 s ≈ <strong>4,167 seconds ≈ 70 minutes</strong>
+        </span>
+      </div>
+      <div class="hb hb-loss">
+        <div class="hb-label">The bottleneck</div>
+        AIMD was designed for the 1980s Internet — small pipes, short RTTs. At 10 Gbps with a 100 ms RTT, a single loss event followed by additive increase means the link sits at half capacity for over an hour. These networks are called <strong>long-fat networks</strong> (high delay × bandwidth product). CUBIC was designed specifically to solve this.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">BDP calculator — compute AIMD recovery time for any link</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.13em;color:var(--muted);">Bandwidth (Gbps)</div>
+          <input id="bw-gbps" type="number" value="1" min="0.001" step="0.1" style="background:var(--bg3);border:1px solid var(--bdr2);border-radius:5px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:8px 10px;outline:none;width:100%;" oninput="calcBDP()">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.13em;color:var(--muted);">RTT (ms)</div>
+          <input id="rtt-ms" type="number" value="100" min="1" style="background:var(--bg3);border:1px solid var(--bdr2);border-radius:5px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:8px 10px;outline:none;width:100%;" oninput="calcBDP()">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.13em;color:var(--muted);">MSS (bytes)</div>
+          <input id="mss-b" type="number" value="1500" min="1" style="background:var(--bg3);border:1px solid var(--bdr2);border-radius:5px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:8px 10px;outline:none;width:100%;" oninput="calcBDP()">
+        </div>
+      </div>
+      <div id="bdp-result" style="background:var(--bg);border:1px solid var(--bdr);border-radius:7px;padding:14px;font-family:'DM Mono',monospace;font-size:12.5px;line-height:2.1;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">CUBIC's two key innovations</div>
+      <div class="two-col">
+        <div style="padding:16px;background:var(--pur-bg);border:1px solid rgba(200,128,255,0.25);border-radius:8px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--purple);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Innovation 1: Cubic window function</div>
+          <div style="font-size:13px;line-height:1.7;">Window grows as a <strong>cubic function of time</strong> since the last loss event — not as a linear function of ACKs. Three phases: fast growth, plateau near W_max, then aggressive probing beyond W_max.</div>
+        </div>
+        <div style="padding:16px;background:var(--pur-bg);border:1px solid rgba(200,128,255,0.25);border-radius:8px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--purple);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Innovation 2: Time-based (not ACK-based)</div>
+          <div style="font-size:13px;line-height:1.7;">Updates happen on a <strong>real-time clock</strong>, not per ACK. Standard AIMD grows faster for short-RTT flows (they get ACKs more often). CUBIC's time-based growth equalizes competition between flows with different RTTs.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The three phases of CUBIC — know all three for the exam</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
+        <div style="background:var(--bg3);border:1px solid rgba(80,223,160,0.2);border-radius:8px;padding:16px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--ss);border-radius:8px 8px 0 0;"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ss);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Phase 1: Concave</div>
+          <div style="font-size:13px;line-height:1.65;color:var(--text);">CW is <strong>far below W_max</strong>. Growth is fast and accelerating — the curve is concave (curving upward). The sender is well below the last congestion point, so it is safe to grow aggressively.</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid rgba(200,128,255,0.2);border-radius:8px;padding:16px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--purple);border-radius:8px 8px 0 0;"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--purple);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Phase 2: Plateau</div>
+          <div style="font-size:13px;line-height:1.65;color:var(--text);">CW is <strong>near W_max</strong> — the window where the last loss occurred. Growth nearly stalls. The sender is cautious: this is where congestion was previously detected, so it probes slowly.</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid rgba(255,144,80,0.2);border-radius:8px;padding:16px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--fr);border-radius:8px 8px 0 0;"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--fr);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Phase 3: Convex</div>
+          <div style="font-size:13px;line-height:1.65;color:var(--text);">CW is <strong>beyond W_max</strong>. Growth accelerates again — the curve is convex (curving downward in the slope). The sender is probing whether new capacity has become available since the last loss.</div>
+        </div>
+      </div>
+      <div class="hb hb-pur">
+        <div class="hb-label">Why this shape is clever</div>
+        The concave phase lets CUBIC recover quickly from a loss. The plateau prevents overshooting right where the network last complained. The convex phase aggressively probes for newly available capacity — important on links where available bandwidth changes over time. Standard TCP's additive increase is <em>only</em> convex (always the same slope), so it recovers slowly and never probes aggressively.
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--bdr2);border-radius:8px;padding:14px;margin-top:12px;">
+        <canvas id="cubic-canvas" height="180" style="display:block;width:100%;border-radius:5px;"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">β = 0.7 vs β = 0.5 — practical effect</div>
+      <div class="two-col">
+        <div style="padding:14px;background:var(--loss-bg);border:1px solid rgba(255,80,96,0.25);border-radius:7px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--loss);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Standard TCP (β = 0.5)</div>
+          <div style="font-size:13px;line-height:1.7;">On loss: CW = CW × 0.5 = CW / 2. Surrenders <strong>half</strong> of the window. Aggressive reaction that may over-reduce capacity on a link that isn't fully congested.</div>
+        </div>
+        <div style="padding:14px;background:var(--pur-bg);border:1px solid rgba(200,128,255,0.25);border-radius:7px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--purple);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">CUBIC (β = 0.7)</div>
+          <div style="font-size:13px;line-height:1.7;">On loss: CW = CW × 0.7. Surrenders <strong>30%</strong> (keeps 70%). Less capacity is given up per loss event. Combined with faster recovery, CUBIC maintains higher throughput on high-BDP links.</div>
+        </div>
+      </div>
+      <div class="hb hb-pur" style="margin-top:14px;">
+        <div class="hb-label">Example</div>
+        CW = 100,000 MSS (realistic on a 10 Gbps link). On loss:<br>
+        Standard TCP: CW → 50,000 MSS. Recovers at +1 MSS/RTT — takes 50,000 RTTs (hours).<br>
+        CUBIC: CW → 70,000 MSS. Recovers via cubic function — reaches W_max in far fewer RTTs, then probes beyond it.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Time-based adjustment and RTT fairness</div>
+      <p>Standard AIMD adds +1 MSS per RTT. This means a flow with RTT = 10 ms gets ACKs 10× faster than a flow with RTT = 100 ms — and grows its window 10× faster. On a shared bottleneck link, the short-RTT flow dominates.</p>
+      <div class="hb hb-pur">
+        <div class="hb-label">How CUBIC fixes this</div>
+        CUBIC updates CongestionWindow based on <strong>elapsed wall-clock time</strong> since the last congestion event — not on ACK arrivals. A flow with RTT = 10 ms and a flow with RTT = 100 ms will both grow their windows at the same rate in real time (since the cubic function advances the same amount per second). This makes CUBIC significantly fairer when flows with different RTTs compete on the same bottleneck.
+      </div>
+      <table class="cmp-tbl" style="margin-top:12px;">
+        <thead><tr><th>Property</th><th>Standard TCP (AIMD)</th><th>TCP CUBIC</th></tr></thead>
+        <tbody>
+          <tr><td>Growth shape</td><td>Linear (additive) — convex only</td><td>Cubic: concave → plateau → convex</td></tr>
+          <tr><td>Growth trigger</td><td>Per ACK arrival (RTT-dependent)</td><td>Per elapsed time (RTT-independent)</td></tr>
+          <tr><td>Fairness across RTTs</td><td>Unfair — short-RTT flows dominate</td><td>Fairer — time-based growth equalizes</td></tr>
+          <tr><td>β (decrease factor)</td><td>0.5 — halves on loss</td><td>0.7 — reduces by 30% on loss</td></tr>
+          <tr><td>Recovery after loss</td><td>Slow linear climb to W_max</td><td>Fast cubic climb; plateau near W_max; probe beyond</td></tr>
+          <tr><td>Target point</td><td>None (pure probe-and-back-off)</td><td>W_max — last congestion window</td></tr>
+          <tr><td>Best suited for</td><td>Low-BDP, short-RTT paths</td><td>Long-fat networks (high BDP)</td></tr>
+          <tr><td>Default in Linux?</td><td>No (legacy)</td><td>Yes (since kernel 2.6.19)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ FLASHCARDS ══ -->
+  <div id="flashcards" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">◧</div>
+      <div>
+        <div class="sec-title">Flashcards</div>
+        <div class="sec-desc">Click to flip · 12 exam-focused cards</div>
+      </div>
+    </div>
+    <div class="flashcard" id="fc" onclick="flipCard()">
+      <div class="fc-inner">
+        <div class="fc-side fc-front"><div class="fc-hint">tap to flip</div><div class="fc-q" id="fc-q"></div></div>
+        <div class="fc-side fc-back"><div class="fc-albl">Answer</div><div class="fc-a" id="fc-a"></div></div>
+      </div>
+    </div>
+    <div class="fc-nav">
+      <button class="fc-btn" onclick="prevCard()">← Prev</button>
+      <span class="fc-prog" id="fc-prog">1 / 12</span>
+      <button class="fc-btn" onclick="nextCard()">Next →</button>
+    </div>
+  </div>
+
+  <!-- ══ QUIZ ══ -->
+  <div id="quiz" class="section">
+    <div class="sec-hd">
+      <div class="sec-icon">✎</div>
+      <div>
+        <div class="sec-title">Self-Check Quiz</div>
+        <div class="sec-desc">10 questions — aligned directly to your professor's bullet points</div>
+      </div>
+    </div>
+    <div id="quiz-container"></div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+/* ── Tab ── */
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+  if (id==='aimd') setTimeout(drawSawtooth, 50);
+  if (id==='tracer') setTimeout(drawTracer, 50);
+}
+
+/* ═══════════ SAWTOOTH CANVAS ═══════════ */
+function drawSawtooth() {
+  const c = document.getElementById('saw-canvas');
+  if (!c) return;
+  const W = c.clientWidth; const H = 160;
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+
+  ctx.fillStyle = '#0d0d18'; ctx.fillRect(0,0,W,H);
+
+  // grid
+  ctx.strokeStyle='rgba(180,160,255,0.06)'; ctx.lineWidth=1;
+  for(let i=0;i<=8;i++){const x=i*W/8;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let i=0;i<=4;i++){const y=i*H/4;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  const maxCW = 20;
+  const toY = cw => H - (cw/maxCW)*H*0.85 - H*0.05;
+
+  // sawtooth data
+  const pts = [];
+  let cw = 1, ss = 12;
+  for (let rtt = 0; rtt <= 40; rtt++) {
+    pts.push({rtt, cw, loss: false});
+    if (rtt === 14 || rtt === 30) {
+      pts[pts.length-1].loss = true;
+      ss = Math.max(Math.floor(cw/2), 1);
+      cw = 1;
+    } else if (cw < ss) {
+      cw = Math.min(cw*2, ss);
+    } else {
+      cw = Math.min(cw+1, maxCW);
+    }
+  }
+
+  const xStep = W / 40;
+
+  // ssthresh line
+  ctx.setLineDash([4,4]); ctx.strokeStyle='rgba(255,144,80,0.4)'; ctx.lineWidth=1.5;
+  let ssCur = 12;
+  ctx.beginPath();
+  pts.forEach((p,i) => {
+    if (p.loss) ssCur = Math.max(Math.floor(p.cw/2),1);
+    const x = i*xStep; const y = toY(ssCur);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // CW line
+  ctx.beginPath(); ctx.strokeStyle='#7ab0ff'; ctx.lineWidth=2.5;
+  pts.forEach((p,i) => {
+    const x = i*xStep; const y = toY(p.cw);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // loss markers
+  pts.forEach((p,i) => {
+    if (!p.loss) return;
+    const x = i*xStep; const y = toY(p.cw);
+    ctx.fillStyle='#ff5060'; ctx.font='13px DM Mono';
+    ctx.textAlign='center'; ctx.fillText('✕',x,y-6);
+  });
+
+  // labels
+  ctx.fillStyle='rgba(122,176,255,0.6)'; ctx.font='10px DM Mono'; ctx.textAlign='left';
+  ctx.fillText('CongestionWindow', 8, 16);
+  ctx.fillStyle='rgba(255,144,80,0.55)';
+  ctx.fillText('ssthresh', 8, 28);
+  ctx.fillStyle='rgba(255,80,96,0.6)';
+  ctx.fillText('✕ = loss (timeout)', 8, 40);
+}
+
+setTimeout(drawSawtooth, 100);
+
+/* ═══════════ TRACER ═══════════ */
+const INF = 9999;
+let trHistory = [{rtt:0, cwStart:1, ss:INF, phase:'Slow Start', event:'—', cwEnd:'—'}];
+let trCW = 1, trSS = INF, trRTT = 0;
+
+function trPhase() { return trCW < trSS ? 'Slow Start' : 'AIMD'; }
+function ssLabel(v) { return v >= INF ? '∞' : v; }
+
+function trStep() {
+  const phaseBefore = trPhase();
+  const cwBefore = trCW;
+  const ssBefore = trSS;
+
+  let cwEnd;
+  if (trCW < trSS) {
+    // slow start: double, but cap at ssthresh
+    cwEnd = Math.min(trCW * 2, trSS);
+  } else {
+    // AIMD: +1 per RTT, cap at 64
+    cwEnd = Math.min(trCW + 1, 64);
+  }
+
+  const row = {rtt: trRTT, cwStart: cwBefore, ss: ssBefore, phase: phaseBefore, event: 'ACK', cwEnd};
+  trHistory.push(row);
+  trRTT++; trCW = cwEnd;
+  updateTracer();
+}
+
+function trLoss() {
+  const cwBefore = trCW; const ssBefore = trSS;
+  const newSS = Math.max(Math.floor(cwBefore/2), 1);
+  const row = {rtt: trRTT, cwStart: cwBefore, ss: ssBefore, phase: trPhase(), event: 'TIMEOUT', cwEnd: 1, isLoss: true};
+  trHistory.push(row);
+  trRTT++; trSS = newSS; trCW = 1;
+  updateTracer();
+}
+
+function trDupACK() {
+  const cwBefore = trCW; const ssBefore = trSS;
+  const newSS = Math.max(Math.floor(cwBefore/2), 1);
+  const row = {rtt: trRTT, cwStart: cwBefore, ss: ssBefore, phase: trPhase(), event: '3 DUP ACKs', cwEnd: newSS, isDup: true};
+  trHistory.push(row);
+  trRTT++; trSS = newSS; trCW = newSS;
+  updateTracer();
+}
+
+function trUndo() {
+  if (trHistory.length <= 1) return;
+  trHistory.pop();
+  const last = trHistory[trHistory.length-1];
+  trRTT = last.rtt; trCW = last.cwEnd === '—' ? last.cwStart : last.cwEnd;
+  trSS = last.ss;
+  // recalculate from scratch
+  rebuildState();
+  updateTracer();
+}
+
+function rebuildState() {
+  let cw=1, ss=INF, rtt=0;
+  for (let i=1; i<trHistory.length; i++){
+    const r = trHistory[i];
+    if (r.isLoss) { ss = Math.max(Math.floor(cw/2),1); cw=1; }
+    else if (r.isDup) { ss = Math.max(Math.floor(cw/2),1); cw=ss; }
+    else { cw = cw<ss ? Math.min(cw*2,ss) : Math.min(cw+1,64); }
+    rtt = r.rtt;
+  }
+  trCW=cw; trSS=ss; trRTT=rtt+1;
+}
+
+function trReset() {
+  trCW=1; trSS=INF; trRTT=0;
+  trHistory=[{rtt:0,cwStart:1,ss:INF,phase:'Slow Start',event:'—',cwEnd:'—'}];
+  updateTracer();
+}
+
+function loadScenario(name) {
+  trReset();
+  document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  if (name==='blank') return;
+
+  if (name==='textbook') {
+    // ssthresh=8, grow to 12, then loss
+    trSS=8;
+    trHistory[0].ss=8;
+    for(let i=0;i<8;i++) trStep();
+    trLoss();
+    for(let i=0;i<6;i++) trStep();
+  }
+  if (name==='dupACK') {
+    trSS=12;
+    trHistory[0].ss=12;
+    for(let i=0;i<8;i++) trStep();
+    trDupACK();
+    for(let i=0;i<5;i++) trStep();
+  }
+  if (name==='fullcycle') {
+    trSS=16;
+    trHistory[0].ss=16;
+    for(let i=0;i<10;i++) trStep();
+    trLoss();
+    for(let i=0;i<8;i++) trStep();
+    trDupACK();
+    for(let i=0;i<5;i++) trStep();
+  }
+}
+
+function updateTracer() {
+  // status
+  document.getElementById('ts-cw').textContent = trCW;
+  document.getElementById('ts-ss').textContent = ssLabel(trSS);
+  document.getElementById('ts-ph').textContent = trPhase();
+  document.getElementById('ts-rtt').textContent = trRTT;
+
+  // table
+  const tbody = document.getElementById('tracer-tbody');
+  tbody.innerHTML = trHistory.map((r,i) => {
+    const isLast = i === trHistory.length-1;
+    let cls = isLast ? 'current' : '';
+    if (r.isLoss) cls = 'loss-row';
+    if (r.isDup)  cls = 'dupACK-row';
+    return `<tr class="${cls}">
+      <td>${r.rtt}</td>
+      <td>${r.cwStart}</td>
+      <td>${ssLabel(r.ss)}</td>
+      <td>${r.phase}</td>
+      <td>${r.event}</td>
+      <td>${r.cwEnd}</td>
+    </tr>`;
+  }).join('');
+  tbody.scrollTop = tbody.scrollHeight;
+
+  drawTracer();
+}
+
+function drawTracer() {
+  const c = document.getElementById('tracer-canvas');
+  if (!c) return;
+  const W = c.clientWidth; const H = 220;
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+
+  const validCWs = trHistory.filter(r=>r.cwEnd!=='—').map(r=>r.cwEnd);
+  const allSSs = trHistory.map(r=>r.ss).filter(v=>v<INF);
+  const maxVal = Math.max(...validCWs, ...allSSs, trCW, 4);
+  const toY = v => H - (v/maxVal)*H*0.85 - H*0.05;
+  const n = trHistory.length;
+  const xStep = n>1 ? W/(n-1) : W;
+
+  ctx.fillStyle='#0d0d18'; ctx.fillRect(0,0,W,H);
+
+  // grid
+  ctx.strokeStyle='rgba(180,160,255,0.06)'; ctx.lineWidth=1;
+  for(let i=0;i<=8;i++){const x=i*W/8;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let i=0;i<=5;i++){const y=i*H/5;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  if (n < 2) { ctx.fillStyle=var2('#5a5880');ctx.font='12px DM Mono';ctx.textAlign='center';ctx.fillText('Click Next RTT to start tracing...',W/2,H/2); return; }
+
+  // ssthresh line
+  ctx.setLineDash([4,4]); ctx.strokeStyle='rgba(255,144,80,0.45)'; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  trHistory.forEach((r,i) => {
+    const x = i*xStep; const ssV = r.ss>=INF ? maxVal : r.ss;
+    const y = toY(ssV);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // CW line — build points
+  const pts = [];
+  trHistory.forEach((r,i)=>{
+    if (i===0) { pts.push({x:0, y:toY(r.cwStart)}); }
+    else {
+      const x = i*xStep;
+      if (r.cwEnd!=='—') pts.push({x, y:toY(r.cwEnd)});
+    }
+  });
+
+  ctx.beginPath(); ctx.strokeStyle='#7ab0ff'; ctx.lineWidth=2.5;
+  pts.forEach((p,i) => i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y));
+  ctx.stroke();
+
+  // event markers
+  trHistory.forEach((r,i) => {
+    if (!r.isLoss && !r.isDup) return;
+    const x = i*xStep; const cw = r.cwStart;
+    const y = toY(cw);
+    ctx.font='14px DM Mono'; ctx.textAlign='center';
+    ctx.fillStyle = r.isLoss ? '#ff5060' : '#ff9050';
+    ctx.fillText('✕',x,y-8);
+  });
+
+  // axis labels
+  ctx.fillStyle='rgba(122,176,255,0.5)'; ctx.font='10px DM Mono'; ctx.textAlign='left';
+  ctx.fillText('CW', 6, 14);
+  ctx.fillStyle='rgba(255,144,80,0.5)'; ctx.fillText('ssthresh',6,26);
+  ctx.fillStyle='rgba(255,80,96,0.5)';  ctx.fillText('✕=loss',6,38);
+  ctx.fillStyle='rgba(255,144,80,0.5)'; ctx.fillText('✕=3 dupACKs',60,38);
+  ctx.fillStyle='rgba(90,88,128,0.6)'; ctx.textAlign='right';
+  ctx.fillText('max='+maxVal+' MSS',W-6,14);
+}
+
+function var2(s){return s;}
+setTimeout(drawTracer,100);
+updateTracer();
+
+/* ═══════════ FLASHCARDS ═══════════ */
+const cards = [
+  { q: "TCP CW = 16 MSS and a timeout occurs. What are the new values of ssthresh and CW, and what happens next?", a: "ssthresh = 16/2 = 8 MSS. CW = 1 MSS. Slow start begins: CW doubles each RTT (1→2→4→8). When CW reaches ssthresh (8), it switches to additive increase (+1 MSS/RTT). The new ssthresh represents the network's last known safe operating point." },
+  { q: "Why is additive decrease insufficient when the network is severely congested?", a: "An oversized window causes dropped packets, which are retransmitted — adding more traffic to an already congested network. This is a compounding effect. Additive decrease (−1 per timeout) takes many timeouts to cut a large window, during which congestion worsens. Multiplicative decrease (÷2) halves the contribution immediately, exiting the congested state in one step." },
+  { q: "Describe the AIMD sawtooth pattern. Is it normal or a sign of a problem?", a: "CongestionWindow grows linearly at +1 MSS per RTT (additive increase), then drops sharply by half when loss is detected (multiplicative decrease). This pattern repeats continuously throughout the connection. It is normal steady-state behavior — the sender is continuously probing for available bandwidth and backing off when it finds the limit." },
+  { q: "Why is slow start called 'slow' when CW doubles every RTT?", a: "Slow start is 'slow' compared to the original TCP behavior of sending an entire advertised window at once on connection start. Sending a full window immediately bursts potentially thousands of packets into the network, overwhelming router buffers. Slow start starts at 1 MSS and ramps up gradually — slow relative to that burst, even though its exponential growth is faster than linear additive increase." },
+  { q: "CW = 1 MSS, ssthresh = 8 MSS. Trace CW for RTTs 0–5 (no loss).", a: "RTT 0: CW=1→2 (SS, <8). RTT 1: 2→4 (SS). RTT 2: 4→8 (SS, hits 8). RTT 3: 8→9 (AIMD, +1). RTT 4: 9→10 (AIMD). RTT 5: 10→11 (AIMD). Slow start doubles until CW reaches ssthresh (8), then additive increase takes over." },
+  { q: "Why does fast retransmit wait for 3 duplicate ACKs rather than triggering on the first?", a: "A single duplicate ACK can be caused by normal packet reordering — a packet arriving slightly out of order triggers a dup ACK without any loss. One dup ACK is ambiguous. Three dup ACKs require three out-of-order packets to have arrived, which is much more likely to indicate a genuinely dropped packet than reordering." },
+  { q: "What is fast recovery and why doesn't it restart slow start?", a: "After fast retransmit (3 dup ACKs): ssthresh = CW/2, CW = ssthresh, then additive increase resumes immediately — no slow start. The reasoning: receiving duplicate ACKs means later segments are still getting through to the receiver. The network is not severely congested (as a timeout would suggest). A mild response (halve and continue AIMD) is appropriate, not the severe response (restart from 1) used after a timeout." },
+  { q: "CW = 20 MSS when 3 duplicate ACKs arrive. What are ssthresh and CW after fast recovery?", a: "ssthresh = 20/2 = 10 MSS. CW = ssthresh = 10 MSS. Additive increase begins immediately from CW=10. Compare: if a timeout had occurred instead, CW would be 1 MSS and slow start would run from 1 to 10, then AIMD. Fast recovery skips that slow start, saving significant time." },
+  { q: "What is the formula for MaxWindow and EffectiveWindow with congestion control?", a: "MaxWindow = MIN(CongestionWindow, AdvertisedWindow). EffectiveWindow = MaxWindow − (LastByteSent − LastByteAcked). The sender is constrained by whichever is smaller — the network's capacity (CW) or the receiver's buffer (AdvWin). Both limits apply simultaneously." },
+  { q: "When does slow start run? When is it skipped?", a: "Slow start runs at: (1) connection start — no information about network capacity, and (2) after a coarse-grained timeout — the pipe is empty, no ACKs to clock. Slow start is skipped after fast retransmit with 3 dup ACKs — fast recovery goes directly to AIMD. Slow start is never used as part of fast recovery." },
+  { q: "ssthresh = 4 MSS. CW starts at 1. How many RTTs to reach CW = 7?", a: "RTT 0: CW=1→2 (SS). RTT 1: 2→4 (SS, hits ssthresh). RTT 2: 4→5 (AIMD). RTT 3: 5→6 (AIMD). RTT 4: 6→7 (AIMD). 4 RTTs of additive increase after 2 RTTs of slow start = 4 RTTs total from transition, 6 total RTTs from CW=1." },
+  { q: "What event causes TCP to enter the AIMD steady-state (sawtooth) rather than slow start?", a: "Once the congestion window reaches ssthresh for the first time (from slow start below), the protocol switches to additive increase — the linear growth phase of AIMD. After a fast-retransmit event (3 dup ACKs), TCP goes directly into additive increase at the new halved ssthresh. Slow start is only used at connection start or after a coarse-grained timeout, not during normal AIMD oscillation." },
+];
+
+let curCard = 0;
+function renderCard() {
+  document.getElementById('fc-q').textContent = cards[curCard].q;
+  document.getElementById('fc-a').textContent = cards[curCard].a;
+  document.getElementById('fc-prog').textContent = (curCard+1)+' / '+cards.length;
+  document.getElementById('fc').classList.remove('flipped');
+}
+function flipCard()  { document.getElementById('fc').classList.toggle('flipped'); }
+function nextCard()  { curCard=(curCard+1)%cards.length; renderCard(); }
+function prevCard()  { curCard=(curCard-1+cards.length)%cards.length; renderCard(); }
+renderCard();
+
+/* ═══════════ QUIZ ═══════════ */
+const questions = [
+  {
+    q: "CongestionWindow = 16 MSS and a timeout occurs. What are the new values of ssthresh and CongestionWindow, and what phase does TCP enter?",
+    opts:["ssthresh = 8, CW = 8, continue AIMD","ssthresh = 8, CW = 1, restart slow start","ssthresh = 16, CW = 1, restart slow start","ssthresh = 8, CW = 8, restart slow start"],
+    correct: 1,
+    fb: "On timeout: ssthresh = CW/2 = 8. CW resets to 1. Slow start begins, doubling each RTT until CW reaches ssthresh (8), then AIMD takes over."
+  },
+  {
+    q: "CW = 1 MSS, ssthresh = 6 MSS. What is CW after RTT 3 (counting from RTT 0, no loss)?",
+    opts:["6 MSS","7 MSS","8 MSS","4 MSS"],
+    correct: 1,
+    fb: "RTT 0: CW=1→2 (SS). RTT 1: 2→4 (SS). RTT 2: 4→6 (SS, hits ssthresh). RTT 3: 6→7 (AIMD, +1). Answer: 7 MSS."
+  },
+  {
+    q: "Why is the 'multiplicative decrease' half of AIMD necessary rather than using additive decrease?",
+    opts:["Additive decrease takes too long — when the window is oversized, dropped packets are retransmitted compounding congestion. Halving immediately cuts load in one step.","Additive decrease would cause the window to drop below 1 MSS","Multiplicative decrease is required by the IP specification","Additive decrease would require more router involvement"],
+    correct: 0,
+    fb: "When severely congested, an oversized window causes retransmissions that add MORE traffic. The sender must exit this state quickly. Additive decrease (−1 per timeout) takes many timeouts; multiplicative decrease (÷2) achieves it in one step. This aggressive retreat is necessary for stability."
+  },
+  {
+    q: "Why is slow start called 'slow' even though it grows exponentially (doubles each RTT)?",
+    opts:["Because it is slower than additive increase","Because it starts at 1 MSS and grows slowly for the first few RTTs","Because it is slow compared to sending the full advertised window all at once — the original TCP behavior before slow start was invented","Because routers slow it down artificially"],
+    correct: 2,
+    fb: "Slow start is named relative to the original behavior: sending an entire advertised window immediately. That full-window burst overwhelms router buffers. Slow start (starting at 1 MSS, doubling per RTT) is 'slow' by comparison, even though it's exponential and much faster than linear additive increase."
+  },
+  {
+    q: "Fast retransmit triggers on 3 duplicate ACKs, not 1. Why not trigger on the first duplicate ACK?",
+    opts:["One duplicate ACK indicates a severe congestion event requiring immediate retransmission","A single duplicate ACK can result from normal packet reordering — it is ambiguous and may not indicate loss at all","The TCP specification arbitrarily chose 3 for historical reasons","Routers only generate duplicate ACKs in groups of 3"],
+    correct: 1,
+    fb: "A single dup ACK can be caused by a packet that was simply delayed and arrived out of order — not dropped. Three dup ACKs require three subsequent packets to have arrived, making it much more likely that the earlier packet was actually dropped rather than just reordered."
+  },
+  {
+    q: "CW = 18 MSS when 3 duplicate ACKs arrive. Fast recovery is applied. What is CW immediately after, and does slow start run?",
+    opts:["CW = 9, slow start runs from 1 to 9","CW = 9, slow start is skipped — AIMD resumes immediately at CW=9","CW = 1, slow start runs from 1 to 9","CW = 18, no change because fast retransmit only retransmits one packet"],
+    correct: 1,
+    fb: "Fast recovery: ssthresh = 18/2 = 9. CW = ssthresh = 9. AIMD resumes immediately — no slow start. The key reason: duplicate ACKs prove that packets are still arriving at the receiver, so the network is not severely congested. A mild response (halve and continue AIMD) is appropriate."
+  },
+  {
+    q: "After a timeout (vs after 3 dup ACKs), why does TCP return to slow start instead of fast recovery?",
+    opts:["Timeouts indicate more packets were lost than 3 dup ACKs","When a timeout fires, the pipe is empty — no packets in flight means no ACKs to clock transmission. The network appears severely congested. When dup ACKs arrive, the pipe still has packets flowing, suggesting milder congestion.","TCP randomly alternates between slow start and fast recovery","Timeouts only occur when ssthresh is very small"],
+    correct: 1,
+    fb: "After a timeout: no packets in flight, no ACKs arriving — the connection is dead. This indicates severe congestion; restart from CW=1. After 3 dup ACKs: later packets ARE arriving (they caused the dup ACKs). The network is congested but not catastrophically. Fast recovery skips slow start because ACKs can still clock transmissions."
+  },
+  {
+    q: "The AIMD sawtooth pattern shows CW repeatedly growing and dropping. This is:",
+    opts:["A bug that should be fixed in TCP's implementation","Normal steady-state behavior — the sender is continuously probing for available bandwidth and backing off when it hits the limit","Evidence that the network is too congested for TCP to work","Only observed on long-fat networks"],
+    correct: 1,
+    fb: "The sawtooth is expected and correct. TCP has no other way to discover available bandwidth than to probe by increasing CW. When it overprobes (CW too large), loss occurs and CW drops. This probe-and-back-off cycle is the fundamental mechanism that allows TCP to fill the pipe without prior knowledge of network capacity."
+  },
+  {
+    q: "CW = 1, ssthresh = 10. After a timeout occurs when CW = 10, what is ssthresh now, and from what CW does slow start restart?",
+    opts:["ssthresh = 5, CW restarts from 1","ssthresh = 10, CW restarts from 1","ssthresh = 5, CW restarts from 5","ssthresh = 10, CW restarts from 5"],
+    correct: 0,
+    fb: "On timeout: ssthresh = CW/2 = 10/2 = 5. CW = 1 (always resets to 1 on timeout). Slow start begins from 1, doubling each RTT: 1→2→4→5 (capped at ssthresh), then AIMD starts at 5→6→7→…"
+  },
+  {
+    q: "Which of the following correctly describes when slow start is active vs when AIMD is active?",
+    opts:["Slow start always runs at connection start and never again","AIMD runs whenever CW < ssthresh; slow start runs when CW ≥ ssthresh","Slow start runs when CW < ssthresh (exponential growth); AIMD runs when CW ≥ ssthresh (linear growth)","Both run simultaneously throughout the connection"],
+    correct: 2,
+    fb: "Slow start: CW < ssthresh → doubles each RTT (1, 2, 4, 8…). AIMD additive increase: CW ≥ ssthresh → +1 MSS per RTT. The transition from slow start to AIMD happens exactly when CW reaches ssthresh. After a timeout, slow start restarts from CW=1 with the new (lower) ssthresh."
+  },
+];
+
+let qIdx=0,score=0,answered=false;
+function renderQuiz(){
+  const c=document.getElementById('quiz-container');
+  if(qIdx>=questions.length){
+    const pct=Math.round(score/questions.length*100);
+    c.innerHTML=`<div class="score-box"><div class="score-num">${score}/${questions.length}</div><div class="score-lbl">${pct}% — ${pct>=80?'Strong command of TCP congestion control':'Review the sections above and use the CWND tracer'}</div><button class="restart-btn" onclick="restartQuiz()">Restart</button></div>`;
+    return;
+  }
+  const q=questions[qIdx];
+  c.innerHTML=`<div class="card"><div class="quiz-counter">QUESTION ${qIdx+1} / ${questions.length}</div><div class="quiz-q">${q.q}</div><div class="quiz-opts">${q.opts.map((o,i)=>`<button class="quiz-opt" id="opt-${i}" onclick="selectOpt(${i})">${o}</button>`).join('')}</div><div class="quiz-fb" id="qfb"></div><button class="quiz-next" id="qnext" onclick="nextQ()">Next →</button></div>`;
+}
+function selectOpt(i){
+  if(answered)return;answered=true;
+  const q=questions[qIdx];
+  document.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);
+  const fb=document.getElementById('qfb');
+  if(i===q.correct){score++;document.getElementById('opt-'+i).classList.add('opt-correct');fb.className='quiz-fb qf-ok';fb.innerHTML='✓ Correct. '+q.fb;}
+  else{document.getElementById('opt-'+i).classList.add('opt-wrong');document.getElementById('opt-'+q.correct).classList.add('opt-correct');fb.className='quiz-fb qf-bad';fb.innerHTML='✗ Not quite. '+q.fb;}
+  fb.style.display='block';document.getElementById('qnext').style.display='inline-block';
+}
+function nextQ(){qIdx++;answered=false;renderQuiz();}
+function restartQuiz(){qIdx=0;score=0;answered=false;renderQuiz();}
+renderQuiz();
+</script>
+</body>
+</html>
