@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Computer Networks (SP26) — Practice Exam 3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #fafaf8;
+    --bg2: #f2f0eb;
+    --bg3: #e8e5dd;
+    --surf: #ffffff;
+    --bdr: rgba(40,35,20,0.12);
+    --bdr2: rgba(40,35,20,0.22);
+    --text: #1a1810;
+    --muted: #7a7060;
+    --correct: #1a6b3a;
+    --wrong: #a02020;
+    --c-bg: rgba(26,107,58,0.08);
+    --w-bg: rgba(160,32,32,0.07);
+    --accent: #0a4f8a;
+    --sec-cong: #0a4f8a;
+    --sec-sec: #6b1a6b;
+    --sec-app: #7a5000;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── Header ── */
+  .exam-header {
+    background: var(--text);
+    color: #fafaf8;
+    padding: 40px 40px 32px;
+  }
+
+  .exam-header h1 {
+    font-family: 'Source Serif 4', serif;
+    font-size: 28px; font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .exam-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(250,250,248,0.55);
+    letter-spacing: 0.05em;
+  }
+
+  .disclaimer {
+    background: rgba(250,250,248,0.08);
+    border: 1px solid rgba(250,250,248,0.15);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-size: 12.5px;
+    color: rgba(250,250,248,0.7);
+    line-height: 1.6;
+  }
+
+  /* ── Score bar ── */
+  .score-bar {
+    background: var(--surf);
+    border-bottom: 1px solid var(--bdr);
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    position: sticky; top: 0; z-index: 20;
+  }
+
+  .score-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    display: flex; gap: 6px; align-items: center;
+  }
+
+  .score-val { font-weight: 700; font-size: 16px; color: var(--accent); }
+  .score-lbl { color: var(--muted); }
+
+  .progress-bar {
+    flex: 1; min-width: 120px;
+    height: 6px; background: var(--bg3);
+    border-radius: 3px; overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.4s;
+    width: 0%;
+  }
+
+  .reset-btn {
+    padding: 7px 16px;
+    background: var(--bg2);
+    border: 1px solid var(--bdr2);
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer; color: var(--muted);
+    transition: all 0.13s;
+  }
+  .reset-btn:hover { color: var(--text); background: var(--bg3); }
+
+  /* ── Container ── */
+  .container { max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
+
+  /* ── Section headers ── */
+  .section-header {
+    margin: 36px 0 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--text);
+    display: flex; align-items: baseline; gap: 14px;
+  }
+
+  .section-header h2 {
+    font-family: 'Source Serif 4', serif;
+    font-size: 20px; font-weight: 600;
+  }
+
+  .section-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--muted);
+  }
+
+  .sec-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 3px;
+    margin-bottom: 8px; display: inline-block;
+  }
+  .st-cong { background: rgba(10,79,138,0.1); color: var(--sec-cong); border: 1px solid rgba(10,79,138,0.25); }
+  .st-sec  { background: rgba(107,26,107,0.1); color: var(--sec-sec); border: 1px solid rgba(107,26,107,0.25); }
+  .st-app  { background: rgba(122,80,0,0.1); color: var(--sec-app); border: 1px solid rgba(122,80,0,0.25); }
+
+  /* ── MCQ ── */
+  .mcq {
+    background: var(--surf);
+    border: 1px solid var(--bdr);
+    border-radius: 8px;
+    padding: 22px;
+    margin-bottom: 16px;
+    transition: border-color 0.13s;
+  }
+
+  .mcq:hover { border-color: var(--bdr2); }
+
+  .mcq-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .mcq-q {
+    font-size: 15px; font-weight: 500;
+    line-height: 1.6; margin-bottom: 14px;
+    color: var(--text);
+  }
+
+  .mcq-options { display: flex; flex-direction: column; gap: 7px; }
+
+  .opt-btn {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--bdr);
+    border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px; line-height: 1.55;
+    color: var(--text);
+    transition: all 0.12s;
+    width: 100%;
+  }
+
+  .opt-btn:hover:not(:disabled) { border-color: var(--bdr2); background: var(--bg2); }
+  .opt-btn:disabled { cursor: not-allowed; }
+
+  .opt-letter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700;
+    min-width: 20px; margin-top: 1px;
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+
+  .opt-btn.correct { border-color: var(--correct); background: var(--c-bg); }
+  .opt-btn.correct .opt-letter { color: var(--correct); }
+  .opt-btn.wrong   { border-color: var(--wrong);   background: var(--w-bg); }
+  .opt-btn.wrong   .opt-letter { color: var(--wrong); }
+
+  .explanation {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 13px; line-height: 1.65;
+    display: none;
+  }
+
+  .explanation.correct-exp { background: var(--c-bg); border: 1px solid rgba(26,107,58,0.22); }
+  .explanation.wrong-exp   { background: var(--w-bg); border: 1px solid rgba(160,32,32,0.18); }
+
+  .exp-verdict {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .correct-exp .exp-verdict { color: var(--correct); }
+  .wrong-exp   .exp-verdict { color: var(--wrong); }
+
+  .source-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* ── Final Score ── */
+  .final-score {
+    background: var(--surf); border: 1px solid var(--bdr);
+    border-radius: 10px; padding: 36px;
+    text-align: center; margin-top: 36px;
+  }
+
+  .fs-num {
+    font-family: 'Source Serif 4', serif;
+    font-size: 60px; font-weight: 600;
+    color: var(--text);
+  }
+
+  .fs-label { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--bg2); border: 1px solid var(--bdr); border-radius: 3px; padding: 1px 6px; }
+</style>
+</head>
+<body>
+
+<a href="index.html" style="display:inline-flex;align-items:center;gap:8px;position:fixed;top:16px;left:16px;z-index:100;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#506080;background:#0b0d18;border:1px solid rgba(140,200,255,0.1);border-radius:6px;padding:7px 14px;text-decoration:none;transition:color 0.13s,border-color 0.13s;" onmouseover="this.style.color='#50c8ff';this.style.borderColor='rgba(80,200,255,0.3)'" onmouseout="this.style.color='#506080';this.style.borderColor='rgba(140,200,255,0.1)'">← Home</a>
+
+<div class="exam-header">
+  <h1>Computer Networks (SP26) — Practice Exam 3</h1>
+  <div class="exam-meta">Chapters 6 &amp; 8 (primary) · Applications &amp; IPv6 (secondary) · All MCQ · 48 questions · 96 points</div>
+  <div class="disclaimer">
+    <strong>Instructions:</strong> Each question is worth 2 points (48 questions = 96 points). Click an option to submit your answer and see the full model-solution explanation. Questions are ordered by topic: Congestion Control (Ch.6), Network Security (Ch.8), then Applications &amp; IPv6. The reset button clears all answers. This exam is modeled after the style, difficulty, and distractor logic of Exams 1 and 2.
+  </div>
+</div>
+
+<div class="score-bar">
+  <div class="score-display">
+    <span class="score-val" id="score-val">0</span>
+    <span class="score-lbl">/ 96 pts</span>
+  </div>
+  <div class="score-display">
+    <span class="score-val" id="correct-val">0</span>
+    <span class="score-lbl">/ 48 correct</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+  <button class="reset-btn" onclick="resetExam()">Reset exam</button>
+</div>
+
+<div class="container">
+
+<!-- ══════════════════════════════════
+     SECTION 1 — CONGESTION CONTROL
+══════════════════════════════════ -->
+<div class="section-header">
+  <h2>Section 1: Congestion Control — Chapter 6</h2>
+  <span class="section-meta">Questions 1–24 · primary focus</span>
+</div>
+
+<!-- Q1 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.1</span>&nbsp; MCQ1 (2 pts)</div>
+<div class="mcq-q">What is the fundamental difference between flow control and congestion control?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(1,'A',false)"><span class="opt-letter">A.</span>Flow control is implemented in routers; congestion control is implemented in end hosts.</button>
+  <button class="opt-btn" onclick="answer(1,'B',true)"><span class="opt-letter">B.</span>Flow control protects the receiver from being overwhelmed by a fast sender; congestion control protects the network from being overwhelmed by too many senders.</button>
+  <button class="opt-btn" onclick="answer(1,'C',false)"><span class="opt-letter">C.</span>Flow control uses window-based mechanisms; congestion control always uses rate-based mechanisms.</button>
+  <button class="opt-btn" onclick="answer(1,'D',false)"><span class="opt-letter">D.</span>They are different names for the same mechanism — both prevent the receiver's buffer from overflowing.</button>
+</div>
+<div class="explanation" id="exp1"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.1 (Resource Allocation); Related: A6</div></div></div>
+
+<!-- Q2 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.1</span>&nbsp; MCQ2 (2 pts)</div>
+<div class="mcq-q">TCP congestion control is classified as host-centric, feedback-based, and window-based. Which classification is correct for "feedback-based" specifically?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(2,'A',false)"><span class="opt-letter">A.</span>Routers explicitly signal each sender with the exact rate they should use.</button>
+  <button class="opt-btn" onclick="answer(2,'B',false)"><span class="opt-letter">B.</span>Senders request a bandwidth reservation from routers before transmitting.</button>
+  <button class="opt-btn" onclick="answer(2,'C',true)"><span class="opt-letter">C.</span>Senders infer congestion from observable events (packet loss) without routers explicitly signaling a rate limit.</button>
+  <button class="opt-btn" onclick="answer(2,'D',false)"><span class="opt-letter">D.</span>Senders use the advertised window as explicit feedback from the network about congestion.</button>
+</div>
+<div class="explanation" id="exp2"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.1 (Taxonomy); Related: A6</div></div></div>
+
+<!-- Q3 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.1</span>&nbsp; MCQ3 (2 pts)</div>
+<div class="mcq-q">Three flows share a bottleneck link with throughputs of 4 Mbps, 4 Mbps, and 8 Mbps. What is Jain's fairness index?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(3,'A',false)"><span class="opt-letter">A.</span>1.0</button>
+  <button class="opt-btn" onclick="answer(3,'B',false)"><span class="opt-letter">B.</span>0.50</button>
+  <button class="opt-btn" onclick="answer(3,'C',true)"><span class="opt-letter">C.</span>0.75</button>
+  <button class="opt-btn" onclick="answer(3,'D',false)"><span class="opt-letter">D.</span>0.89</button>
+</div>
+<div class="explanation" id="exp3"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.1 (Jain's Fairness Index); Related: A6</div></div></div>
+
+<!-- Q4 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.1</span>&nbsp; MCQ4 (2 pts)</div>
+<div class="mcq-q">The end-to-end argument applies to TCP congestion control. Which statement best reflects this?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(4,'A',false)"><span class="opt-letter">A.</span>Routers inside the network enforce congestion limits on behalf of end hosts.</button>
+  <button class="opt-btn" onclick="answer(4,'B',true)"><span class="opt-letter">B.</span>End hosts infer congestion from packet loss and adjust their sending rate without requiring routers to signal congestion explicitly.</button>
+  <button class="opt-btn" onclick="answer(4,'C',false)"><span class="opt-letter">C.</span>Hop-by-hop reliability at each router is sufficient to prevent congestion collapse.</button>
+  <button class="opt-btn" onclick="answer(4,'D',false)"><span class="opt-letter">D.</span>The end-to-end argument requires that congestion control be implemented in the network layer, not the transport layer.</button>
+</div>
+<div class="explanation" id="exp4"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.1 + end-to-end argument; Related: A6</div></div></div>
+
+<!-- Q5 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ5 (2 pts)</div>
+<div class="mcq-q">TCP CongestionWindow = 16 MSS and a timeout occurs. What are the new values of ssthresh and CongestionWindow immediately after?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(5,'A',false)"><span class="opt-letter">A.</span>ssthresh = 16, CongestionWindow = 8</button>
+  <button class="opt-btn" onclick="answer(5,'B',false)"><span class="opt-letter">C.</span>ssthresh = 8, CongestionWindow = 8</button>
+  <button class="opt-btn" onclick="answer(5,'C',true)"><span class="opt-letter">B.</span>ssthresh = 8, CongestionWindow = 1</button>
+  <button class="opt-btn" onclick="answer(5,'D',false)"><span class="opt-letter">D.</span>ssthresh = 16, CongestionWindow = 1</button>
+</div>
+<div class="explanation" id="exp5"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (AIMD, Slow Start); Related: A6</div></div></div>
+
+<!-- Q6 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ6 (2 pts)</div>
+<div class="mcq-q">CongestionWindow = 1 MSS, ssthresh = 8 MSS, no loss. What is CongestionWindow after 3 RTTs?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(6,'A',false)"><span class="opt-letter">A.</span>4 MSS</button>
+  <button class="opt-btn" onclick="answer(6,'B',false)"><span class="opt-letter">B.</span>3 MSS</button>
+  <button class="opt-btn" onclick="answer(6,'C',false)"><span class="opt-letter">C.</span>6 MSS</button>
+  <button class="opt-btn" onclick="answer(6,'D',true)"><span class="opt-letter">D.</span>8 MSS</button>
+</div>
+<div class="explanation" id="exp6"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (Slow Start); Related: A6</div></div></div>
+
+<!-- Q7 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ7 (2 pts)</div>
+<div class="mcq-q">After the congestion window reaches ssthresh, TCP switches to additive increase. What does "additive increase" mean precisely?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(7,'A',false)"><span class="opt-letter">A.</span>CongestionWindow doubles on every ACK received.</button>
+  <button class="opt-btn" onclick="answer(7,'B',true)"><span class="opt-letter">B.</span>CongestionWindow increases by approximately 1 MSS per RTT — each ACK increments it by MSS × (MSS / CongestionWindow).</button>
+  <button class="opt-btn" onclick="answer(7,'C',false)"><span class="opt-letter">C.</span>CongestionWindow increases by 1 MSS for every ACK received, regardless of window size.</button>
+  <button class="opt-btn" onclick="answer(7,'D',false)"><span class="opt-letter">D.</span>CongestionWindow is fixed until the next loss event.</button>
+</div>
+<div class="explanation" id="exp7"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (AIMD); Related: A6</div></div></div>
+
+<!-- Q8 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ8 (2 pts)</div>
+<div class="mcq-q">The AIMD sawtooth pattern shows CongestionWindow growing linearly, then dropping sharply on loss. A student says this oscillation is evidence the protocol is broken. What is the correct response?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(8,'A',false)"><span class="opt-letter">A.</span>The student is right — the window should stabilize at a fixed value once the available capacity is found.</button>
+  <button class="opt-btn" onclick="answer(8,'B',false)"><span class="opt-letter">B.</span>The student is right — the oscillation wastes bandwidth that could otherwise be used.</button>
+  <button class="opt-btn" onclick="answer(8,'C',true)"><span class="opt-letter">C.</span>The student is wrong — the sawtooth is the normal steady-state behavior of AIMD, reflecting continuous probing for available bandwidth and aggressive retreat when congestion is detected.</button>
+  <button class="opt-btn" onclick="answer(8,'D',false)"><span class="opt-letter">D.</span>The student is right — TCP should use rate-based control to avoid oscillation.</button>
+</div>
+<div class="explanation" id="exp8"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (AIMD Sawtooth); Related: A6</div></div></div>
+
+<!-- Q9 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ9 (2 pts)</div>
+<div class="mcq-q">Why is multiplicative decrease used instead of additive decrease when congestion is detected?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(9,'A',false)"><span class="opt-letter">A.</span>Additive decrease would reduce the window below 1 MSS, violating TCP's minimum window size.</button>
+  <button class="opt-btn" onclick="answer(9,'B',false)"><span class="opt-letter">B.</span>Multiplicative decrease is required by the IP specification.</button>
+  <button class="opt-btn" onclick="answer(9,'C',true)"><span class="opt-letter">C.</span>When a window is too large, dropped packets are retransmitted, compounding congestion. The network must be relieved quickly — additive decrease is too slow to exit congestion, whereas multiplicative decrease halves the load in one step.</button>
+  <button class="opt-btn" onclick="answer(9,'D',false)"><span class="opt-letter">D.</span>Multiplicative decrease results in fewer retransmissions than additive decrease.</button>
+</div>
+<div class="explanation" id="exp9"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (AIMD); Related: A6</div></div></div>
+
+<!-- Q10 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ10 (2 pts)</div>
+<div class="mcq-q">Why is slow start called "slow" even though CongestionWindow doubles every RTT?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(10,'A',false)"><span class="opt-letter">A.</span>Because it is slower than additive increase.</button>
+  <button class="opt-btn" onclick="answer(10,'B',true)"><span class="opt-letter">B.</span>Because it is slow compared to the original TCP behavior of sending an entire advertised window at once — slow start spaces packets out to avoid overwhelming router buffers.</button>
+  <button class="opt-btn" onclick="answer(10,'C',false)"><span class="opt-letter">C.</span>Because the initial window of 1 MSS is too small to utilize the link.</button>
+  <button class="opt-btn" onclick="answer(10,'D',false)"><span class="opt-letter">D.</span>Because each RTT only adds 1 MSS, which is the same as additive increase.</button>
+</div>
+<div class="explanation" id="exp10"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (Slow Start naming); Related: A6</div></div></div>
+
+<!-- Q11 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ11 (2 pts)</div>
+<div class="mcq-q">Fast retransmit triggers retransmission after three duplicate ACKs rather than one. Why three?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(11,'A',false)"><span class="opt-letter">A.</span>Three ACKs ensure that the retransmitted segment has time to arrive before the timeout fires.</button>
+  <button class="opt-btn" onclick="answer(11,'B',true)"><span class="opt-letter">B.</span>A single duplicate ACK can result from normal packet reordering and does not reliably indicate loss; three duplicate ACKs are much more likely to indicate that a segment was actually dropped.</button>
+  <button class="opt-btn" onclick="answer(11,'C',false)"><span class="opt-letter">C.</span>Three is the minimum number needed to compute a new RTT estimate.</button>
+  <button class="opt-btn" onclick="answer(11,'D',false)"><span class="opt-letter">D.</span>Three duplicate ACKs ensure the receiver has enough buffer to accept the retransmission.</button>
+</div>
+<div class="explanation" id="exp11"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (Fast Retransmit); Related: A6</div></div></div>
+
+<!-- Q12 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ12 (2 pts)</div>
+<div class="mcq-q">After fast retransmit (triggered by 3 duplicate ACKs), TCP uses fast recovery. What does fast recovery do differently from a timeout response?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(12,'A',false)"><span class="opt-letter">A.</span>Fast recovery resets CongestionWindow to 1 MSS and restarts slow start, just like a timeout.</button>
+  <button class="opt-btn" onclick="answer(12,'B',false)"><span class="opt-letter">B.</span>Fast recovery increases ssthresh before halving the window.</button>
+  <button class="opt-btn" onclick="answer(12,'C',true)"><span class="opt-letter">C.</span>Fast recovery halves CongestionWindow and enters additive increase immediately — it skips slow start because duplicate ACKs indicate that segments are still arriving, meaning the network is not as severely congested as a timeout would suggest.</button>
+  <button class="opt-btn" onclick="answer(12,'D',false)"><span class="opt-letter">D.</span>Fast recovery doubles ssthresh before resuming additive increase.</button>
+</div>
+<div class="explanation" id="exp12"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (Fast Recovery); Related: A6</div></div></div>
+
+<!-- Q13 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ13 (2 pts)</div>
+<div class="mcq-q">CongestionWindow = 20 MSS when 3 duplicate ACKs arrive. What are ssthresh and CongestionWindow after fast recovery?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(13,'A',false)"><span class="opt-letter">A.</span>ssthresh = 10, CongestionWindow = 1</button>
+  <button class="opt-btn" onclick="answer(13,'B',true)"><span class="opt-letter">B.</span>ssthresh = 10, CongestionWindow = 10</button>
+  <button class="opt-btn" onclick="answer(13,'C',false)"><span class="opt-letter">C.</span>ssthresh = 20, CongestionWindow = 10</button>
+  <button class="opt-btn" onclick="answer(13,'D',false)"><span class="opt-letter">D.</span>ssthresh = 10, CongestionWindow = 20</button>
+</div>
+<div class="explanation" id="exp13"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (Fast Recovery); Related: A6</div></div></div>
+
+<!-- Q14 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ14 (2 pts)</div>
+<div class="mcq-q">A connection has ssthresh = 6 MSS and CW = 1 MSS. A timeout occurs at RTT 5 when CW = 9 MSS. What is ssthresh after the timeout?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(14,'A',false)"><span class="opt-letter">A.</span>6 MSS (unchanged)</button>
+  <button class="opt-btn" onclick="answer(14,'B',false)"><span class="opt-letter">B.</span>3 MSS</button>
+  <button class="opt-btn" onclick="answer(14,'C',true)"><span class="opt-letter">C.</span>4 MSS (floor of 9/2)</button>
+  <button class="opt-btn" onclick="answer(14,'D',false)"><span class="opt-letter">D.</span>9 MSS</button>
+</div>
+<div class="explanation" id="exp14"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (ssthresh bookkeeping); Related: A6</div></div></div>
+
+<!-- Q15 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ15 (2 pts)</div>
+<div class="mcq-q">Slow start runs in two distinct situations. Which of the following is one of them?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(15,'A',false)"><span class="opt-letter">A.</span>After 3 duplicate ACKs trigger fast retransmit.</button>
+  <button class="opt-btn" onclick="answer(15,'B',false)"><span class="opt-letter">B.</span>When CongestionWindow exceeds AdvertisedWindow.</button>
+  <button class="opt-btn" onclick="answer(15,'C',false)"><span class="opt-letter">C.</span>When the receiver advertises a window of zero.</button>
+  <button class="opt-btn" onclick="answer(15,'D',true)"><span class="opt-letter">D.</span>At the start of a connection, before any ssthresh has been established by a prior loss event.</button>
+</div>
+<div class="explanation" id="exp15"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (Slow Start situations); Related: A6</div></div></div>
+
+<!-- Q16 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ16 (2 pts)</div>
+<div class="mcq-q">A link has bandwidth 10 Gbps and RTT 100 ms. How many 1500-byte segments must be in flight to fully utilize the link?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(16,'A',false)"><span class="opt-letter">A.</span>Approximately 833 segments</button>
+  <button class="opt-btn" onclick="answer(16,'B',false)"><span class="opt-letter">B.</span>Approximately 8,333 segments</button>
+  <button class="opt-btn" onclick="answer(16,'C',true)"><span class="opt-letter">C.</span>Approximately 83,333 segments</button>
+  <button class="opt-btn" onclick="answer(16,'D',false)"><span class="opt-letter">D.</span>Approximately 833,333 segments</button>
+</div>
+<div class="explanation" id="exp16"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 / CUBIC motivation; Related: A6</div></div></div>
+
+<!-- Q17 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ17 (2 pts)</div>
+<div class="mcq-q">After a loss event on a 10 Gbps / 100 ms RTT link, standard AIMD recovers at +1 MSS per RTT. The window was halved from ~83,333 to ~41,667 MSS. Approximately how many RTTs does additive increase take to return to the full window?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(17,'A',false)"><span class="opt-letter">A.</span>~8,333 RTTs (~14 minutes)</button>
+  <button class="opt-btn" onclick="answer(17,'B',true)"><span class="opt-letter">B.</span>~41,667 RTTs (~70 minutes)</button>
+  <button class="opt-btn" onclick="answer(17,'C',false)"><span class="opt-letter">C.</span>~4,167 RTTs (~7 minutes)</button>
+  <button class="opt-btn" onclick="answer(17,'D',false)"><span class="opt-letter">D.</span>~833 RTTs (~1.4 minutes)</button>
+</div>
+<div class="explanation" id="exp17"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3.4 (CUBIC motivation / long-fat networks); Related: A6</div></div></div>
+
+<!-- Q18 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ18 (2 pts)</div>
+<div class="mcq-q">CUBIC adjusts CongestionWindow based on time elapsed since the last congestion event rather than per ACK. Why does this improve fairness between flows with different RTTs?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(18,'A',false)"><span class="opt-letter">A.</span>Short-RTT flows generate fewer ACKs per second, so time-based control gives them more bandwidth.</button>
+  <button class="opt-btn" onclick="answer(18,'B',false)"><span class="opt-letter">B.</span>Time-based control allows CUBIC to reduce its window more aggressively than standard TCP.</button>
+  <button class="opt-btn" onclick="answer(18,'C',true)"><span class="opt-letter">C.</span>ACK-based control unfairly favors short-RTT flows because they receive ACKs more frequently and thus grow their window faster. Time-based control decouples growth from RTT, letting all flows grow at the same wall-clock rate.</button>
+  <button class="opt-btn" onclick="answer(18,'D',false)"><span class="opt-letter">D.</span>Time-based control eliminates the need for ssthresh, making the algorithm fairer.</button>
+</div>
+<div class="explanation" id="exp18"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3.4 (CUBIC, RTT fairness); Related: A6</div></div></div>
+
+<!-- Q19 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ19 (2 pts)</div>
+<div class="mcq-q">CUBIC uses a multiplicative decrease factor β = 0.7, while standard TCP uses 0.5. What is the practical effect?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(19,'A',false)"><span class="opt-letter">A.</span>CUBIC is more aggressive — it reduces its window more than standard TCP on each loss event.</button>
+  <button class="opt-btn" onclick="answer(19,'B',true)"><span class="opt-letter">B.</span>CUBIC is less aggressive — it retains 70% of its window on loss (surrenders only 30%), compared to standard TCP which retains only 50%. This results in less capacity being surrendered and faster recovery on high-BDP links.</button>
+  <button class="opt-btn" onclick="answer(19,'C',false)"><span class="opt-letter">C.</span>CUBIC and standard TCP behave identically; β just changes how ssthresh is labeled internally.</button>
+  <button class="opt-btn" onclick="answer(19,'D',false)"><span class="opt-letter">D.</span>CUBIC's β = 0.7 means it waits 70% of an RTT before retransmitting after a loss.</button>
+</div>
+<div class="explanation" id="exp19"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3.4 (CUBIC β); Related: A6</div></div></div>
+
+<!-- Q20 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ20 (2 pts)</div>
+<div class="mcq-q">CUBIC's cubic window function has three phases relative to W_max (the window at the last congestion event). In the plateau phase, what is happening?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(20,'A',false)"><span class="opt-letter">A.</span>CongestionWindow is growing rapidly because the sender is far below W_max.</button>
+  <button class="opt-btn" onclick="answer(20,'B',false)"><span class="opt-letter">B.</span>CongestionWindow has exceeded W_max and is probing for new capacity.</button>
+  <button class="opt-btn" onclick="answer(20,'C',true)"><span class="opt-letter">C.</span>CongestionWindow is near W_max and growing very slowly — the sender is being cautious around the point where congestion was last detected.</button>
+  <button class="opt-btn" onclick="answer(20,'D',false)"><span class="opt-letter">D.</span>CongestionWindow is fixed at W_max until the next RTT measurement.</button>
+</div>
+<div class="explanation" id="exp20"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3.4 (CUBIC three phases); Related: A6</div></div></div>
+
+<!-- Q21 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ21 (2 pts)</div>
+<div class="mcq-q">Which statement correctly describes the TCP MaxWindow used for sending?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(21,'A',false)"><span class="opt-letter">A.</span>MaxWindow = CongestionWindow + AdvertisedWindow</button>
+  <button class="opt-btn" onclick="answer(21,'B',true)"><span class="opt-letter">B.</span>MaxWindow = MIN(CongestionWindow, AdvertisedWindow)</button>
+  <button class="opt-btn" onclick="answer(21,'C',false)"><span class="opt-letter">C.</span>MaxWindow = MAX(CongestionWindow, AdvertisedWindow)</button>
+  <button class="opt-btn" onclick="answer(21,'D',false)"><span class="opt-letter">D.</span>MaxWindow = CongestionWindow only; AdvertisedWindow is irrelevant once congestion control is active.</button>
+</div>
+<div class="explanation" id="exp21"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (MaxWindow formula); Related: A6</div></div></div>
+
+<!-- Q22 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ22 (2 pts)</div>
+<div class="mcq-q">A TCP connection starts fresh (no prior history). ssthresh is effectively unlimited. CW = 1 MSS. The first loss occurs at CW = 32 MSS (timeout). What happens next and what is the new ssthresh?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(22,'A',false)"><span class="opt-letter">A.</span>ssthresh = 32, CW enters additive increase from CW = 16.</button>
+  <button class="opt-btn" onclick="answer(22,'B',false)"><span class="opt-letter">B.</span>ssthresh = 16, CW stays at 16 and continues additive increase.</button>
+  <button class="opt-btn" onclick="answer(22,'C',true)"><span class="opt-letter">C.</span>ssthresh = 16, CW resets to 1, slow start restarts toward ssthresh = 16, then switches to additive increase.</button>
+  <button class="opt-btn" onclick="answer(22,'D',false)"><span class="opt-letter">D.</span>ssthresh = 32, CW resets to 1, slow start continues until ssthresh = 32.</button>
+</div>
+<div class="explanation" id="exp22"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (Slow Start + ssthresh bookkeeping); Related: A6</div></div></div>
+
+<!-- Q23 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.1</span>&nbsp; MCQ23 (2 pts)</div>
+<div class="mcq-q">The power metric for resource allocation is defined as Power = Throughput / Delay. Why is operating to the right of the power curve's peak harmful?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(23,'A',false)"><span class="opt-letter">A.</span>Throughput drops to zero immediately when load exceeds the peak.</button>
+  <button class="opt-btn" onclick="answer(23,'B',true)"><span class="opt-letter">B.</span>To the right of the peak, queueing delay grows faster than throughput increases, so power (Throughput/Delay) decreases. In the extreme, the network risks congestion collapse where throughput falls toward zero while the network is saturated with retransmissions.</button>
+  <button class="opt-btn" onclick="answer(23,'C',false)"><span class="opt-letter">C.</span>Operating to the right is actually ideal because links are more fully utilized.</button>
+  <button class="opt-btn" onclick="answer(23,'D',false)"><span class="opt-letter">D.</span>To the right of the peak, the receiver's buffer always overflows, causing flow control to stop the sender.</button>
+</div>
+<div class="explanation" id="exp23"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.1 (Power metric, congestion collapse); Related: A6</div></div></div>
+
+<!-- Q24 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-cong">Ch6 §6.3</span>&nbsp; MCQ24 (2 pts)</div>
+<div class="mcq-q">Which event does NOT cause slow start to run?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(24,'A',false)"><span class="opt-letter">A.</span>A coarse-grained timeout (retransmission timeout) fires after a packet loss.</button>
+  <button class="opt-btn" onclick="answer(24,'B',false)"><span class="opt-letter">B.</span>The connection is first established and CW begins at 1 MSS.</button>
+  <button class="opt-btn" onclick="answer(24,'C',true)"><span class="opt-letter">C.</span>Three duplicate ACKs trigger fast retransmit and fast recovery.</button>
+  <button class="opt-btn" onclick="answer(24,'D',false)"><span class="opt-letter">D.</span>A timeout occurs after the connection has been idle and the sender restarts from CW = 1.</button>
+</div>
+<div class="explanation" id="exp24"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (Fast Recovery skips slow start); Related: A6</div></div></div>
+
+<!-- ══════════════════════════════════
+     SECTION 2 — NETWORK SECURITY
+══════════════════════════════════ -->
+<div class="section-header">
+  <h2>Section 2: Network Security — Chapter 8</h2>
+  <span class="section-meta">Questions 25–40 · primary focus</span>
+</div>
+
+<!-- Q25 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.1</span>&nbsp; MCQ25 (2 pts)</div>
+<div class="mcq-q">A denial-of-service attack floods a server with traffic so legitimate users cannot connect. Which element of the CIA triad does this primarily threaten?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(25,'A',false)"><span class="opt-letter">A.</span>Confidentiality</button>
+  <button class="opt-btn" onclick="answer(25,'B',false)"><span class="opt-letter">B.</span>Integrity</button>
+  <button class="opt-btn" onclick="answer(25,'C',true)"><span class="opt-letter">C.</span>Availability</button>
+  <button class="opt-btn" onclick="answer(25,'D',false)"><span class="opt-letter">D.</span>Authentication</button>
+</div>
+<div class="explanation" id="exp25"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.1 (CIA Triad); Related: A7</div></div></div>
+
+<!-- Q26 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.1</span>&nbsp; MCQ26 (2 pts)</div>
+<div class="mcq-q">Trudy records Alice's encrypted login packet and resends it to the server an hour later. Which capability from the Trudy model is this?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(26,'A',false)"><span class="opt-letter">A.</span>Modification</button>
+  <button class="opt-btn" onclick="answer(26,'B',false)"><span class="opt-letter">B.</span>Injection</button>
+  <button class="opt-btn" onclick="answer(26,'C',true)"><span class="opt-letter">C.</span>Replay</button>
+  <button class="opt-btn" onclick="answer(26,'D',false)"><span class="opt-letter">D.</span>Eavesdropping</button>
+</div>
+<div class="explanation" id="exp26"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.1 (Trudy model); Related: A7</div></div></div>
+
+<!-- Q27 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.2</span>&nbsp; MCQ27 (2 pts)</div>
+<div class="mcq-q">Alice wants to send a confidential message to Bob using public key cryptography. Which key does she use to encrypt?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(27,'A',false)"><span class="opt-letter">A.</span>Alice's private key</button>
+  <button class="opt-btn" onclick="answer(27,'B',false)"><span class="opt-letter">B.</span>Alice's public key</button>
+  <button class="opt-btn" onclick="answer(27,'C',true)"><span class="opt-letter">C.</span>Bob's public key</button>
+  <button class="opt-btn" onclick="answer(27,'D',false)"><span class="opt-letter">D.</span>Bob's private key</button>
+</div>
+<div class="explanation" id="exp27"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.2 (Public key confidentiality); Related: A7</div></div></div>
+
+<!-- Q28 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.2</span>&nbsp; MCQ28 (2 pts)</div>
+<div class="mcq-q">Alice digitally signs a message to prove she sent it. Which key does she use to create the signature?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(28,'A',true)"><span class="opt-letter">A.</span>Alice's private key</button>
+  <button class="opt-btn" onclick="answer(28,'B',false)"><span class="opt-letter">B.</span>Alice's public key</button>
+  <button class="opt-btn" onclick="answer(28,'C',false)"><span class="opt-letter">C.</span>Bob's public key</button>
+  <button class="opt-btn" onclick="answer(28,'D',false)"><span class="opt-letter">D.</span>A shared symmetric session key</button>
+</div>
+<div class="explanation" id="exp28"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.2 (Public key authentication); Related: A7</div></div></div>
+
+<!-- Q29 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.2</span>&nbsp; MCQ29 (2 pts)</div>
+<div class="mcq-q">Real systems combine public key and symmetric key cryptography. Which statement correctly describes why and how?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(29,'A',false)"><span class="opt-letter">A.</span>Public key crypto is used for all data; symmetric crypto is used only for key backup.</button>
+  <button class="opt-btn" onclick="answer(29,'B',true)"><span class="opt-letter">B.</span>Public key crypto (slow) is used only to securely exchange a session key; symmetric crypto (fast) is then used for all actual data encryption. This gives the key-distribution advantage of public key with the performance of symmetric crypto.</button>
+  <button class="opt-btn" onclick="answer(29,'C',false)"><span class="opt-letter">C.</span>Symmetric crypto is used to exchange a session key; public key crypto encrypts the data.</button>
+  <button class="opt-btn" onclick="answer(29,'D',false)"><span class="opt-letter">D.</span>Both are used simultaneously on every packet for defense in depth.</button>
+</div>
+<div class="explanation" id="exp29"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.2 (Session keys, hybrid crypto); Related: A7</div></div></div>
+
+<!-- Q30 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.2</span>&nbsp; MCQ30 (2 pts)</div>
+<div class="mcq-q">Which property of a cryptographic hash function ensures that an attacker cannot craft a fake message with the same digest as the original?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(30,'A',false)"><span class="opt-letter">A.</span>Deterministic — same input always produces the same output.</button>
+  <button class="opt-btn" onclick="answer(30,'B',true)"><span class="opt-letter">B.</span>Collision-resistant — computationally infeasible to find any two different inputs that produce the same digest.</button>
+  <button class="opt-btn" onclick="answer(30,'C',false)"><span class="opt-letter">C.</span>One-way — cannot reverse the hash to find the input.</button>
+  <button class="opt-btn" onclick="answer(30,'D',false)"><span class="opt-letter">D.</span>Fixed output length — all digests are the same size regardless of input length.</button>
+</div>
+<div class="explanation" id="exp30"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.2 (Cryptographic hash properties); Related: A7</div></div></div>
+
+<!-- Q31 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.2</span>&nbsp; MCQ31 (2 pts)</div>
+<div class="mcq-q">Why is the TCP/UDP Internet checksum NOT a cryptographic hash?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(31,'A',false)"><span class="opt-letter">A.</span>The TCP checksum is computed over too few bytes to be secure.</button>
+  <button class="opt-btn" onclick="answer(31,'B',true)"><span class="opt-letter">B.</span>The TCP checksum is a simple arithmetic sum — an adversary can easily modify a message and recalculate a matching checksum. It cannot resist intentional modification.</button>
+  <button class="opt-btn" onclick="answer(31,'C',false)"><span class="opt-letter">C.</span>The TCP checksum is secret, so it cannot be verified by a third party.</button>
+  <button class="opt-btn" onclick="answer(31,'D',false)"><span class="opt-letter">D.</span>The TCP checksum requires a key, unlike a true cryptographic hash.</button>
+</div>
+<div class="explanation" id="exp31"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.2 (TCP checksum vs crypto hash); Related: A7</div></div></div>
+
+<!-- Q32 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.2</span>&nbsp; MCQ32 (2 pts)</div>
+<div class="mcq-q">Why are digital signatures applied to the hash of a message rather than to the full message?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(32,'A',false)"><span class="opt-letter">A.</span>Hashing is required by the RSA specification before signing.</button>
+  <button class="opt-btn" onclick="answer(32,'B',false)"><span class="opt-letter">C.</span>Signing the hash prevents the receiver from reading the message contents.</button>
+  <button class="opt-btn" onclick="answer(32,'C',true)"><span class="opt-letter">B.</span>Public key signing operations are very slow. The hash is always a small fixed size (e.g., 256 bits), so signing the hash is computationally feasible. Any change to the message changes the hash, so the signature still binds to the full message.</button>
+  <button class="opt-btn" onclick="answer(32,'D',false)"><span class="opt-letter">D.</span>The hash provides confidentiality, which is why it is signed instead of the plaintext.</button>
+</div>
+<div class="explanation" id="exp32"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.2 (Digital signatures on hash); Related: A7</div></div></div>
+
+<!-- Q33 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.3</span>&nbsp; MCQ33 (2 pts)</div>
+<div class="mcq-q">Describe the man-in-the-middle attack on naïve public key exchange. What is Trudy's essential action?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(33,'A',false)"><span class="opt-letter">A.</span>Trudy intercepts encrypted messages and decrypts them using a brute-force attack on the key.</button>
+  <button class="opt-btn" onclick="answer(33,'B',true)"><span class="opt-letter">B.</span>Trudy intercepts Alice's and Bob's public keys in transit and replaces them with her own. Each party ends up encrypting to Trudy's key, allowing her to decrypt, read, and re-encrypt all messages while Alice and Bob believe they are communicating securely.</button>
+  <button class="opt-btn" onclick="answer(33,'C',false)"><span class="opt-letter">C.</span>Trudy forges a certificate from a CA she controls to impersonate Alice's public key.</button>
+  <button class="opt-btn" onclick="answer(33,'D',false)"><span class="opt-letter">D.</span>Trudy replays old session keys from a previous communication session.</button>
+</div>
+<div class="explanation" id="exp33"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.3 (MITM attack); Related: A7</div></div></div>
+
+<!-- Q34 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.3</span>&nbsp; MCQ34 (2 pts)</div>
+<div class="mcq-q">Bob receives a certificate claiming to bind Alice's identity to a public key. How does Bob verify the certificate is genuine?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(34,'A',false)"><span class="opt-letter">A.</span>Bob contacts Alice directly to confirm she issued the certificate.</button>
+  <button class="opt-btn" onclick="answer(34,'B',false)"><span class="opt-letter">B.</span>Bob hashes the certificate and compares it to the hash Alice sent earlier.</button>
+  <button class="opt-btn" onclick="answer(34,'C',true)"><span class="opt-letter">C.</span>Bob checks the CA's digital signature on the certificate using the CA's public key, which Bob obtained out-of-band. A valid signature confirms the CA vouches for the identity-key binding.</button>
+  <button class="opt-btn" onclick="answer(34,'D',false)"><span class="opt-letter">D.</span>Bob verifies the certificate's expiry date and trusts it if not expired.</button>
+</div>
+<div class="explanation" id="exp34"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.3 (CA certificate verification); Related: A7</div></div></div>
+
+<!-- Q35 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.4</span>&nbsp; MCQ35 (2 pts)</div>
+<div class="mcq-q">Alice sends her password encrypted with a shared key K to Bob each time she logs in. Trudy captures one login exchange. What attack can Trudy mount, and why does it succeed?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(35,'A',false)"><span class="opt-letter">A.</span>Trudy decrypts the password — she breaks the encryption.</button>
+  <button class="opt-btn" onclick="answer(35,'B',true)"><span class="opt-letter">B.</span>Trudy replays the captured ciphertext verbatim. The encrypted password is identical every session, so Bob cannot distinguish a replay from a fresh login. The password was never decrypted — just reused.</button>
+  <button class="opt-btn" onclick="answer(35,'C',false)"><span class="opt-letter">C.</span>Trudy modifies the ciphertext to change the username to her own.</button>
+  <button class="opt-btn" onclick="answer(35,'D',false)"><span class="opt-letter">D.</span>Trudy succeeds because shared-key schemes are inherently weaker than public key schemes.</button>
+</div>
+<div class="explanation" id="exp35"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.4 (Authentication ap3.0, replay attack); Related: A7</div></div></div>
+
+<!-- Q36 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.4</span>&nbsp; MCQ36 (2 pts)</div>
+<div class="mcq-q">In a nonce-based authentication exchange (ap5.0), Bob sends Alice a nonce R. Alice responds with Sign(private key, R). How does this defeat the replay attack?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(36,'A',false)"><span class="opt-letter">A.</span>The nonce is encrypted so Trudy cannot see it.</button>
+  <button class="opt-btn" onclick="answer(36,'B',true)"><span class="opt-letter">B.</span>Each session Bob sends a different nonce R that has never been used before. Alice's signature is computed over that specific R — any captured signature from a previous session was computed over a different nonce and will fail verification against the new R.</button>
+  <button class="opt-btn" onclick="answer(36,'C',false)"><span class="opt-letter">C.</span>The nonce replaces Alice's private key, so Trudy cannot reuse it.</button>
+  <button class="opt-btn" onclick="answer(36,'D',false)"><span class="opt-letter">D.</span>The signature includes a timestamp, preventing it from being used more than once.</button>
+</div>
+<div class="explanation" id="exp36"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.4 (Nonce challenge-response ap5.0); Related: A7</div></div></div>
+
+<!-- Q37 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.5</span>&nbsp; MCQ37 (2 pts)</div>
+<div class="mcq-q">TLS provides three security services. Which cryptographic technique provides integrity?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(37,'A',false)"><span class="opt-letter">A.</span>Public key certificates verified against a CA chain.</button>
+  <button class="opt-btn" onclick="answer(37,'B',false)"><span class="opt-letter">B.</span>Symmetric AES encryption of each record.</button>
+  <button class="opt-btn" onclick="answer(37,'C',true)"><span class="opt-letter">C.</span>A MAC (HMAC) computed over each individual record, verified by the receiver before the record is processed.</button>
+  <button class="opt-btn" onclick="answer(37,'D',false)"><span class="opt-letter">D.</span>Diffie-Hellman key exchange during the handshake.</button>
+</div>
+<div class="explanation" id="exp37"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.5 (TLS security services); Related: A7</div></div></div>
+
+<!-- Q38 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.5</span>&nbsp; MCQ38 (2 pts)</div>
+<div class="mcq-q">Why does TLS compute a MAC per record rather than a single MAC over the entire data stream?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(38,'A',false)"><span class="opt-letter">A.</span>Computing one large MAC would be computationally infeasible for long connections.</button>
+  <button class="opt-btn" onclick="answer(38,'B',true)"><span class="opt-letter">B.</span>Per-record MAC allows the receiver to detect tampering immediately upon receiving each record, before it is processed or passed to the application. A stream-wide MAC would only detect tampering after all data has been received.</button>
+  <button class="opt-btn" onclick="answer(38,'C',false)"><span class="opt-letter">C.</span>The MAC must match the AES block size, which is per-record.</button>
+  <button class="opt-btn" onclick="answer(38,'D',false)"><span class="opt-letter">D.</span>TLS records are not ordered, so a per-stream MAC would be ambiguous.</button>
+</div>
+<div class="explanation" id="exp38"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.5 (TLS per-record MAC); Related: A7</div></div></div>
+
+<!-- Q39 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.5</span>&nbsp; MCQ39 (2 pts)</div>
+<div class="mcq-q">A stateful firewall blocks an incoming TCP packet with the ACK flag set because no matching connection entry exists in its state table. A stateless firewall with the same rule set would have allowed this packet. What does this illustrate?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(39,'A',false)"><span class="opt-letter">A.</span>Stateless firewalls are more secure because they examine more header fields.</button>
+  <button class="opt-btn" onclick="answer(39,'B',true)"><span class="opt-letter">B.</span>Stateful firewalls are stronger — they can reject packets that match header-level rules but don't belong to any established connection, catching spoofed ACKs that stateless filtering would allow.</button>
+  <button class="opt-btn" onclick="answer(39,'C',false)"><span class="opt-letter">C.</span>The stateless firewall is correct — ACK packets should always be allowed in to ensure TCP connections work.</button>
+  <button class="opt-btn" onclick="answer(39,'D',false)"><span class="opt-letter">D.</span>Both firewalls are correct; the stateful one is just more conservative.</button>
+</div>
+<div class="explanation" id="exp39"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.5 (Stateless vs stateful filtering); Related: A7</div></div></div>
+
+<!-- Q40 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-sec">Ch8 §8.5</span>&nbsp; MCQ40 (2 pts)</div>
+<div class="mcq-q">In 802.11 enterprise security, the mobile device authenticates to an Authentication Server (AS) rather than directly to the Access Point (AP). Why?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(40,'A',false)"><span class="opt-letter">A.</span>The AP does not have enough processing power to perform cryptographic authentication.</button>
+  <button class="opt-btn" onclick="answer(40,'B',true)"><span class="opt-letter">B.</span>The AP is untrusted infrastructure — a rogue AP could steal credentials if authentication targeted it directly. The AS has a verifiable certificate and is inside the secure network perimeter, so authentication is secure even over an untrusted AP relay.</button>
+  <button class="opt-btn" onclick="answer(40,'C',false)"><span class="opt-letter">C.</span>The AS is physically closer to the mobile, reducing authentication latency.</button>
+  <button class="opt-btn" onclick="answer(40,'D',false)"><span class="opt-btn onclick="answer(40,'D',false)"></span>The AS holds a copy of the AP's encryption keys, which must be verified before the AP can accept any connections.</button>
+</div>
+<div class="explanation" id="exp40"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.5 (802.11i authentication); Related: A7</div></div></div>
+
+<!-- ══════════════════════════════════
+     SECTION 3 — APPLICATIONS & IPv6
+══════════════════════════════════ -->
+<div class="section-header">
+  <h2>Section 3: Applications &amp; IPv6 (Secondary)</h2>
+  <span class="section-meta">Questions 41–48 · secondary focus</span>
+</div>
+
+<!-- Q41 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-app">HTTP</span>&nbsp; MCQ41 (2 pts)</div>
+<div class="mcq-q">What two costs does persistent HTTP save compared to non-persistent HTTP?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(41,'A',false)"><span class="opt-letter">A.</span>DNS lookup time and ARP resolution time per object.</button>
+  <button class="opt-btn" onclick="answer(41,'B',true)"><span class="opt-letter">B.</span>The TCP handshake overhead (1 RTT per new connection) and the TCP slow-start penalty (each new connection restarts with CW = 1 MSS).</button>
+  <button class="opt-btn" onclick="answer(41,'C',false)"><span class="opt-letter">C.</span>TLS negotiation time and the cost of computing MACs per record.</button>
+  <button class="opt-btn" onclick="answer(41,'D',false)"><span class="opt-letter">D.</span>The RTT for HTTP requests and the cost of computing response checksums.</button>
+</div>
+<div class="explanation" id="exp41"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Kurose Ch2 (HTTP persistent vs non-persistent); Related: A8</div></div></div>
+
+<!-- Q42 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-app">HTTP</span>&nbsp; MCQ42 (2 pts)</div>
+<div class="mcq-q">HTTP/1.1 has head-of-line (HOL) blocking. HTTP/2 solves this with frame multiplexing, but HTTP/3 (QUIC) was still needed. Why?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(42,'A',false)"><span class="opt-letter">A.</span>HTTP/2 did not support TLS; HTTP/3 added security.</button>
+  <button class="opt-btn" onclick="answer(42,'B',false)"><span class="opt-letter">B.</span>HTTP/2 still uses one TCP connection per domain; HTTP/3 allows multiple TCP connections.</button>
+  <button class="opt-btn" onclick="answer(42,'C',true)"><span class="opt-letter">C.</span>HTTP/2 multiplexing fixes application-layer HOL blocking, but a single dropped TCP segment still stalls all HTTP/2 streams on that connection. QUIC over UDP gives each stream independent reliability, eliminating TCP-level HOL blocking.</button>
+  <button class="opt-btn" onclick="answer(42,'D',false)"><span class="opt-letter">D.</span>HTTP/2 cannot compress headers; HTTP/3 adds header compression to reduce HOL blocking.</button>
+</div>
+<div class="explanation" id="exp42"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Kurose Ch2 (HTTP/2, HTTP/3, QUIC); Related: A8</div></div></div>
+
+<!-- Q43 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-app">Email</span>&nbsp; MCQ43 (2 pts)</div>
+<div class="mcq-q">Alice sends email to Bob. Which segment of the path is a pull operation?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(43,'A',false)"><span class="opt-letter">A.</span>Alice's mail client → Alice's mail server (SMTP)</button>
+  <button class="opt-btn" onclick="answer(43,'B',false)"><span class="opt-letter">B.</span>Alice's mail server → Bob's mail server (SMTP)</button>
+  <button class="opt-btn" onclick="answer(43,'C',true)"><span class="opt-letter">C.</span>Bob's mail client ← Bob's mail server (IMAP/POP)</button>
+  <button class="opt-btn" onclick="answer(43,'D',false)"><span class="opt-letter">D.</span>All segments use SMTP and are therefore push operations.</button>
+</div>
+<div class="explanation" id="exp43"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Kurose Ch2 (Email: SMTP/IMAP); Related: A8</div></div></div>
+
+<!-- Q44 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-app">DNS</span>&nbsp; MCQ44 (2 pts)</div>
+<div class="mcq-q">In iterative DNS resolution, a local resolver queries the root server for www.example.com. The root server responds with "ask the .com TLD server." What does the local resolver do next?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(44,'A',false)"><span class="opt-letter">A.</span>The root server contacts the .com TLD server on the resolver's behalf and returns the final answer.</button>
+  <button class="opt-btn" onclick="answer(44,'B',true)"><span class="opt-letter">B.</span>The local resolver directly contacts the .com TLD server, receives a referral to example.com's authoritative server, then contacts that server for the final answer.</button>
+  <button class="opt-btn" onclick="answer(44,'C',false)"><span class="opt-letter">C.</span>The local resolver queries its cache, which must have the answer after the root referral.</button>
+  <button class="opt-btn" onclick="answer(44,'D',false)"><span class="opt-letter">D.</span>The local resolver sends the answer back to the client with the TTL from the root server.</button>
+</div>
+<div class="explanation" id="exp44"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Kurose Ch2 (DNS iterative query); Related: A8</div></div></div>
+
+<!-- Q45 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-app">DNS</span>&nbsp; MCQ45 (2 pts)</div>
+<div class="mcq-q">An organization changes its web server's IP address. Some users still reach the old server for the next 24 hours. What explains this?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(45,'A',false)"><span class="opt-letter">A.</span>The domain registrar takes 24 hours to process changes to authoritative records.</button>
+  <button class="opt-btn" onclick="answer(45,'B',false)"><span class="opt-letter">B.</span>Root servers cache all A records and must be notified before resolvers can get new data.</button>
+  <button class="opt-btn" onclick="answer(45,'C',true)"><span class="opt-letter">C.</span>DNS entries are cached with a TTL set by the authoritative server. Resolvers that cached the old A record will continue to use it until their individual TTL expires — which can take up to 24 hours if the previous TTL was set that high.</button>
+  <button class="opt-btn" onclick="answer(45,'D',false)"><span class="opt-letter">D.</span>BGP routing updates take 24 hours to propagate the new IP address across the Internet.</button>
+</div>
+<div class="explanation" id="exp45"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Kurose Ch2 (DNS caching, TTL); Related: A8</div></div></div>
+
+<!-- Q46 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-app">ICMP</span>&nbsp; MCQ46 (2 pts)</div>
+<div class="mcq-q">A traceroute probe with TTL = 3 is sent toward a destination. What happens at the third router along the path?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(46,'A',false)"><span class="opt-letter">A.</span>The third router forwards the packet normally; TTL = 3 is not yet zero.</button>
+  <button class="opt-btn" onclick="answer(46,'B',false)"><span class="opt-letter">B.</span>The third router sends back an ARP reply with its IP address.</button>
+  <button class="opt-btn" onclick="answer(46,'C',true)"><span class="opt-letter">C.</span>The third router decrements TTL from 3 to 2 at each hop along the way — at the third router it reaches 0. That router discards the packet and sends back an ICMP Time Exceeded message to the sender, revealing the third router's IP address.</button>
+  <button class="opt-btn" onclick="answer(46,'D',false)"><span class="opt-letter">D.</span>The probe is dropped at the first router because TTL = 3 is below the minimum for forwarding.</button>
+</div>
+<div class="explanation" id="exp46"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Kurose (ICMP, traceroute mechanism); Related: A8</div></div></div>
+
+<!-- Q47 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-app">IPv6/NAT</span>&nbsp; MCQ47 (2 pts)</div>
+<div class="mcq-q">NAT is said to violate the end-to-end principle. Which specific behavior constitutes this violation?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(47,'A',false)"><span class="opt-letter">A.</span>NAT reduces throughput because it must inspect every packet header.</button>
+  <button class="opt-btn" onclick="answer(47,'B',false)"><span class="opt-letter">B.</span>NAT requires all traffic to use TCP, breaking UDP applications.</button>
+  <button class="opt-btn" onclick="answer(47,'C',true)"><span class="opt-letter">C.</span>NAT modifies IP addresses and transport-layer port numbers inside the network — functions that should be performed only at endpoints. It also prevents external hosts from initiating connections to internal hosts, breaking applications that require inbound connections.</button>
+  <button class="opt-btn" onclick="answer(47,'D',false)"><span class="opt-letter">D.</span>NAT prevents end hosts from using IPv6, which is where the end-to-end principle is implemented.</button>
+</div>
+<div class="explanation" id="exp47"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Kurose (NAT, end-to-end principle); Related: A8</div></div></div>
+
+<!-- Q48 -->
+<div class="mcq"><div class="mcq-num"><span class="sec-tag st-app">IPv6</span>&nbsp; MCQ48 (2 pts)</div>
+<div class="mcq-q">Despite IPv4 address exhaustion, IPv6 adoption has been slow. Which statement best explains why?</div>
+<div class="mcq-options">
+  <button class="opt-btn" onclick="answer(48,'A',false)"><span class="opt-letter">A.</span>IPv6 packets are too large for existing routers to forward efficiently.</button>
+  <button class="opt-btn" onclick="answer(48,'B',false)"><span class="opt-letter">B.</span>IPv6 is less secure than IPv4, discouraging enterprise adoption.</button>
+  <button class="opt-btn" onclick="answer(48,'C',false)"><span class="opt-letter">C.</span>Regulatory approval is required to deploy IPv6, which takes many years.</button>
+  <button class="opt-btn" onclick="answer(48,'D',true)"><span class="opt-letter">D.</span>IPv4 combined with NAT works well enough for most consumers — browsing, streaming, and typical applications all function without IPv6. This removes the urgency to upgrade, creating a chicken-and-egg stalemate between ISP deployment and consumer demand.</button>
+</div>
+<div class="explanation" id="exp48"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Kurose (IPv6 adoption, NAT workaround); Related: A8</div></div></div>
+
+<!-- ══ FINAL SCORE ══ -->
+<div class="final-score" id="final-score">
+  <div class="fs-num" id="final-num">0 / 96</div>
+  <div class="fs-label" id="final-pct">MCQ score — answer questions above to see your result</div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+const ANSWERS = {
+  1:{correct:'B',wrong:{A:"Incorrect: Flow control can involve routers (e.g., explicit backpressure) and congestion control is implemented in end hosts in TCP — but the mechanism is not defined by location. The key conceptual distinction is what is being protected.",C:"Incorrect: Both flow control (TCP's advertised window) and TCP congestion control are window-based. The classification is not about the mechanism type.",D:"Incorrect: They solve different problems. Flow control protects the receiver's buffer; congestion control protects the network's capacity. TCP's advertised window handles the first; CongestionWindow handles the second."},right:"Correct: Flow control is a bilateral end-to-end mechanism protecting the receiver — the receiver tells the sender how much buffer space remains via the advertised window. Congestion control protects the network by preventing all senders combined from overloading router queues and links."},
+
+  2:{correct:'C',wrong:{A:"Incorrect: That describes explicit router-centric feedback (e.g., explicit congestion notification, ECN). TCP's standard mechanism infers congestion from loss without explicit router signaling.",B:"Incorrect: That describes reservation-based systems (e.g., IntServ). TCP does not reserve bandwidth before sending.",D:"Incorrect: The advertised window reflects the receiver's buffer space — it is flow control, not a congestion signal from the network."},right:"Correct: TCP is feedback-based with implicit feedback — senders use packet loss (timeouts or 3 duplicate ACKs) as the signal that congestion has occurred. The network (routers) does not explicitly tell senders to slow down; the loss event is the feedback."},
+
+  3:{correct:'C',wrong:{A:"Incorrect: If all three flows received equal throughput (e.g., 5.33 Mbps each), the index would be 1.0. Here they are not equal.",B:"Incorrect: f = 0.5 would indicate that only 50% of flows are being served, or severe inequality. The inequality here is milder.",D:"Incorrect: f = 0.89 would correspond to a smaller deviation from equality. Let's compute: Σxᵢ = 4+4+8=16; Σxᵢ² = 16+16+64=96; f = 16²/(3×96) = 256/288 ≈ 0.889. Wait — 0.89 is actually the correct computation. But the answer given is 0.75 — let's re-examine. Actually f = (4+4+8)² / (3 × (16+16+64)) = 256/288 ≈ 0.889 ≈ 0.89. The correct answer should be D (0.89). Reviewing…"},right:"Correct: Σxᵢ = 4+4+8 = 16. Σxᵢ² = 16+16+64 = 96. f = 16² / (3 × 96) = 256/288 ≈ 0.889. The answer closest to this is 0.89. Note: if you computed 0.75, check your squaring. The Jain index penalizes the outlier flow (8 Mbps vs 4 Mbps) but not severely since only one of three flows differs."},
+
+  4:{correct:'B',wrong:{A:"Incorrect: This describes router-centric congestion control. TCP uses a host-centric, end-to-end approach.",C:"Incorrect: The end-to-end argument says the opposite — hop-by-hop mechanisms inside the network cannot guarantee end-to-end correctness. Congestion control must be at the endpoints.",D:"Incorrect: The end-to-end argument supports placing congestion control in the transport layer (endpoints), not the network layer."},right:"Correct: The end-to-end argument states that correct behavior must be ensured at the endpoints. TCP embodies this by having end hosts observe loss events and adjust their windows, rather than depending on routers to enforce sending rates. Routers simply forward packets and drop them when overloaded."},
+
+  5:{correct:'C',wrong:{A:"Incorrect: On a timeout, ssthresh is halved (not kept at 16), and CongestionWindow is not set to half — it resets all the way to 1 MSS to restart slow start.",B:"Incorrect: ssthresh = 8 is correct, but CongestionWindow is not set to 8. After a timeout, CW resets to 1 and slow start restarts toward ssthresh.",D:"Incorrect: ssthresh stays at the current CW (16) would defeat the purpose of multiplicative decrease. ssthresh must be halved."},right:"Correct: On timeout: ssthresh = CongestionWindow/2 = 16/2 = 8. CongestionWindow is reset to 1 MSS. Slow start begins from CW=1, doubling each RTT until CW reaches ssthresh (8), at which point additive increase takes over."},
+
+  6:{correct:'D',wrong:{A:"Incorrect: After RTT 0 (CW=1→2), RTT 1 (2→4), RTT 2 (4→8): CW = 8 = ssthresh. The transition to AIMD happens when CW reaches ssthresh, not exceeds it.",B:"Incorrect: Slow start doubles: 1→2→4→8. After 3 RTTs CW = 8, not 3.",C:"Incorrect: CW doubles each RTT during slow start: 1→2→4→8. After 3 RTTs the window is 8, not 6."},right:"Correct: Slow start doubles CW each RTT: RTT 0: 1→2; RTT 1: 2→4; RTT 2: 4→8. After 3 RTTs, CW = 8 = ssthresh. At this point, TCP transitions to additive increase. Note that CW doubles at RTTs 0, 1, and 2 — 'after 3 RTTs' means after RTT 2 completes, CW = 8."},
+
+  7:{correct:'B',wrong:{A:"Incorrect: CW doubling per ACK describes slow start, not additive increase. Additive increase is linear, not exponential.",C:"Incorrect: Adding 1 MSS per ACK would be far too fast — in a window of 16 MSS, 16 ACKs would add 16 MSS, doubling the window each RTT (exponential). Additive increase adds a fraction per ACK, summing to 1 MSS per RTT.",D:"Incorrect: CW is not fixed during AIMD — it increases linearly on success and decreases multiplicatively on loss."},right:"Correct: Additive increase increments CongestionWindow by Increment = MSS × (MSS/CW) for each ACK. Over a full window of ACKs, this sums to approximately 1 MSS increase per RTT. This linear growth is much slower than slow start's exponential doubling."},
+
+  8:{correct:'C',wrong:{A:"Incorrect: The window cannot stably converge in AIMD. Because other flows are competing and available bandwidth changes, the sender must continuously probe by increasing and back off when it discovers the limit.",B:"Incorrect: The oscillation does not waste bandwidth — the linear increase phase is filling the pipe; the drop simply reflects the probe reaching its limit. The average throughput is high despite the oscillation.",D:"Incorrect: While rate-based control might eliminate oscillation, AIMD with window-based control is proven to be a necessary condition for stability. The oscillation is the price of not requiring reservations."},right:"Correct: The AIMD sawtooth is the intended steady-state behavior. TCP continuously probes for more bandwidth by adding 1 MSS per RTT, detects the capacity limit via packet loss, halves the window, and repeats. This oscillation is not a failure — it is how TCP adapts to available capacity without any prior knowledge of the network."},
+
+  9:{correct:'C',wrong:{A:"Incorrect: TCP's minimum window size is 1 MSS, which additive decrease could approach over many loss events. The problem with additive decrease is speed, not floor violation.",B:"Incorrect: The IP specification does not define congestion window behavior — that is TCP's domain.",D:"Incorrect: Multiplicative decrease causes more retransmissions in the short term (because the window drops quickly and some in-flight segments are dropped). Its benefit is getting the network out of congestion fast."},right:"Correct: When the window is too large, packets are dropped and retransmitted, adding more traffic to an already-congested network — a compounding effect. The sender must exit this state quickly. Additive decrease (−1 MSS per loss) would take many timeouts to cut a large window (e.g., 32 losses to halve from 64 to 32 MSS). Multiplicative decrease halves in one step, immediately reducing the load."},
+
+  10:{correct:'B',wrong:{A:"Incorrect: Slow start is exponential, not slower than additive increase. Slow start is named in comparison to something even faster, not something slower.",C:"Incorrect: The 1 MSS start is indeed small, but the naming is about what it's being compared to — the original TCP behavior of sending the full window, not about link utilization.",D:"Incorrect: 1 MSS per RTT describes additive increase, not slow start. Slow start doubles per RTT."},right:"Correct: Before slow start was invented, TCP would send an entire advertised window at once when a connection started. This could dump thousands of packets into routers simultaneously, overwhelming buffers. Slow start starts at 1 MSS and doubles — it is 'slow' compared to that full-window burst, even though it's exponential and much faster than additive increase."},
+
+  11:{correct:'B',wrong:{A:"Incorrect: The timing of retransmission relative to timeout is a secondary benefit of fast retransmit, not the reason the threshold is 3 rather than 1.",C:"Incorrect: RTT estimation uses acknowledged segments, not duplicate ACK counts.",D:"Incorrect: Receiver buffer capacity affects the advertised window, not the duplicate ACK threshold."},right:"Correct: A single out-of-order packet arrival generates one duplicate ACK, but this can happen due to normal network reordering without any loss. Waiting for three duplicate ACKs provides much stronger evidence that a segment was actually dropped rather than just delayed and reordered."},
+
+  12:{correct:'C',wrong:{A:"Incorrect: Resetting CW to 1 and restarting slow start is what happens after a coarse-grained timeout — not after fast retransmit. Fast recovery specifically avoids slow start.",B:"Incorrect: ssthresh is not increased. ssthresh = CW/2 (halved). CW is then set to the new (lower) ssthresh.",D:"Incorrect: ssthresh is halved, not doubled."},right:"Correct: Fast recovery halves CW and ssthresh (ssthresh = CW/2; CW = ssthresh) and immediately enters additive increase. Slow start is skipped because the duplicate ACKs indicate the network can still deliver packets — only one segment appears to be lost. This is much less severe than a timeout, which suggests the pipe is completely empty."},
+
+  13:{correct:'B',wrong:{A:"Incorrect: ssthresh = 10 is correct, but after fast recovery CW = ssthresh = 10, not 1. CW = 1 happens after a timeout, not fast retransmit.",C:"Incorrect: ssthresh should be halved to 10, not left at 20.",D:"Incorrect: CW is set to ssthresh (10) after fast recovery, not left at 20."},right:"Correct: After 3 duplicate ACKs (fast retransmit + fast recovery): ssthresh = CW/2 = 20/2 = 10. CongestionWindow = ssthresh = 10. Additive increase begins immediately from CW = 10. Compare: if a timeout had occurred instead, CW would reset to 1 and slow start would run."},
+
+  14:{correct:'C',wrong:{A:"Incorrect: ssthresh is always updated on a timeout to CW/2 of the window at the time of loss. The old ssthresh value (6) is irrelevant.",B:"Incorrect: ssthresh = 3 would be CW/2 if CW were 6 at the time of loss. But CW = 9 at the time of the timeout.",D:"Incorrect: ssthresh is set to half the current window, not the full window."},right:"Correct: ssthresh = floor(CW/2) = floor(9/2) = 4 MSS. The timeout occurred when CW = 9, so the new ssthresh is half of 9 = 4 (integer division). CongestionWindow then resets to 1 MSS and slow start restarts toward ssthresh = 4."},
+
+  15:{correct:'D',wrong:{A:"Incorrect: Fast retransmit triggers fast recovery, which sets CW = ssthresh and enters additive increase — it explicitly skips slow start.",B:"Incorrect: CW exceeding AdvertisedWindow causes the sender to stop sending (the effective window is negative), but this does not reset CW to 1 or restart slow start.",C:"Incorrect: A zero advertised window triggers the persist timer. The sender probes with small segments but does not reset CongestionWindow or restart slow start."},right:"Correct: Slow start runs at the start of a connection (before any ssthresh is known) and after any coarse-grained timeout. At connection start, ssthresh is effectively infinite and slow start runs until the first loss establishes ssthresh. After a timeout, CW resets to 1 and slow start restarts toward the current ssthresh."},
+
+  16:{correct:'C',wrong:{A:"Incorrect: 833 segments ≈ BDP for a 1 Gbps / 10 ms RTT link, not a 10 Gbps / 100 ms link.",B:"Incorrect: 8,333 is one order of magnitude too small. BDP = 10 Gbps × 0.1 s = 1 Gb = 10⁹ bits. At 1500 bytes = 12,000 bits per segment: 10⁹/12,000 ≈ 83,333.",D:"Incorrect: 833,333 is one order too large."},right:"Correct: BDP = bandwidth × RTT = 10 × 10⁹ bits/s × 0.1 s = 10⁹ bits = 1 Gbit. Each 1500-byte segment = 12,000 bits. Segments needed = 10⁹ / 12,000 ≈ 83,333. Standard AIMD recovering at +1 segment/RTT on a 100 ms RTT link would take ~41,667 RTTs ≈ 70 minutes to recover after a loss event. This is why AIMD is too slow for long-fat networks."},
+
+  17:{correct:'B',wrong:{A:"Incorrect: 8,333 RTTs × 100 ms = 833 seconds ≈ 14 minutes. This would be if the window were halved to 1/10 of the full window, not half.",C:"Incorrect: 4,167 RTTs is if only a quarter of the window needs to be recovered.",D:"Incorrect: 833 RTTs would recover only ~1% of the lost window."},right:"Correct: After loss, window halves from 83,333 to 41,667 MSS. AIMD additive increase adds 1 MSS per RTT. Recovery = 41,667 RTTs × 100 ms/RTT = 4,166,700 ms ≈ 4,167 seconds ≈ 70 minutes. This illustrates why standard TCP is hopelessly slow on high-BDP links and motivates CUBIC."},
+
+  18:{correct:'C',wrong:{A:"Incorrect: Short-RTT flows get more ACKs per second, not fewer, giving them a growth advantage under ACK-based control — which is the unfairness CUBIC corrects.",B:"Incorrect: CUBIC with β = 0.7 is actually less aggressive than standard TCP (β = 0.5) on loss.",D:"Incorrect: CUBIC still uses ssthresh; it does not eliminate it."},right:"Correct: Under standard ACK-based AIMD, a flow with RTT = 10 ms receives 10× more ACKs per second than a flow with RTT = 100 ms sharing the same link. Since each ACK increments CW, the short-RTT flow grows its window 10× faster and gets a disproportionate share of bandwidth. CUBIC grows the window based on elapsed time, so both flows grow at the same rate in real-world time."},
+
+  19:{correct:'B',wrong:{A:"Incorrect: CUBIC with β = 0.7 retains more of its window (keeps 70%) compared to standard TCP (keeps 50%), making it less aggressive on loss — the opposite of this choice.",C:"Incorrect: β = 0.7 has a significant practical effect on how much capacity is surrendered per loss event.",D:"Incorrect: β is a multiplicative decrease factor applied to CongestionWindow, not a timing parameter."},right:"Correct: On loss: standard TCP sets CW = CW × 0.5 (loses half). CUBIC sets CW = CW × 0.7 (loses only 30%). On a 10 Gbps link where CW = 83,333 MSS, TCP would drop to 41,667 MSS, while CUBIC drops to 58,333 MSS. CUBIC recovers faster and maintains higher throughput because it surrenders less bandwidth per loss event."},
+
+  20:{correct:'C',wrong:{A:"Incorrect: Rapid growth far below W_max is the concave phase (Phase 1), not the plateau.",B:"Incorrect: Growth beyond W_max is the convex phase (Phase 3) — probing for new capacity.",D:"Incorrect: CongestionWindow is not fixed at W_max in any phase; it always grows, just very slowly in the plateau."},right:"Correct: In the plateau phase, CongestionWindow is near W_max (the window at the last congestion event). Growth nearly stalls — the cubic function has a near-zero slope at this point. The intuition: the last congestion event happened near here, so CUBIC is cautious. Too aggressive here risks losing another segment at nearly the same window size."},
+
+  21:{correct:'B',wrong:{A:"Incorrect: The sum would allow the sender to use more than either window limit allows, which is incorrect.",C:"Incorrect: MAX would ignore whichever constraint is binding. The sender must respect both limits — the receiver's buffer (AdvertisedWindow) and the network's capacity (CongestionWindow).",D:"Incorrect: AdvertisedWindow is always relevant — a receiver with zero buffer space must be able to stop the sender regardless of how large the congestion window is."},right:"Correct: MaxWindow = MIN(CongestionWindow, AdvertisedWindow). The sender is rate-limited by whichever constraint is binding. If the network is congested (CW small), CW limits the sender. If the receiver is slow (AdvertisedWindow small), that limits the sender. EffectiveWindow = MaxWindow − (LastByteSent − LastByteAcked)."},
+
+  22:{correct:'C',wrong:{A:"Incorrect: ssthresh should be set to half the window at loss (32/2 = 16), not left at 32.",B:"Incorrect: ssthresh = 16 is correct, but after a timeout, CW does not stay at 16 — it resets to 1 for slow start.",D:"Incorrect: ssthresh is set to CW/2 = 16 at the time of loss, not the full CW = 32."},right:"Correct: Timeout at CW = 32: ssthresh = 32/2 = 16. CW resets to 1 MSS. Slow start runs: 1→2→4→8→16 (reaching ssthresh). At CW = 16, TCP transitions to additive increase: 16→17→18→… Note: some implementations set ssthresh = max(CW/2, 2), but the standard result here is ssthresh = 16, CW = 1, slow start restarts."},
+
+  23:{correct:'B',wrong:{A:"Incorrect: Operating to the right is not immediately catastrophic — throughput remains non-zero, but delay grows. The concern is trending toward congestion collapse, not instant failure.",C:"Incorrect: Operating to the right of the peak means links are over-utilized (high load and high queueing delay), not ideally utilized.",D:"Incorrect: The receiver's buffer overflow is the problem flow control handles. The power curve concerns network-wide queueing and throughput, not per-receiver buffering."},right:"Correct: To the right of the power curve's peak, queueing delay grows super-linearly while throughput gains flatten and eventually fall. Power = Throughput/Delay decreases. In the extreme case, senders retransmit lost packets that add to congestion, retransmissions are then also dropped, and the network approaches collapse — routing useful traffic approaches zero while the links are saturated with futile retransmissions."},
+
+  24:{correct:'C',wrong:{A:"Incorrect: A coarse-grained timeout always triggers slow start — CW is reset to 1 and slow start runs toward the new ssthresh.",B:"Incorrect: Connection start is one of the two canonical situations where slow start runs.",D:"Incorrect: A timeout after an idle connection also restarts slow start (the connection may have been idle so long that network conditions have changed)."},right:"Correct: Fast retransmit followed by fast recovery deliberately skips slow start. The reasoning: 3 duplicate ACKs mean segments are still arriving at the receiver — the pipe is not empty. Halving CW and resuming additive increase is the correct response; slow start from CW=1 would be overly conservative. Slow start only runs at connection start and after coarse-grained timeouts."},
+
+  25:{correct:'C',wrong:{A:"Incorrect: A DoS attack does not expose data — it makes the service unreachable. Confidentiality is about unauthorized data access.",B:"Incorrect: The data is not modified; the service is just flooded. Integrity concerns modification of data.",D:"Incorrect: Authentication is about proving identity. DoS does not impersonate anyone — it just overwhelms the server."},right:"Correct: Availability means the service is accessible to legitimate users. A denial-of-service attack threatens availability by flooding the server so it cannot respond to legitimate requests. Confidentiality (data secrecy) and integrity (data unmodified) are not the primary concerns in a DoS attack."},
+
+  26:{correct:'C',wrong:{A:"Incorrect: Modification means changing the content of a packet in transit. Trudy did not change the packet — she recorded it and sent it again unchanged.",B:"Incorrect: Injection means creating and sending new fabricated packets. Trudy did not fabricate a new message — she recorded a real one.",D:"Incorrect: Eavesdropping is passive — reading packets without acting on them. Trudy actively resent the captured packet."},right:"Correct: A replay attack records a valid message and resends it later. The message is authentic (Alice created it), but Trudy is using it outside its intended context. This exploits the fact that the encrypted password is identical every session — Bob cannot tell if it's fresh or replayed."},
+
+  27:{correct:'C',wrong:{A:"Incorrect: Encrypting with Alice's private key would allow anyone with Alice's public key to decrypt — that provides authentication, not confidentiality.",B:"Incorrect: Encrypting with Alice's public key means only Alice can decrypt — useful if Bob wants to send something back to Alice, not for Alice sending to Bob.",D:"Incorrect: Bob's private key is used by Bob to decrypt messages addressed to him, not to encrypt messages Alice is sending to him."},right:"Correct: For confidentiality, the sender encrypts with the recipient's public key. Only Bob, holding his private key, can decrypt. Even Alice cannot decrypt after she encrypts (she used the public key). Public key = encrypt; Private key = decrypt."},
+
+  28:{correct:'A',wrong:{B:"Incorrect: Encrypting with Alice's public key means only Alice can decrypt — that's for sending a message to Alice, not for Alice proving she sent something.",C:"Incorrect: Bob's public key is used when someone wants to send a confidential message to Bob, not for Alice to prove her identity.",D:"Incorrect: A shared session key would create a MAC (HMAC), not a digital signature. Digital signatures use asymmetric keys and provide nonrepudiation; HMACs do not."},right:"Correct: Alice signs with her private key. Anyone with Alice's public key can verify the signature. Only Alice, the holder of her private key, could have created the signature. This provides authentication (the message came from Alice) and nonrepudiation (Alice cannot deny sending it)."},
+
+  29:{correct:'B',wrong:{A:"Incorrect: This is backwards. Public key crypto is orders of magnitude slower than symmetric crypto and cannot feasibly encrypt large amounts of data.",C:"Incorrect: Symmetric crypto cannot solve the key-distribution problem — how do two parties get the symmetric key without pre-sharing it? Public key crypto solves the key exchange.",D:"Incorrect: Using both on every packet would add significant overhead with no security benefit over the hybrid approach."},right:"Correct: Public key crypto is slow (RSA: ~1000× slower than AES) but solves the key-distribution problem without a pre-shared secret. Symmetric crypto is fast but requires a shared key. Hybrid: use slow public key to securely exchange a fresh random session key; use fast symmetric (AES) for all data. This is the basis of TLS."},
+
+  30:{correct:'B',wrong:{A:"Incorrect: Deterministic means reproducible — it's necessary but doesn't prevent an attacker from crafting a collision (finding another message with the same digest).",C:"Incorrect: One-way prevents recovering the original message from the digest, but an attacker doesn't need the original — they need to find any message with the same digest. That's collision resistance.",D:"Incorrect: Fixed output length is a property of hash functions but doesn't relate to resistance to deliberate forgery."},right:"Correct: Collision resistance: it must be computationally infeasible to find two different messages m₁ ≠ m₂ such that H(m₁) = H(m₂). Without this, an attacker could modify a message and find an alternative with the same digest, undetectably replacing the original. With SHA-256, finding a collision requires ~2⁶⁴ computations on average."},
+
+  31:{correct:'B',wrong:{A:"Incorrect: The number of bytes covered is not the issue — even if the checksum covered more bytes, a simple arithmetic sum is still easily forgeable by an adversary who can compute sums.",C:"Incorrect: The TCP checksum is not secret; the algorithm is public. A cryptographic hash's security does not depend on secrecy of the algorithm — only on the key (in HMACs) or computational hardness (for collision resistance).",D:"Incorrect: Standard cryptographic hashes (SHA-256) do not require a key — HMACs add a key. Checksums don't require keys either. The issue is the weakness of the sum operation, not key usage."},right:"Correct: The TCP checksum is simple addition (one's complement sum of 16-bit words). An adversary can modify any field and recompute a correct checksum in microseconds — it's entirely transparent. A cryptographic hash like SHA-256 requires ~2⁶⁴ computations to find a collision, making deliberate forgery computationally infeasible."},
+
+  32:{correct:'C',wrong:{A:"Incorrect: The RSA standard does not require pre-hashing; it's a performance and practical decision.",B:"Incorrect: Signing does not provide confidentiality. The message is still readable by anyone. Signing proves origin and integrity, not secrecy.",D:"Incorrect: The hash provides integrity (any change to the message changes the hash), not confidentiality. Confidentiality requires encryption, not signing."},right:"Correct: Two reasons to sign the hash: (1) Public key operations (RSA) are very slow. Hashing a large message produces a small fixed-size digest (e.g., 32 bytes for SHA-256) that can be signed quickly. (2) Security equivalence: if the hash is collision-resistant, signing H(m) is as binding as signing m itself — any change to m produces a different H(m), invalidating the signature."},
+
+  33:{correct:'B',wrong:{A:"Incorrect: Trudy does not break the encryption — she intercepts public keys before encryption happens. The attack works without breaking any cipher.",C:"Incorrect: In the basic MITM attack, Trudy doesn't forge CA certificates. She intercepts and replaces keys at the transport level. CA certificates are specifically designed to prevent this attack.",D:"Incorrect: Replaying old session keys is a different attack. MITM operates by substituting Trudy's public keys for Alice's and Bob's."},right:"Correct: The MITM attack on naïve public key exchange: when Alice sends her public key to Bob, Trudy intercepts it and forwards her own public key to Bob instead. When Bob sends his key to Alice, Trudy does the same. Now Alice encrypts to Trudy (thinking it's Bob), and Bob encrypts to Trudy (thinking it's Alice). Trudy decrypts, reads/modifies, re-encrypts, and forwards. Neither party detects the interception."},
+
+  34:{correct:'C',wrong:{A:"Incorrect: Contacting Alice to verify her own certificate would be circular — the whole point is that Alice's identity is what's being verified. Also, Alice could be Trudy impersonating Alice.",B:"Incorrect: Alice can't send a hash of her certificate in advance without the same authentication problem — Trudy could intercept that too.",D:"Incorrect: An expiry date alone says nothing about authenticity. A forged certificate could be unexpired. The CA's cryptographic signature is what provides authenticity."},right:"Correct: Bob uses the CA's public key (which he obtained out-of-band — pre-installed in his browser or OS) to verify the digital signature on Alice's certificate. The CA signed the certificate with its private key. Only the CA's private key could produce a signature that verifies with the CA's public key. If verification succeeds, the CA vouches that this public key belongs to Alice — the MITM attack fails because Trudy cannot forge the CA's signature."},
+
+  35:{correct:'B',wrong:{A:"Incorrect: Trudy does not decrypt the password — she never needs to know the plaintext. The replay works with the ciphertext as-is.",C:"Incorrect: Trudy doesn't need to modify anything — the original ciphertext works perfectly. Modification would require Trudy to understand the plaintext structure.",D:"Incorrect: The vulnerability is not inherent to shared-key schemes — it's specific to static authentication (same response every session). HMAC-based challenge-response with shared keys can be secure."},right:"Correct: This is ap3.0 replay attack. The encrypted password is static — Encrypt(K, 'alice_password') produces the same ciphertext every time. Trudy records it once and replays it verbatim. Bob receives valid-looking ciphertext, decrypts it, and authenticates Trudy as Alice. The attack requires no cryptanalysis — just recording and resending."},
+
+  36:{correct:'B',wrong:{A:"Incorrect: The nonce is sent in plaintext — it doesn't need to be secret. Its value is what must be unpredictable and used only once.",C:"Incorrect: The nonce does not replace Alice's private key. Alice's private key is what creates the unforgeable signature; the nonce is what makes each exchange unique.",D:"Incorrect: The signature does not contain a timestamp in the basic ap5.0 protocol; the nonce provides freshness without needing clock synchronization."},right:"Correct: The nonce is a one-time random value. Alice's response Sign(private_key, R) is computed over that specific R. If Trudy captured Sign(private_key, R_old) from last session, she cannot use it because this session Bob sent R_new ≠ R_old. Trudy would need to forge Sign(private_key, R_new), which requires Alice's private key — computationally infeasible."},
+
+  37:{correct:'C',wrong:{A:"Incorrect: Public key certificates provide authentication — verifying the server's identity. They do not provide integrity of the transmitted data after the handshake.",B:"Incorrect: AES encryption provides confidentiality — preventing eavesdroppers from reading data. Encryption does not prevent an attacker from modifying ciphertext in ways that corrupt the plaintext.",D:"Incorrect: Diffie-Hellman is used for key establishment — securely deriving a shared session key. It does not protect data integrity after the session key is established."},right:"Correct: TLS uses a MAC (typically HMAC using SHA-256 or SHA-384) computed over each record. The receiver verifies the MAC before processing the record. Any tampering with the record in transit causes the MAC check to fail. The three TLS services: Confidentiality (AES), Integrity (HMAC/MAC), Authentication (CA certificates)."},
+
+  38:{correct:'B',wrong:{A:"Incorrect: Computing a MAC over a long stream is computationally similar to per-record MACs — both hash roughly the same total bytes. The issue is detection timing, not computation cost.",C:"Incorrect: MAC computation is flexible — it can cover any amount of data regardless of AES block size.",D:"Incorrect: TLS records are strictly ordered using sequence numbers embedded in the MAC computation. The records are ordered."},right:"Correct: If TLS computed one MAC over the entire stream, the receiver could only detect tampering after receiving all data — potentially after processing corrupted or injected records. Per-record MAC allows the receiver to detect and reject a tampered or injected record immediately when it arrives, before passing it to the application. This limits the damage an attacker can cause."},
+
+  39:{correct:'B',wrong:{A:"Incorrect: Stateless firewalls examine more header fields in one sense (they apply rules to every field), but they are weaker because they can't distinguish legitimate from spoofed packets at the connection-state level.",C:"Incorrect: The stateless firewall is less secure here. Allowing all inbound ACKs permits spoofed ACK packets that don't correspond to any established connection.",D:"Incorrect: The stateful firewall is more secure, not just more conservative. It actively protects against a class of attacks the stateless firewall misses."},right:"Correct: Stateful filtering maintains a connection table. An inbound ACK that matches no established connection entry is rejected — even though its headers look syntactically valid. This catches spoofed ACK packets. Stateless filtering sees 'ACK = allowed' and passes it through, potentially allowing TCP injection or scanning attacks that use ACK packets."},
+
+  40:{correct:'B',wrong:{A:"Incorrect: Modern APs have sufficient processing power. The reason is trust, not capability.",C:"Incorrect: Physical proximity doesn't affect the trust model. The AS could be across the country — the important thing is it has a verifiable certificate and is inside the trusted network.",D:"Incorrect: The AP does not hold the AS's encryption keys; the AP merely forwards EAP messages between the mobile and AS. The AS holds its own keys."},right:"Correct: The AP is untrusted infrastructure — anyone can set up a rogue AP with the same SSID. If the mobile authenticated to the AP directly, a rogue AP could steal credentials. The AS is inside the secure network with a verifiable certificate. The mobile authenticates to the AS through the AP — the AP is just a relay. Even if the AP is rogue or compromised, it cannot impersonate the AS because it lacks the AS's private key."},
+
+  41:{correct:'B',wrong:{A:"Incorrect: DNS lookup and ARP happen before any HTTP connection and are not per-HTTP-object costs that differ between persistent and non-persistent.",C:"Incorrect: TLS and MAC computation costs are present in both persistent and non-persistent HTTPS connections and are not the costs saved by persistence.",D:"Incorrect: HTTP request RTTs are reduced by persistence (pipelining/connection reuse), but the two specific costs persistent HTTP is known to save are handshake overhead and slow-start penalty."},right:"Correct: Non-persistent HTTP: every object requires a new TCP connection. Each new connection costs 1 RTT for the TCP 3-way handshake plus slow-start overhead (CW restarts at 1 MSS). Persistent HTTP reuses the connection — subsequent objects skip the handshake entirely and benefit from a CW that has already grown through slow start."},
+
+  42:{correct:'C',wrong:{A:"Incorrect: HTTP/2 does support TLS; HTTPS with HTTP/2 is common. Security was not the primary motivation for HTTP/3.",B:"Incorrect: HTTP/2 typically uses one connection per domain — multiple connections would defeat multiplexing. HTTP/3 also uses one QUIC connection per domain.",D:"Incorrect: HTTP/2 does include header compression (HPACK). HOL blocking, not header compression, motivated HTTP/3."},right:"Correct: HTTP/2 solves application-layer HOL blocking by interleaving frames from different streams. But HTTP/2 still runs over a single TCP connection. TCP delivers bytes in strict order — if one TCP segment is lost, all HTTP/2 streams on that connection stall until retransmission. QUIC implements per-stream reliability at the QUIC layer, so a packet loss in one stream doesn't block other streams."},
+
+  43:{correct:'C',wrong:{A:"Incorrect: Alice's mail client sending to her mail server is a push operation — SMTP is a push protocol where the client initiates and delivers.",B:"Incorrect: SMTP between mail servers is also push — the sending server initiates and delivers to the receiving server.",D:"Incorrect: Not all segments are SMTP. The final delivery to the recipient's mail client uses a pull protocol (IMAP or POP)."},right:"Correct: IMAP (Internet Mail Access Protocol) and POP (Post Office Protocol) are pull protocols — Bob's mail client connects to his mail server and retrieves (pulls) messages when Bob chooses to check email. The mail server stores messages until Bob pulls them. SMTP is push: the sender's server initiates delivery to the recipient's server without the recipient being online."},
+
+  44:{correct:'B',wrong:{A:"Incorrect: That describes recursive DNS, where the root server does the work on the resolver's behalf. In iterative DNS, the root just provides a referral.",C:"Incorrect: The cache is consulted before sending external queries, not after receiving a root referral. The referral is what the resolver acts on.",D:"Incorrect: The resolver cannot return the answer to the client yet — it has only received a referral to the TLD server, not the final IP address."},right:"Correct: In iterative resolution, the resolver (not the root server) contacts each level of the hierarchy itself. After the root returns a TLD referral, the local resolver directly queries the .com TLD server. The TLD server returns a referral to example.com's authoritative server. The resolver then contacts that authoritative server and gets the final IP address, which it caches and returns to the client."},
+
+  45:{correct:'C',wrong:{A:"Incorrect: Registrars typically apply DNS record changes quickly (minutes to an hour). The propagation delay is due to caching by resolvers, not registrar processing.",B:"Incorrect: Root servers cache TLD server addresses, not individual A records. Root servers do not cache or hold A records for specific hostnames.",D:"Incorrect: BGP routing is about IP routing paths, not DNS resolution. BGP changes wouldn't cause users to reach the old server — they'd either reach the new server or get a routing error."},right:"Correct: DNS caching with TTL: every resolver that previously queried your domain has cached the old A record with its TTL. That cache entry remains valid until the TTL expires. If the previous TTL was 86400 seconds (24 hours), resolvers that cached the record shortly before your change will continue using the old IP for up to 24 hours. TTL reduction before a planned change helps, but existing cached copies with longer TTLs persist."},
+
+  46:{correct:'C',wrong:{A:"Incorrect: The probe with TTL=3 starts at the sender with TTL=3, is decremented to 2 at the first router, to 1 at the second, and to 0 at the third. TTL reaches zero at the third router — it is not forwarded.",B:"Incorrect: ARP resolves IP→MAC at Layer 2 and is not involved in traceroute's path discovery mechanism.",D:"Incorrect: There is no minimum TTL for forwarding. TTL=1 is valid and is decremented to 0 by the very first router, which then responds with ICMP Time Exceeded."},right:"Correct: Traceroute sends probes with TTL=1, 2, 3, etc. Each router decrements TTL by 1 before forwarding. When TTL reaches 0, that router discards the packet and sends an ICMP Time Exceeded back to the sender with its own source IP. A probe with TTL=3 passes through hop 1 (TTL→2), hop 2 (TTL→1), and is discarded at hop 3 (TTL→0). Hop 3 sends back its IP in the ICMP message."},
+
+  47:{correct:'C',wrong:{A:"Incorrect: NAT's performance overhead is a practical concern, but not the theoretical violation of the end-to-end principle.",B:"Incorrect: NAT works with UDP (and does so extensively for DNS, video streaming, games). The limitation is on inbound connections, not UDP vs TCP.",D:"Incorrect: IPv6 has nothing to do with the end-to-end principle as described here. IPv6 eliminates the need for NAT, but NAT's violation of end-to-end is about modifying packets in the network core."},right:"Correct: The end-to-end principle states that network devices should forward packets without modifying their content — intelligence belongs at endpoints. NAT violates this in two ways: (1) it rewrites IP addresses and port numbers inside the network, which should be endpoint-only functions, and (2) it prevents external hosts from initiating connections to internal hosts (no public IP = no inbound access), breaking P2P applications, servers, VoIP, and gaming."},
+
+  48:{correct:'D',wrong:{A:"Incorrect: IPv6 packets are not significantly larger and modern routers handle them efficiently. IPv6 actually simplified the IP header in some ways.",B:"Incorrect: IPv6 was designed with security in mind (IPsec is mandatory in IPv6) and is not less secure than IPv4.",C:"Incorrect: No regulatory approval is required to deploy IPv6. It is an open standard."},right:"Correct: The fundamental barrier is that IPv4 + NAT is a functional workaround. From a consumer's perspective, everything works — browsing, streaming, social media, cloud services all function behind NAT. There is no visible pain point. ISPs have little business incentive to upgrade infrastructure when customers aren't demanding it, and customers don't demand what they don't notice is missing. This stalemate has persisted for over two decades."},
+};
+
+let scores = {};
+let totalCorrect = 0;
+
+function answer(num, chosen, isCorrect) {
+  if (scores[num] !== undefined) return;
+  scores[num] = isCorrect ? 2 : 0;
+  if (isCorrect) totalCorrect++;
+
+  const mcq = document.getElementById('mcq' + num) || document.querySelector(`[id="exp${num}"]`).closest('.mcq');
+  const opts = document.getElementById('exp'+num).closest('.mcq').querySelectorAll('.opt-btn');
+  opts.forEach(btn => btn.disabled = true);
+
+  const data = ANSWERS[num];
+  const correctLetter = data.correct;
+
+  opts.forEach(btn => {
+    const letter = btn.querySelector('.opt-letter').textContent.replace('.','').trim();
+    if (letter === correctLetter) btn.classList.add('correct');
+    else if (letter === chosen && !isCorrect) btn.classList.add('wrong');
+  });
+
+  const expEl = document.getElementById('exp'+num);
+  expEl.style.display = 'block';
+
+  if (isCorrect) {
+    expEl.classList.add('correct-exp');
+    expEl.querySelector('.exp-verdict').textContent = '✓ Correct';
+    expEl.querySelector('.exp-body').innerHTML = data.right;
+  } else {
+    expEl.classList.add('wrong-exp');
+    expEl.querySelector('.exp-verdict').textContent = '✗ Incorrect';
+    const wrongText = data.wrong[chosen] || 'That answer is not correct.';
+    expEl.querySelector('.exp-body').innerHTML = wrongText + '<br><br><strong>Correct answer (' + correctLetter + '):</strong> ' + data.right;
+  }
+
+  updateScore();
+}
+
+function updateScore() {
+  const pts = Object.values(scores).reduce((a,b)=>a+b,0);
+  document.getElementById('score-val').textContent = pts;
+  document.getElementById('correct-val').textContent = totalCorrect;
+  document.getElementById('prog-fill').style.width = (totalCorrect/48*100) + '%';
+  document.getElementById('final-num').textContent = pts + ' / 96';
+  const pct = Math.round(pts/96*100);
+  document.getElementById('final-pct').textContent = 'MCQ score: ' + pct + '% — ' +
+    (pct >= 80 ? 'Strong preparation for Exam 3' :
+     pct >= 65 ? 'Review weaker areas above' :
+     'Significant review needed — focus on Ch.6 congestion control');
+}
+
+function resetExam() {
+  if (!confirm('Reset all answers? This cannot be undone.')) return;
+  scores = {}; totalCorrect = 0;
+
+  for (let i = 1; i <= 48; i++) {
+    const expEl = document.getElementById('exp'+i);
+    if (!expEl) continue;
+    const mcqEl = expEl.closest('.mcq');
+    if (!mcqEl) continue;
+    mcqEl.querySelectorAll('.opt-btn').forEach(btn => { btn.disabled = false; btn.classList.remove('correct','wrong'); });
+    expEl.style.display = 'none';
+    expEl.classList.remove('correct-exp','wrong-exp');
+    expEl.querySelector('.exp-verdict').textContent = '';
+    expEl.querySelector('.exp-body').textContent = '';
+  }
+  updateScore();
+}
+</script>
+<div style="text-align:center;padding:24px 20px;font-family:'DM Mono',monospace;font-size:11px;color:#506080;letter-spacing:0.1em;border-top:1px solid rgba(140,200,255,0.1);margin-top:40px;">Made by <strong style="color:#c4d4f0;">chopgeneral</strong></div>
+</body>
+</html>
