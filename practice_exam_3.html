@@ -252,8 +252,6 @@
 </head>
 <body>
 
-<a href="index.html" style="display:inline-flex;align-items:center;gap:8px;position:fixed;top:16px;left:16px;z-index:100;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#506080;background:#0b0d18;border:1px solid rgba(140,200,255,0.1);border-radius:6px;padding:7px 14px;text-decoration:none;transition:color 0.13s,border-color 0.13s;" onmouseover="this.style.color='#50c8ff';this.style.borderColor='rgba(80,200,255,0.3)'" onmouseout="this.style.color='#506080';this.style.borderColor='rgba(140,200,255,0.1)'">← Home</a>
-
 <div class="exam-header">
   <h1>Computer Networks (SP26) — Practice Exam 3</h1>
   <div class="exam-meta">Chapters 6 &amp; 8 (primary) · Applications &amp; IPv6 (secondary) · All MCQ · 48 questions · 96 points</div>
@@ -313,8 +311,8 @@
 <div class="mcq-options">
   <button class="opt-btn" onclick="answer(3,'A',false)"><span class="opt-letter">A.</span>1.0</button>
   <button class="opt-btn" onclick="answer(3,'B',false)"><span class="opt-letter">B.</span>0.50</button>
-  <button class="opt-btn" onclick="answer(3,'C',true)"><span class="opt-letter">C.</span>0.75</button>
-  <button class="opt-btn" onclick="answer(3,'D',false)"><span class="opt-letter">D.</span>0.89</button>
+  <button class="opt-btn" onclick="answer(3,'C',false)"><span class="opt-letter">C.</span>0.75</button>
+  <button class="opt-btn" onclick="answer(3,'D',true)"><span class="opt-letter">D.</span>0.89</button>
 </div>
 <div class="explanation" id="exp3"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.1 (Jain's Fairness Index); Related: A6</div></div></div>
 
@@ -334,8 +332,8 @@
 <div class="mcq-q">TCP CongestionWindow = 16 MSS and a timeout occurs. What are the new values of ssthresh and CongestionWindow immediately after?</div>
 <div class="mcq-options">
   <button class="opt-btn" onclick="answer(5,'A',false)"><span class="opt-letter">A.</span>ssthresh = 16, CongestionWindow = 8</button>
-  <button class="opt-btn" onclick="answer(5,'B',false)"><span class="opt-letter">C.</span>ssthresh = 8, CongestionWindow = 8</button>
-  <button class="opt-btn" onclick="answer(5,'C',true)"><span class="opt-letter">B.</span>ssthresh = 8, CongestionWindow = 1</button>
+  <button class="opt-btn" onclick="answer(5,'B',false)"><span class="opt-letter">B.</span>ssthresh = 8, CongestionWindow = 8</button>
+  <button class="opt-btn" onclick="answer(5,'C',true)"><span class="opt-letter">C.</span>ssthresh = 8, CongestionWindow = 1</button>
   <button class="opt-btn" onclick="answer(5,'D',false)"><span class="opt-letter">D.</span>ssthresh = 16, CongestionWindow = 1</button>
 </div>
 <div class="explanation" id="exp5"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch6 §6.3 (AIMD, Slow Start); Related: A6</div></div></div>
@@ -639,8 +637,8 @@
 <div class="mcq-q">Why are digital signatures applied to the hash of a message rather than to the full message?</div>
 <div class="mcq-options">
   <button class="opt-btn" onclick="answer(32,'A',false)"><span class="opt-letter">A.</span>Hashing is required by the RSA specification before signing.</button>
-  <button class="opt-btn" onclick="answer(32,'B',false)"><span class="opt-letter">C.</span>Signing the hash prevents the receiver from reading the message contents.</button>
-  <button class="opt-btn" onclick="answer(32,'C',true)"><span class="opt-letter">B.</span>Public key signing operations are very slow. The hash is always a small fixed size (e.g., 256 bits), so signing the hash is computationally feasible. Any change to the message changes the hash, so the signature still binds to the full message.</button>
+  <button class="opt-btn" onclick="answer(32,'B',false)"><span class="opt-letter">B.</span>Signing the hash prevents the receiver from reading the message contents.</button>
+  <button class="opt-btn" onclick="answer(32,'C',true)"><span class="opt-letter">C.</span>Public key signing operations are very slow. The hash is always a small fixed size (e.g., 256 bits), so signing the hash is computationally feasible. Any change to the message changes the hash, so the signature still binds to the full message.</button>
   <button class="opt-btn" onclick="answer(32,'D',false)"><span class="opt-letter">D.</span>The hash provides confidentiality, which is why it is signed instead of the plaintext.</button>
 </div>
 <div class="explanation" id="exp32"><div class="exp-verdict"></div><div class="exp-body"></div><div class="source-tag">Source: Book Ch8 §8.2 (Digital signatures on hash); Related: A7</div></div></div>
@@ -843,11 +841,11 @@ const ANSWERS = {
 
   2:{correct:'C',wrong:{A:"Incorrect: That describes explicit router-centric feedback (e.g., explicit congestion notification, ECN). TCP's standard mechanism infers congestion from loss without explicit router signaling.",B:"Incorrect: That describes reservation-based systems (e.g., IntServ). TCP does not reserve bandwidth before sending.",D:"Incorrect: The advertised window reflects the receiver's buffer space — it is flow control, not a congestion signal from the network."},right:"Correct: TCP is feedback-based with implicit feedback — senders use packet loss (timeouts or 3 duplicate ACKs) as the signal that congestion has occurred. The network (routers) does not explicitly tell senders to slow down; the loss event is the feedback."},
 
-  3:{correct:'C',wrong:{A:"Incorrect: If all three flows received equal throughput (e.g., 5.33 Mbps each), the index would be 1.0. Here they are not equal.",B:"Incorrect: f = 0.5 would indicate that only 50% of flows are being served, or severe inequality. The inequality here is milder.",D:"Incorrect: f = 0.89 would correspond to a smaller deviation from equality. Let's compute: Σxᵢ = 4+4+8=16; Σxᵢ² = 16+16+64=96; f = 16²/(3×96) = 256/288 ≈ 0.889. Wait — 0.89 is actually the correct computation. But the answer given is 0.75 — let's re-examine. Actually f = (4+4+8)² / (3 × (16+16+64)) = 256/288 ≈ 0.889 ≈ 0.89. The correct answer should be D (0.89). Reviewing…"},right:"Correct: Σxᵢ = 4+4+8 = 16. Σxᵢ² = 16+16+64 = 96. f = 16² / (3 × 96) = 256/288 ≈ 0.889. The answer closest to this is 0.89. Note: if you computed 0.75, check your squaring. The Jain index penalizes the outlier flow (8 Mbps vs 4 Mbps) but not severely since only one of three flows differs."},
+  3:{correct:'D',wrong:{A:"Incorrect: f = 1.0 only when all flows receive identical throughput. Here one flow gets 8 Mbps while the others get 4 Mbps, so the index must be less than 1.",B:"Incorrect: f = 0.5 would indicate severe unfairness — as if only half the flows were being served. The deviation here is milder.",C:"Incorrect: 0.75 is not the result of Jain's formula for these values. Compute: Σxᵢ = 16, Σxᵢ² = 96, f = 256/288 ≈ 0.889."},right:"Correct: Σxᵢ = 4+4+8 = 16. Σxᵢ² = 16+16+64 = 96. f = (Σxᵢ)² / (n × Σxᵢ²) = 256 / (3 × 96) = 256/288 ≈ 0.889. The index is below 1.0 because one flow gets double the others, but not drastically low because only one flow deviates."},
 
   4:{correct:'B',wrong:{A:"Incorrect: This describes router-centric congestion control. TCP uses a host-centric, end-to-end approach.",C:"Incorrect: The end-to-end argument says the opposite — hop-by-hop mechanisms inside the network cannot guarantee end-to-end correctness. Congestion control must be at the endpoints.",D:"Incorrect: The end-to-end argument supports placing congestion control in the transport layer (endpoints), not the network layer."},right:"Correct: The end-to-end argument states that correct behavior must be ensured at the endpoints. TCP embodies this by having end hosts observe loss events and adjust their windows, rather than depending on routers to enforce sending rates. Routers simply forward packets and drop them when overloaded."},
 
-  5:{correct:'C',wrong:{A:"Incorrect: On a timeout, ssthresh is halved (not kept at 16), and CongestionWindow is not set to half — it resets all the way to 1 MSS to restart slow start.",B:"Incorrect: ssthresh = 8 is correct, but CongestionWindow is not set to 8. After a timeout, CW resets to 1 and slow start restarts toward ssthresh.",D:"Incorrect: ssthresh stays at the current CW (16) would defeat the purpose of multiplicative decrease. ssthresh must be halved."},right:"Correct: On timeout: ssthresh = CongestionWindow/2 = 16/2 = 8. CongestionWindow is reset to 1 MSS. Slow start begins from CW=1, doubling each RTT until CW reaches ssthresh (8), at which point additive increase takes over."},
+  5:{correct:'C',wrong:{A:"Incorrect: On a timeout, ssthresh is halved (not kept at 16), and CongestionWindow is not set to half — it resets all the way to 1 MSS to restart slow start.",B:"Incorrect: ssthresh = 8 is correct, but CongestionWindow is not set to 8. After a timeout, CW resets to 1 and slow start restarts toward ssthresh.",D:"Incorrect: ssthresh staying at 16 would defeat the purpose of multiplicative decrease. ssthresh must be halved to reflect the new estimate of safe capacity."},right:"Correct: On timeout: ssthresh = CongestionWindow/2 = 16/2 = 8. CongestionWindow is reset to 1 MSS. Slow start begins from CW=1, doubling each RTT until CW reaches ssthresh (8), at which point additive increase takes over."},
 
   6:{correct:'D',wrong:{A:"Incorrect: After RTT 0 (CW=1→2), RTT 1 (2→4), RTT 2 (4→8): CW = 8 = ssthresh. The transition to AIMD happens when CW reaches ssthresh, not exceeds it.",B:"Incorrect: Slow start doubles: 1→2→4→8. After 3 RTTs CW = 8, not 3.",C:"Incorrect: CW doubles each RTT during slow start: 1→2→4→8. After 3 RTTs the window is 8, not 6."},right:"Correct: Slow start doubles CW each RTT: RTT 0: 1→2; RTT 1: 2→4; RTT 2: 4→8. After 3 RTTs, CW = 8 = ssthresh. At this point, TCP transitions to additive increase. Note that CW doubles at RTTs 0, 1, and 2 — 'after 3 RTTs' means after RTT 2 completes, CW = 8."},
 
@@ -901,7 +899,7 @@ const ANSWERS = {
 
   31:{correct:'B',wrong:{A:"Incorrect: The number of bytes covered is not the issue — even if the checksum covered more bytes, a simple arithmetic sum is still easily forgeable by an adversary who can compute sums.",C:"Incorrect: The TCP checksum is not secret; the algorithm is public. A cryptographic hash's security does not depend on secrecy of the algorithm — only on the key (in HMACs) or computational hardness (for collision resistance).",D:"Incorrect: Standard cryptographic hashes (SHA-256) do not require a key — HMACs add a key. Checksums don't require keys either. The issue is the weakness of the sum operation, not key usage."},right:"Correct: The TCP checksum is simple addition (one's complement sum of 16-bit words). An adversary can modify any field and recompute a correct checksum in microseconds — it's entirely transparent. A cryptographic hash like SHA-256 requires ~2⁶⁴ computations to find a collision, making deliberate forgery computationally infeasible."},
 
-  32:{correct:'C',wrong:{A:"Incorrect: The RSA standard does not require pre-hashing; it's a performance and practical decision.",B:"Incorrect: Signing does not provide confidentiality. The message is still readable by anyone. Signing proves origin and integrity, not secrecy.",D:"Incorrect: The hash provides integrity (any change to the message changes the hash), not confidentiality. Confidentiality requires encryption, not signing."},right:"Correct: Two reasons to sign the hash: (1) Public key operations (RSA) are very slow. Hashing a large message produces a small fixed-size digest (e.g., 32 bytes for SHA-256) that can be signed quickly. (2) Security equivalence: if the hash is collision-resistant, signing H(m) is as binding as signing m itself — any change to m produces a different H(m), invalidating the signature."},
+  32:{correct:'C',wrong:{A:"Incorrect: The RSA standard does not require pre-hashing; it's a performance and practical decision.",B:"Incorrect: Signing does not prevent the receiver from reading the message — the message is still transmitted in plaintext alongside the signature. Signing proves origin and integrity, not secrecy.",D:"Incorrect: The hash provides integrity (any change to the message changes the hash), not confidentiality. Confidentiality requires encryption, not signing."},right:"Correct: Two reasons to sign the hash: (1) Public key operations (RSA) are very slow. Hashing a large message produces a small fixed-size digest (e.g., 32 bytes for SHA-256) that can be signed quickly. (2) Security equivalence: if the hash is collision-resistant, signing H(m) is as binding as signing m itself — any change to m produces a different H(m), invalidating the signature."},
 
   33:{correct:'B',wrong:{A:"Incorrect: Trudy does not break the encryption — she intercepts public keys before encryption happens. The attack works without breaking any cipher.",C:"Incorrect: In the basic MITM attack, Trudy doesn't forge CA certificates. She intercepts and replaces keys at the transport level. CA certificates are specifically designed to prevent this attack.",D:"Incorrect: Replaying old session keys is a different attack. MITM operates by substituting Trudy's public keys for Alice's and Bob's."},right:"Correct: The MITM attack on naïve public key exchange: when Alice sends her public key to Bob, Trudy intercepts it and forwards her own public key to Bob instead. When Bob sends his key to Alice, Trudy does the same. Now Alice encrypts to Trudy (thinking it's Bob), and Bob encrypts to Trudy (thinking it's Alice). Trudy decrypts, reads/modifies, re-encrypts, and forwards. Neither party detects the interception."},
 
@@ -1005,6 +1003,5 @@ function resetExam() {
   updateScore();
 }
 </script>
-<div style="text-align:center;padding:24px 20px;font-family:'DM Mono',monospace;font-size:11px;color:#506080;letter-spacing:0.1em;border-top:1px solid rgba(140,200,255,0.1);margin-top:40px;">Made by <strong style="color:#c4d4f0;">chopgeneral</strong></div>
 </body>
 </html>
